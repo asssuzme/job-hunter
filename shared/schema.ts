@@ -6,8 +6,9 @@ import { z } from "zod";
 export const jobScrapingRequests = pgTable("job_scraping_requests", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   linkedinUrl: text("linkedin_url").notNull(),
-  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, processing, completed, failed
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, processing, filtering, completed, failed
   results: jsonb("results"),
+  filteredResults: jsonb("filtered_results"),
   errorMessage: text("error_message"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   completedAt: timestamp("completed_at"),
@@ -45,9 +46,31 @@ export const jobDataSchema = z.object({
   description: z.string(),
   skills: z.array(z.string()).optional(),
   originalUrl: z.string(),
+  companyWebsite: z.string().optional(),
+  companyLinkedinUrl: z.string().optional(),
+  jobPosterName: z.string().optional(),
+  jobPosterLinkedinUrl: z.string().optional(),
+  requirement: z.string().optional(),
+  salaryInfo: z.string().optional(),
 });
 
 export type JobData = z.infer<typeof jobDataSchema>;
+
+// Filtered job data schema with required fields
+export const filteredJobDataSchema = z.object({
+  title: z.string(),
+  companyName: z.string(),
+  companyWebsite: z.string(),
+  companyLinkedinUrl: z.string(),
+  jobPosterName: z.string().optional(),
+  jobPosterLinkedinUrl: z.string().optional(),
+  requirement: z.string().optional(),
+  location: z.string(),
+  link: z.string(),
+  salaryInfo: z.string().optional(),
+});
+
+export type FilteredJobData = z.infer<typeof filteredJobDataSchema>;
 
 export const scrapingResultSchema = z.object({
   jobs: z.array(jobDataSchema),
@@ -55,4 +78,12 @@ export const scrapingResultSchema = z.object({
   scrapedAt: z.string(),
 });
 
+export const filteredResultSchema = z.object({
+  jobs: z.array(filteredJobDataSchema),
+  totalCount: z.number(),
+  originalCount: z.number(),
+  filteredAt: z.string(),
+});
+
 export type ScrapingResult = z.infer<typeof scrapingResultSchema>;
+export type FilteredResult = z.infer<typeof filteredResultSchema>;

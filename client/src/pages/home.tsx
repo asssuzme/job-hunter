@@ -2,18 +2,20 @@ import { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { JobForm } from "@/components/job-form";
 import { JobCard } from "@/components/job-card";
+import { FilteredJobCard } from "@/components/filtered-job-card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ScrapingState } from "@/lib/types";
-import { JobScrapingRequest, ScrapingResult } from "@shared/schema";
-import { Loader2, AlertTriangle, Download, Trash2, Linkedin, Settings, HelpCircle, Plus } from "lucide-react";
+import { JobScrapingRequest, ScrapingResult, FilteredResult } from "@shared/schema";
+import { Loader2, AlertTriangle, Download, Trash2, Linkedin, Settings, HelpCircle, Plus, Filter } from "lucide-react";
 
 export default function Home() {
   const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
   const [scrapingState, setScrapingState] = useState<ScrapingState>('idle');
+  const [showFiltered, setShowFiltered] = useState(true);
 
   // Query to poll for scraping results
   const { data: scrapingRequest, isLoading: isPolling } = useQuery<JobScrapingRequest>({
@@ -28,6 +30,9 @@ export default function Home() {
       setScrapingState('success');
     } else if (scrapingRequest?.status === 'failed') {
       setScrapingState('error');
+    } else if (scrapingRequest?.status === 'filtering') {
+      // Keep loading state during filtering
+      if (scrapingState !== 'loading') setScrapingState('loading');
     }
   }, [scrapingRequest?.status]);
 
@@ -62,6 +67,7 @@ export default function Home() {
   };
 
   const results = scrapingRequest?.results as ScrapingResult | null;
+  const filteredResults = scrapingRequest?.filteredResults as FilteredResult | null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -147,13 +153,21 @@ export default function Home() {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">
-                    {results.totalCount} Jobs Found
+                    Processing Complete
                   </h2>
                   <p className="text-sm text-gray-500">
-                    Scraped {new Date(results.scrapedAt).toLocaleString()} from LinkedIn
+                    Scraped: {results.totalCount} | Filtered: {filteredResults?.totalCount || 0} jobs
                   </p>
                 </div>
                 <div className="flex items-center space-x-3">
+                  <Button 
+                    variant={showFiltered ? "default" : "outline"} 
+                    size="sm"
+                    onClick={() => setShowFiltered(!showFiltered)}
+                  >
+                    <Filter className="h-4 w-4 mr-1" />
+                    {showFiltered ? 'Filtered' : 'All Results'}
+                  </Button>
                   <Button variant="outline" size="sm">
                     <Download className="h-4 w-4 mr-1" />
                     Export
@@ -196,9 +210,32 @@ export default function Home() {
 
             {/* Job Results */}
             <div className="space-y-6">
-              {results.jobs.map((job, index) => (
-                <JobCard key={index} job={job} />
-              ))}
+              {showFiltered && filteredResults ? (
+                filteredResults.jobs.map((job, index) => (
+                  <FilteredJobCard key={index} job={job} />
+                ))
+              ) : (
+                results.jobs.map((job, index) => (
+                  <JobCard key={index} job={job} />
+                ))
+              )}
+              
+              {showFiltered && (!filteredResults || filteredResults.jobs.length === 0) && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
+                  <Filter className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Filtered Results</h3>
+                  <p className="text-gray-500">
+                    None of the scraped jobs met the filtering criteria (company name, website, and LinkedIn URL required).
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowFiltered(false)}
+                    className="mt-4"
+                  >
+                    View All Results
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* Load More Button (if there are more results to show) */}

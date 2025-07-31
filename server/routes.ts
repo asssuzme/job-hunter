@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertJobScrapingRequestSchema, linkedinUrlSchema } from "@shared/schema";
+import { insertJobScrapingRequestSchema, linkedinUrlSchema, type FilteredJobData, type JobData } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -53,6 +53,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   return httpServer;
 }
 
+function filterJobs(jobs: JobData[]): FilteredJobData[] {
+  // Filter jobs to keep only those with required fields
+  const validJobs = jobs.filter(job => 
+    job.company.name && 
+    job.companyWebsite && 
+    job.companyLinkedinUrl
+  );
+
+  // Group by company name and keep only the first job from each company
+  const companyMap = new Map<string, FilteredJobData>();
+  
+  for (const job of validJobs) {
+    const companyName = job.company.name.trim().toLowerCase();
+    
+    if (!companyMap.has(companyName)) {
+      companyMap.set(companyName, {
+        title: job.title,
+        companyName: job.company.name,
+        companyWebsite: job.companyWebsite!,
+        companyLinkedinUrl: job.companyLinkedinUrl!,
+        jobPosterName: job.jobPosterName,
+        jobPosterLinkedinUrl: job.jobPosterLinkedinUrl,
+        requirement: job.requirement,
+        location: job.location,
+        link: job.originalUrl,
+        salaryInfo: job.salaryInfo
+      });
+    }
+  }
+
+  return Array.from(companyMap.values());
+}
+
 async function processJobScraping(requestId: string) {
   try {
     // Update status to processing
@@ -102,7 +135,13 @@ async function processJobScraping(requestId: string) {
       applicants: item.applicants,
       description: item.description || item.jobDescription || "No description available",
       skills: item.skills || [],
-      originalUrl: item.url || item.jobUrl || request.linkedinUrl
+      originalUrl: item.url || item.jobUrl || request.linkedinUrl,
+      companyWebsite: item.companyWebsite || item.website,
+      companyLinkedinUrl: item.companyLinkedinUrl || item.companyUrl,
+      jobPosterName: item.jobPosterName || item.posterName,
+      jobPosterLinkedinUrl: item.jobPosterLinkedinUrl || item.posterUrl,
+      requirement: item.requirement || item.requirements,
+      salaryInfo: item.salaryInfo || item.salary
     }));
 
     const results = {
@@ -111,9 +150,25 @@ async function processJobScraping(requestId: string) {
       scrapedAt: new Date().toISOString()
     };
 
+    // Update status to filtering
+    await storage.updateJobScrapingRequest(requestId, {
+      status: "filtering",
+      results
+    });
+
+    // Apply filtering logic
+    const filteredJobs = filterJobs(transformedJobs);
+    
+    const filteredResults = {
+      jobs: filteredJobs,
+      totalCount: filteredJobs.length,
+      originalCount: transformedJobs.length,
+      filteredAt: new Date().toISOString()
+    };
+
     await storage.updateJobScrapingRequest(requestId, {
       status: "completed",
-      results,
+      filteredResults,
       completedAt: new Date()
     });
 
