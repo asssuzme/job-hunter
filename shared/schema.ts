@@ -14,14 +14,17 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// User table for authentication
+// User table for Google OAuth authentication
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  googleId: varchar("google_id").unique().notNull(),
   email: varchar("email").unique().notNull(),
-  username: varchar("username").unique().notNull(),
-  passwordHash: text("password_hash").notNull(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
+  profilePicture: text("profile_picture"),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  tokenExpiresAt: timestamp("token_expires_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -47,23 +50,21 @@ export const insertUserSchema = createInsertSchema(users).omit({
   updatedAt: true,
 });
 
-export const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
-  password: z.string().min(1, "Password is required"),
-});
-
-export const registerSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
-  email: z.string().email("Please enter a valid email"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
-});
+// Remove username/password schemas as we're using Google OAuth only
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
-export type LoginRequest = z.infer<typeof loginSchema>;
-export type RegisterRequest = z.infer<typeof registerSchema>;
+// Google OAuth types
+export type GoogleUser = {
+  googleId: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  profilePicture?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  tokenExpiresAt?: Date;
+};
 
 export const insertJobScrapingRequestSchema = createInsertSchema(jobScrapingRequests).pick({
   linkedinUrl: true,

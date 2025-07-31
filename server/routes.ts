@@ -1,12 +1,11 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupSession, setupAuth, requireAuth } from "./auth";
+import { setupSession, requireAuth } from "./auth";
+import { setupGoogleAuth } from "./googleAuth";
 import { 
   insertJobScrapingRequestSchema, 
-  linkedinUrlSchema, 
-  loginSchema,
-  registerSchema,
+  linkedinUrlSchema,
   type FilteredJobData, 
   type JobData,
   type User 
@@ -22,86 +21,50 @@ const upload = multer({ storage: multer.memoryStorage() });
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
   setupSession(app);
-  setupAuth(app);
+  app.use(passport.initialize());
+  app.use(passport.session());
+  const googleAuthEnabled = setupGoogleAuth();
 
-  // Auth routes
-  app.post("/api/register", async (req, res) => {
-    try {
-      const validatedData = registerSchema.parse(req.body);
-      
-      // Check if user already exists
-      const existingUser = await storage.getUserByUsername(validatedData.username);
-      if (existingUser) {
-        return res.status(400).json({ message: "Username already exists" });
+  // Google OAuth routes (only if credentials are configured)
+  if (googleAuthEnabled) {
+    app.get("/api/auth/google", passport.authenticate("google", {
+      scope: [
+        'profile',
+        'email',
+        'https://www.googleapis.com/auth/gmail.send',
+        'https://www.googleapis.com/auth/gmail.compose',
+        'https://www.googleapis.com/auth/gmail.modify'
+      ]
+    }));
+
+    app.get("/api/auth/google/callback", 
+      passport.authenticate("google", { failureRedirect: "/login" }),
+      (req, res) => {
+        // Successful authentication, redirect to home
+        res.redirect("/");
       }
-
-      const existingEmail = await storage.getUserByEmail(validatedData.email);
-      if (existingEmail) {
-        return res.status(400).json({ message: "Email already exists" });
-      }
-
-      // Create user
-      const user = await storage.createUser({
-        username: validatedData.username,
-        email: validatedData.email,
-        passwordHash: validatedData.password, // Will be hashed in storage layer
-        firstName: validatedData.firstName,
-        lastName: validatedData.lastName,
-      });
-
-      // Return success without automatic login
-      res.json({ 
-        success: true, 
-        message: "Account created successfully! Please sign in with your credentials.",
-        user: { 
-          id: user.id, 
-          username: user.username, 
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName 
-        } 
-      });
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: error.errors[0].message });
-      }
-      console.error("Registration error:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.post("/api/login", passport.authenticate("local"), async (req, res) => {
-    const user = req.user as User;
-    res.json({ 
-      success: true, 
-      user: { 
-        id: user.id, 
-        username: user.username, 
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName 
-      } 
+    );
+  } else {
+    // Return configuration status endpoint
+    app.get("/api/auth/status", (req, res) => {
+      res.json({ googleAuthEnabled: false });
     });
-  });
+  }
 
   app.post("/api/logout", (req, res) => {
     req.logout((err) => {
       if (err) {
-        return res.status(500).json({ message: "Logout failed" });
+        return res.status(500).json({ message: "Error logging out" });
       }
       res.json({ success: true });
     });
   });
 
+
+
   app.get("/api/user", requireAuth, async (req, res) => {
     const user = req.user as User;
-    res.json({ 
-      id: user.id, 
-      username: user.username, 
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName 
-    });
+    res.json(user);
   });
 
   // Create a new job scraping request (now requires authentication)

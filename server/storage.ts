@@ -3,13 +3,13 @@ import {
   type InsertJobScrapingRequest, 
   type User,
   type InsertUser,
+  type GoogleUser,
   jobScrapingRequests,
   users 
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
-import bcrypt from "bcryptjs";
 
 export interface IStorage {
   // Job scraping methods
@@ -20,11 +20,11 @@ export interface IStorage {
   getJobScrapingRequestsByUser(userId: string): Promise<JobScrapingRequest[]>;
   cancelJobScrapingRequest(id: string): Promise<void>;
   
-  // User methods
+  // User methods for Google OAuth
   getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByGoogleId(googleId: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  upsertGoogleUser(googleUser: GoogleUser): Promise<User>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -71,8 +71,8 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
+  async getUserByGoogleId(googleId: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.googleId, googleId));
     return user || undefined;
   }
 
@@ -81,20 +81,44 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
-  async createUser(userData: InsertUser): Promise<User> {
-    // Hash the password before storing
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(userData.passwordHash, saltRounds);
+  async upsertGoogleUser(googleUser: GoogleUser): Promise<User> {
+    // Check if user exists by googleId
+    const existingUser = await this.getUserByGoogleId(googleUser.googleId);
     
-    const [user] = await db
-      .insert(users)
-      .values({
-        ...userData,
-        passwordHash: hashedPassword,
-      })
-      .returning();
-    
-    return user;
+    if (existingUser) {
+      // Update existing user with new tokens and info
+      const [updated] = await db
+        .update(users)
+        .set({
+          email: googleUser.email,
+          firstName: googleUser.firstName,
+          lastName: googleUser.lastName,
+          profilePicture: googleUser.profilePicture,
+          accessToken: googleUser.accessToken,
+          refreshToken: googleUser.refreshToken,
+          tokenExpiresAt: googleUser.tokenExpiresAt,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, existingUser.id))
+        .returning();
+      return updated;
+    } else {
+      // Create new user
+      const [newUser] = await db
+        .insert(users)
+        .values({
+          googleId: googleUser.googleId,
+          email: googleUser.email,
+          firstName: googleUser.firstName,
+          lastName: googleUser.lastName,
+          profilePicture: googleUser.profilePicture,
+          accessToken: googleUser.accessToken,
+          refreshToken: googleUser.refreshToken,
+          tokenExpiresAt: googleUser.tokenExpiresAt,
+        })
+        .returning();
+      return newUser;
+    }
   }
 }
 
