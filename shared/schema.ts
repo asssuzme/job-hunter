@@ -60,6 +60,7 @@ export type JobData = z.infer<typeof jobDataSchema>;
 export const filteredJobDataSchema = z.object({
   title: z.string(),
   companyName: z.string(),
+  companyLogo: z.string().optional(),
   companyWebsite: z.string(),
   companyLinkedinUrl: z.string(),
   jobPosterName: z.string().optional(),

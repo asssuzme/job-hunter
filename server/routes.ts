@@ -71,6 +71,7 @@ function filterJobs(jobs: JobData[]): FilteredJobData[] {
       companyMap.set(companyName, {
         title: job.title,
         companyName: job.company.name,
+        companyLogo: job.company.logo,
         companyWebsite: job.companyWebsite!,
         companyLinkedinUrl: job.companyLinkedinUrl!,
         jobPosterName: job.jobPosterName,

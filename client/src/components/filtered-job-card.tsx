@@ -29,30 +29,44 @@ export function FilteredJobCard({ job }: FilteredJobCardProps) {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow p-6">
       <div className="flex items-start justify-between mb-4">
-        <div className="flex-1">
-          <h3 
-            className="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors cursor-pointer mb-2"
-            onClick={handleViewJob}
-          >
-            {job.title}
-          </h3>
-          <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
-            <span 
-              className="font-medium hover:text-blue-600 cursor-pointer transition-colors"
-              onClick={handleViewCompany}
+        <div className="flex items-start space-x-4">
+          {job.companyLogo && (
+            <img 
+              src={job.companyLogo} 
+              alt={`${job.companyName} logo`} 
+              className="w-12 h-12 rounded-lg object-cover border border-gray-200" 
+            />
+          )}
+          {!job.companyLogo && (
+            <div className="w-12 h-12 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center">
+              <Briefcase className="h-6 w-6 text-gray-400" />
+            </div>
+          )}
+          <div className="flex-1">
+            <h3 
+              className="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors cursor-pointer mb-2"
+              onClick={handleViewJob}
             >
-              {job.companyName}
-            </span>
-            <span className="flex items-center">
-              <MapPin className="h-3 w-3 mr-1" />
-              {job.location}
-            </span>
-            {job.salaryInfo && (
-              <span className="flex items-center">
-                <DollarSign className="h-3 w-3 mr-1" />
-                {job.salaryInfo}
+              {job.title}
+            </h3>
+            <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
+              <span 
+                className="font-medium hover:text-blue-600 cursor-pointer transition-colors"
+                onClick={handleViewCompany}
+              >
+                {job.companyName}
               </span>
-            )}
+              <span className="flex items-center">
+                <MapPin className="h-3 w-3 mr-1" />
+                {job.location}
+              </span>
+              {job.salaryInfo && (
+                <span className="flex items-center">
+                  <DollarSign className="h-3 w-3 mr-1" />
+                  {job.salaryInfo}
+                </span>
+              )}
+            </div>
           </div>
         </div>
         <div className="flex items-center space-x-2">
