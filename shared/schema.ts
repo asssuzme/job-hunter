@@ -25,7 +25,7 @@ export const linkedinUrlSchema = z.object({
   linkedinUrl: z.string()
     .url("Please enter a valid URL")
     .refine((url) => url.includes("linkedin.com"), "Please enter a LinkedIn URL")
-    .refine((url) => url.includes("/jobs/view/"), "Please enter a LinkedIn job posting URL"),
+    .refine((url) => url.includes("/jobs/"), "Please enter a LinkedIn job URL"),
 });
 
 // Type definitions for scraped job data

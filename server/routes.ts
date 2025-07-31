@@ -63,111 +63,59 @@ async function processJobScraping(requestId: string) {
     const request = await storage.getJobScrapingRequest(requestId);
     if (!request) return;
 
-    // Get Apify API key from environment
-    const apifyApiKey = process.env.APIFY_API_KEY || process.env.APIFY_TOKEN;
-    if (!apifyApiKey) {
-      throw new Error("Apify API key not found in environment variables");
-    }
-
     // Prepare Apify request body
     const requestBody = {
-      startUrls: [{ url: request.linkedinUrl }],
+      count: 100,
       scrapeCompany: true,
-      count: 100
+      urls: [request.linkedinUrl]
     };
 
-    // Call Apify LinkedIn scraper API
-    const response = await fetch("https://api.apify.com/v2/acts/trudax~linkedin-job-scraper/runs", {
+    // Call Apify LinkedIn scraper API using the sync endpoint
+    const response = await fetch("https://api.apify.com/v2/acts/curious_coder~linkedin-jobs-scraper/run-sync-get-dataset-items?token=apify_api_HrPjMf1C0y5C8CyoiA5iAeJmjsjfLY0XXGHG", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${apifyApiKey}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify(requestBody)
     });
 
     if (!response.ok) {
-      throw new Error(`Apify API error: ${response.status} ${response.statusText}`);
+      const errorText = await response.text();
+      throw new Error(`Apify API error: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
-    const runData = await response.json();
-    const runId = runData.data.id;
+    const rawResults = await response.json();
+    
+    // Transform the results to match our schema
+    const transformedJobs = rawResults.map((item: any) => ({
+      title: item.title || "N/A",
+      company: {
+        name: item.companyName || item.company || "N/A",
+        industry: item.industry,
+        size: item.companySize,
+        founded: item.founded,
+        logo: item.companyLogo
+      },
+      location: item.location || "N/A",
+      workType: item.employmentType || item.workType || "N/A",
+      postedDate: item.postedDate || item.datePosted || "N/A",
+      applicants: item.applicants,
+      description: item.description || item.jobDescription || "No description available",
+      skills: item.skills || [],
+      originalUrl: item.url || item.jobUrl || request.linkedinUrl
+    }));
 
-    // Poll for completion
-    let completed = false;
-    let attempts = 0;
-    const maxAttempts = 60; // 5 minutes max
+    const results = {
+      jobs: transformedJobs,
+      totalCount: transformedJobs.length,
+      scrapedAt: new Date().toISOString()
+    };
 
-    while (!completed && attempts < maxAttempts) {
-      await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
-      
-      const statusResponse = await fetch(`https://api.apify.com/v2/acts/trudax~linkedin-job-scraper/runs/${runId}`, {
-        headers: {
-          "Authorization": `Bearer ${apifyApiKey}`
-        }
-      });
-
-      if (statusResponse.ok) {
-        const statusData = await statusResponse.json();
-        const status = statusData.data.status;
-        
-        if (status === "SUCCEEDED") {
-          completed = true;
-          
-          // Get the results
-          const resultsResponse = await fetch(`https://api.apify.com/v2/datasets/${statusData.data.defaultDatasetId}/items`, {
-            headers: {
-              "Authorization": `Bearer ${apifyApiKey}`
-            }
-          });
-
-          if (resultsResponse.ok) {
-            const rawResults = await resultsResponse.json();
-            
-            // Transform the results to match our schema
-            const transformedJobs = rawResults.map((item: any) => ({
-              title: item.title || "N/A",
-              company: {
-                name: item.companyName || "N/A",
-                industry: item.industry,
-                size: item.companySize,
-                founded: item.founded,
-                logo: item.companyLogo
-              },
-              location: item.location || "N/A",
-              workType: item.employmentType || "N/A",
-              postedDate: item.postedDate || "N/A",
-              applicants: item.applicants,
-              description: item.description || "No description available",
-              skills: item.skills || [],
-              originalUrl: item.url || request.linkedinUrl
-            }));
-
-            const results = {
-              jobs: transformedJobs,
-              totalCount: transformedJobs.length,
-              scrapedAt: new Date().toISOString()
-            };
-
-            await storage.updateJobScrapingRequest(requestId, {
-              status: "completed",
-              results,
-              completedAt: new Date()
-            });
-          } else {
-            throw new Error("Failed to fetch results from Apify");
-          }
-        } else if (status === "FAILED") {
-          throw new Error("Apify job scraping failed");
-        }
-      }
-      
-      attempts++;
-    }
-
-    if (!completed) {
-      throw new Error("Scraping timed out");
-    }
+    await storage.updateJobScrapingRequest(requestId, {
+      status: "completed",
+      results,
+      completedAt: new Date()
+    });
 
   } catch (error) {
     console.error("Error processing job scraping:", error);

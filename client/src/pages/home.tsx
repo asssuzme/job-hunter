@@ -20,8 +20,8 @@ export default function Home() {
     queryKey: ['/api/scrape-job', currentRequestId],
     enabled: !!currentRequestId && (scrapingState === 'loading'),
     refetchInterval: (data) => {
-      if (!data?.data) return 2000;
-      const status = (data.data as JobScrapingRequest).status;
+      if (!data) return 2000;
+      const status = (data as JobScrapingRequest).status;
       if (status === 'completed' || status === 'failed') {
         if (status === 'completed') {
           setScrapingState('success');
@@ -54,8 +54,8 @@ export default function Home() {
   };
 
   const handleRetry = () => {
-    if (scrapingRequest?.data?.linkedinUrl) {
-      handleSubmit(scrapingRequest.data.linkedinUrl);
+    if (scrapingRequest?.linkedinUrl) {
+      handleSubmit(scrapingRequest.linkedinUrl);
     }
   };
 
@@ -64,7 +64,7 @@ export default function Home() {
     setScrapingState('idle');
   };
 
-  const results = scrapingRequest?.data?.results as ScrapingResult | null;
+  const results = scrapingRequest?.results as ScrapingResult | null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -125,7 +125,7 @@ export default function Home() {
                 <div>
                   <h3 className="font-medium mb-1">Scraping Failed</h3>
                   <p className="text-sm">
-                    {scrapingRequest?.data?.errorMessage || 
+                    {scrapingRequest?.errorMessage || 
                      "Unable to process the LinkedIn URL. Please check that the URL is valid and the job posting is accessible."}
                   </p>
                 </div>
