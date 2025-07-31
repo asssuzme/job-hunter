@@ -49,6 +49,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Scrape company profile
+  app.post("/api/scrape-company", async (req, res) => {
+    try {
+      const { companyLinkedinUrl } = req.body;
+      
+      if (!companyLinkedinUrl) {
+        return res.status(400).json({ error: "Company LinkedIn URL is required" });
+      }
+
+      console.log("🏢 Scraping company profile:", companyLinkedinUrl);
+      
+      const apiUrl = 'https://api.apify.com/v2/acts/fetchclub~linkedin-company-profiles-scraper/run-sync-get-dataset-items?token=apify_api_4zPr6hJ4tX3HD8Iqkc5WjRx4Q54biX11P0vs';
+      
+      const requestBody = {
+        company_profile_urls: [companyLinkedinUrl]
+      };
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Company scraping API error: ${response.status} - ${errorText}`);
+        return res.status(500).json({ error: "Failed to scrape company profile" });
+      }
+
+      const companyData = await response.json();
+      console.log("Company profile scraped successfully:", companyData);
+
+      // Return the first company profile from the results
+      const profile = companyData[0] || {};
+      
+      res.json({
+        success: true,
+        company: {
+          name: profile.name || profile.companyName,
+          description: profile.description || profile.about,
+          industry: profile.industry,
+          size: profile.size || profile.companySize,
+          headquarters: profile.headquarters || profile.location,
+          website: profile.website,
+          specialties: profile.specialties || [],
+          founded: profile.founded,
+          employees: profile.employees || profile.employeeCount,
+          logo: profile.logo || profile.logoUrl,
+          tagline: profile.tagline,
+          updates: profile.updates || [],
+          linkedinUrl: companyLinkedinUrl
+        }
+      });
+    } catch (error) {
+      console.error("Error scraping company profile:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

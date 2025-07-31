@@ -1,13 +1,43 @@
+import { useState } from "react";
 import { FilteredJobData } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, ExternalLink, User, Briefcase, DollarSign, Mail, CheckCircle, XCircle } from "lucide-react";
+import { CompanyProfileModal } from "./company-profile-modal";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 interface FilteredJobCardProps {
   job: FilteredJobData;
 }
 
 export function FilteredJobCard({ job }: FilteredJobCardProps) {
+  const [showCompanyModal, setShowCompanyModal] = useState(false);
+  const [companyProfile, setCompanyProfile] = useState<any>(null);
+
+  const companyMutation = useMutation({
+    mutationFn: async (companyLinkedinUrl: string) => {
+      const response = await apiRequest('POST', '/api/scrape-company', { companyLinkedinUrl });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.success) {
+        setCompanyProfile(data.company);
+      }
+    },
+  });
+
+  const handleApplyClick = () => {
+    setShowCompanyModal(true);
+    if (job.companyLinkedinUrl && !companyProfile) {
+      companyMutation.mutate(job.companyLinkedinUrl);
+    }
+  };
+
+  const handleProceedToApply = () => {
+    setShowCompanyModal(false);
+    window.open(`mailto:${job.jobPosterEmail}`, '_blank');
+  };
   const handleViewJob = () => {
     window.open(job.link, "_blank", "noopener,noreferrer");
   };
@@ -150,7 +180,7 @@ export function FilteredJobCard({ job }: FilteredJobCardProps) {
                     <Button 
                       size="sm" 
                       className="bg-green-600 hover:bg-green-700 text-white"
-                      onClick={() => window.open(`mailto:${job.jobPosterEmail}`, '_blank')}
+                      onClick={handleApplyClick}
                     >
                       <CheckCircle className="h-3 w-3 mr-1" />
                       Apply
@@ -161,7 +191,7 @@ export function FilteredJobCard({ job }: FilteredJobCardProps) {
                       size="sm" 
                       variant="outline"
                       className="border-yellow-600 text-yellow-700 hover:bg-yellow-50"
-                      onClick={() => window.open(`mailto:${job.jobPosterEmail}`, '_blank')}
+                      onClick={handleApplyClick}
                     >
                       <Mail className="h-3 w-3 mr-1" />
                       Risky Apply
@@ -214,6 +244,16 @@ export function FilteredJobCard({ job }: FilteredJobCardProps) {
           View Job
         </Button>
       </div>
+      
+      {/* Company Profile Modal */}
+      <CompanyProfileModal 
+        isOpen={showCompanyModal}
+        onClose={() => setShowCompanyModal(false)}
+        companyProfile={companyProfile}
+        isLoading={companyMutation.isPending}
+        jobEmail={job.jobPosterEmail}
+        onProceedToApply={handleProceedToApply}
+      />
     </div>
   );
 }
