@@ -139,19 +139,37 @@ async function enrichJobsWithProfiles(jobs: FilteredJobData[]): Promise<Filtered
     }
 
     const profileResults = await response.json();
-    console.log("Profile scraper results:", JSON.stringify(profileResults, null, 2));
+    console.log("Profile scraper raw results count:", profileResults.length);
+    console.log("Profile scraper first result sample:", JSON.stringify(profileResults[0], null, 2));
     
     // Create a map of profile URL to email
     const profileEmailMap = new Map<string, string>();
     
     if (Array.isArray(profileResults)) {
-      profileResults.forEach((profile: any) => {
-        console.log("Processing profile:", profile);
-        if (profile.profileUrl && profile.email) {
-          profileEmailMap.set(profile.profileUrl, profile.email);
-          console.log(`Mapped ${profile.profileUrl} to ${profile.email}`);
+      profileResults.forEach((profile: any, index: number) => {
+        console.log(`\nProcessing profile ${index + 1}:`);
+        console.log("Available fields:", Object.keys(profile));
+        
+        // Try multiple possible field names for the profile URL
+        const profileUrl = profile.profileUrl || 
+                          profile.url || 
+                          profile.linkedinUrl || 
+                          profile.linkedin_url ||
+                          profile.publicIdentifier && `https://www.linkedin.com/in/${profile.publicIdentifier}`;
+        
+        // The email field from the screenshots shows it's directly available as "email"
+        const email = profile.email || profile.Email || null;
+        
+        console.log("Extracted profileUrl:", profileUrl);
+        console.log("Extracted email:", email);
+        
+        if (profileUrl && email && email !== "null" && email !== null) {
+          // Normalize the URL to handle different formats
+          const normalizedUrl = profileUrl.trim();
+          profileEmailMap.set(normalizedUrl, email);
+          console.log(`✓ Successfully mapped ${normalizedUrl} to ${email}`);
         } else {
-          console.log("Profile missing URL or email:", profile);
+          console.log(`✗ Could not map profile - URL: ${profileUrl}, Email: ${email}`);
         }
       });
     } else {
@@ -162,9 +180,37 @@ async function enrichJobsWithProfiles(jobs: FilteredJobData[]): Promise<Filtered
 
     // Enrich jobs with profile data
     const enrichedJobs = jobs.map(job => {
-      const email = job.jobPosterLinkedinUrl ? profileEmailMap.get(job.jobPosterLinkedinUrl) : undefined;
+      let email: string | undefined = undefined;
+      
+      if (job.jobPosterLinkedinUrl) {
+        // Try exact match first
+        email = profileEmailMap.get(job.jobPosterLinkedinUrl);
+        
+        // If no exact match, try normalized versions
+        if (!email) {
+          // Normalize the job poster URL
+          const normalizedJobUrl = job.jobPosterLinkedinUrl.trim().toLowerCase();
+          
+          // Try to find a matching profile URL
+          for (const [profileUrl, profileEmail] of profileEmailMap.entries()) {
+            const normalizedProfileUrl = profileUrl.toLowerCase();
+            
+            // Check if URLs match (with or without trailing slash, http/https)
+            if (normalizedJobUrl === normalizedProfileUrl ||
+                normalizedJobUrl.replace(/\/$/, '') === normalizedProfileUrl.replace(/\/$/, '') ||
+                normalizedJobUrl.replace('https://', '') === normalizedProfileUrl.replace('https://', '') ||
+                normalizedJobUrl.replace('http://', '') === normalizedProfileUrl.replace('http://', '')) {
+              email = profileEmail;
+              console.log(`✓ Found email via normalized match: ${job.jobPosterLinkedinUrl} -> ${profileUrl} -> ${email}`);
+              break;
+            }
+          }
+        }
+      }
+      
       const canApply = !!email;
       console.log(`Job "${job.title}" - Profile: ${job.jobPosterLinkedinUrl} - Email: ${email} - Can Apply: ${canApply}`);
+      
       return {
         ...job,
         jobPosterEmail: email,
