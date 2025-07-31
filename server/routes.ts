@@ -89,7 +89,7 @@ function filterJobs(jobs: JobData[]): FilteredJobData[] {
 
 async function enrichJobsWithProfiles(jobs: FilteredJobData[]): Promise<FilteredJobData[]> {
   // Get jobs that have poster LinkedIn URLs - be very specific about checking
-  const jobsWithProfiles = jobs.filter(job => {
+  const jobsWithProfiles = jobs.filter((job: FilteredJobData) => {
     const hasUrl = job.jobPosterLinkedinUrl && job.jobPosterLinkedinUrl.trim() !== '' && job.jobPosterLinkedinUrl !== 'N/A';
     if (hasUrl) {
       console.log(`Job "${job.title}" has valid poster URL: ${job.jobPosterLinkedinUrl}`);
@@ -139,77 +139,117 @@ async function enrichJobsWithProfiles(jobs: FilteredJobData[]): Promise<Filtered
     }
 
     const profileResults = await response.json();
-    console.log("Profile scraper raw results count:", profileResults.length);
-    console.log("Profile scraper first result sample:", JSON.stringify(profileResults[0], null, 2));
+    console.log("\n🔍 PROFILE SCRAPER RESPONSE ANALYSIS:");
+    console.log("Response type:", typeof profileResults);
+    console.log("Is array:", Array.isArray(profileResults));
+    console.log("Results count:", profileResults.length);
+    
+    // Log the complete structure of the first result
+    if (profileResults.length > 0) {
+      console.log("\n📋 FIRST PROFILE RESULT - COMPLETE STRUCTURE:");
+      console.log(JSON.stringify(profileResults[0], null, 2));
+      
+      // Also log specific fields we're interested in
+      console.log("\n🔑 KEY FIELDS FROM FIRST RESULT:");
+      const firstResult = profileResults[0];
+      console.log("email field:", firstResult.email);
+      console.log("Email field:", firstResult.Email);
+      console.log("profileUrl field:", firstResult.profileUrl);
+      console.log("url field:", firstResult.url);
+      console.log("linkedinUrl field:", firstResult.linkedinUrl);
+      console.log("publicIdentifier field:", firstResult.publicIdentifier);
+    }
     
     // Create a map of profile URL to email
     const profileEmailMap = new Map<string, string>();
     
     if (Array.isArray(profileResults)) {
       profileResults.forEach((profile: any, index: number) => {
-        console.log(`\nProcessing profile ${index + 1}:`);
-        console.log("Available fields:", Object.keys(profile));
+        console.log(`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+        console.log(`Processing profile ${index + 1}/${profileResults.length}:`);
+        console.log("Raw profile data:", JSON.stringify(profile).substring(0, 200) + "...");
         
-        // Try multiple possible field names for the profile URL
-        const profileUrl = profile.profileUrl || 
-                          profile.url || 
-                          profile.linkedinUrl || 
-                          profile.linkedin_url ||
-                          profile.publicIdentifier && `https://www.linkedin.com/in/${profile.publicIdentifier}`;
+        // Check all possible email fields
+        const email = profile.email || 
+                     profile.Email || 
+                     profile.contactInfo?.email || 
+                     profile.publicContactInfo?.email ||
+                     null;
         
-        // The email field from the screenshots shows it's directly available as "email"
-        const email = profile.email || profile.Email || null;
+        console.log("📧 Email extraction:");
+        console.log("  - profile.email:", profile.email);
+        console.log("  - profile.Email:", profile.Email);
+        console.log("  - Final extracted email:", email);
         
-        console.log("Extracted profileUrl:", profileUrl);
-        console.log("Extracted email:", email);
+        // For profile URL, we need to match what we sent
+        // The API might return the URL in a different field
+        const sentUrl = profileUrls[index];
+        console.log("🔗 URL matching:");
+        console.log("  - URL we sent:", sentUrl);
+        console.log("  - profile.profileUrl:", profile.profileUrl);
+        console.log("  - profile.url:", profile.url);
         
-        if (profileUrl && email && email !== "null" && email !== null) {
-          // Normalize the URL to handle different formats
-          const normalizedUrl = profileUrl.trim();
-          profileEmailMap.set(normalizedUrl, email);
-          console.log(`✓ Successfully mapped ${normalizedUrl} to ${email}`);
+        if (email && email !== "null" && email !== null) {
+          // Use the URL we sent as the key since that's what we'll use for matching
+          profileEmailMap.set(sentUrl, email);
+          console.log(`✅ SUCCESSFULLY MAPPED: ${sentUrl} → ${email}`);
         } else {
-          console.log(`✗ Could not map profile - URL: ${profileUrl}, Email: ${email}`);
+          console.log(`❌ NO EMAIL FOUND for ${sentUrl}`);
         }
       });
     } else {
-      console.log("Profile results is not an array:", profileResults);
+      console.log("❌ Profile results is not an array:", typeof profileResults);
     }
 
-    console.log("Profile email map:", Object.fromEntries(profileEmailMap));
+    console.log("\n📊 PROFILE EMAIL MAP SUMMARY:");
+    console.log("Total profiles with emails:", profileEmailMap.size);
+    console.log("Email mappings:", Array.from(profileEmailMap.entries()));
 
     // Enrich jobs with profile data
     const enrichedJobs = jobs.map(job => {
       let email: string | undefined = undefined;
       
       if (job.jobPosterLinkedinUrl) {
+        console.log(`\n🔎 Searching email for job "${job.title}"`);
+        console.log(`  Job poster URL: ${job.jobPosterLinkedinUrl}`);
+        
         // Try exact match first
         email = profileEmailMap.get(job.jobPosterLinkedinUrl);
-        
-        // If no exact match, try normalized versions
-        if (!email) {
+        if (email) {
+          console.log(`  ✅ Found email via exact match: ${email}`);
+        } else {
+          console.log(`  ❌ No exact match found, trying normalized versions...`);
+          
           // Normalize the job poster URL
           const normalizedJobUrl = job.jobPosterLinkedinUrl.trim().toLowerCase();
           
           // Try to find a matching profile URL
-          for (const [profileUrl, profileEmail] of profileEmailMap.entries()) {
+          const entries = Array.from(profileEmailMap.entries());
+          for (const [profileUrl, profileEmail] of entries) {
             const normalizedProfileUrl = profileUrl.toLowerCase();
             
-            // Check if URLs match (with or without trailing slash, http/https)
+            // Check if URLs match (with or without trailing slash, http/https, www)
             if (normalizedJobUrl === normalizedProfileUrl ||
                 normalizedJobUrl.replace(/\/$/, '') === normalizedProfileUrl.replace(/\/$/, '') ||
-                normalizedJobUrl.replace('https://', '') === normalizedProfileUrl.replace('https://', '') ||
-                normalizedJobUrl.replace('http://', '') === normalizedProfileUrl.replace('http://', '')) {
+                normalizedJobUrl.replace('https://', '').replace('http://', '').replace('www.', '') === 
+                normalizedProfileUrl.replace('https://', '').replace('http://', '').replace('www.', '')) {
               email = profileEmail;
-              console.log(`✓ Found email via normalized match: ${job.jobPosterLinkedinUrl} -> ${profileUrl} -> ${email}`);
+              console.log(`  ✅ Found email via normalized match: ${email}`);
+              console.log(`     Job URL: ${job.jobPosterLinkedinUrl}`);
+              console.log(`     Profile URL: ${profileUrl}`);
               break;
             }
           }
+          
+          if (!email) {
+            console.log(`  ❌ No email found after normalization attempts`);
+          }
         }
+      } else {
+        console.log(`\n⚠️ Job "${job.title}" has no poster LinkedIn URL`);
       }
       
       const canApply = !!email;
-      console.log(`Job "${job.title}" - Profile: ${job.jobPosterLinkedinUrl} - Email: ${email} - Can Apply: ${canApply}`);
       
       return {
         ...job,
