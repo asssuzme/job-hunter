@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertJobScrapingRequestSchema, linkedinUrlSchema, type FilteredJobData, type JobData } from "@shared/schema";
 import { z } from "zod";
+import OpenAI from "openai";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Create a new job scraping request
@@ -107,6 +108,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error scraping company profile:", error);
       res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Generate application email using OpenAI
+  app.post("/api/generate-email", async (req, res) => {
+    try {
+      const { 
+        companyData, 
+        jobPosterData, 
+        jobDescription, 
+        jobTitle,
+        recipientEmail 
+      } = req.body;
+
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(500).json({ error: "OpenAI API key not configured" });
+      }
+
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+      // Extract relevant data from company profile
+      const companyInfo = {
+        name: companyData?.name || companyData?.company_name || "the company",
+        about: companyData?.description || companyData?.company_about_us || companyData?.about,
+        industry: companyData?.industry || companyData?.company_industry,
+        twitterDescription: companyData?.company_twitter_description
+      };
+
+      // Extract relevant data from job poster profile
+      const posterInfo = {
+        name: jobPosterData?.name || jobPosterData?.fullName || "Hiring Manager",
+        headline: jobPosterData?.headline || jobPosterData?.Headline,
+        jobTitle: jobPosterData?.jobTitle || jobPosterData?.currentJobTitle,
+        about: jobPosterData?.about || jobPosterData?.summary
+      };
+
+      const prompt = `You are an expert job application email writer. Generate a personalized, professional email application based on the following information:
+
+COMPANY INFORMATION:
+- Company Name: ${companyInfo.name}
+- About: ${companyInfo.about || "Not provided"}
+- Industry: ${companyInfo.industry || "Not provided"}
+- Twitter Description: ${companyInfo.twitterDescription || "Not provided"}
+
+JOB POSTER/RECIPIENT:
+- Name: ${posterInfo.name}
+- Current Role: ${posterInfo.headline || posterInfo.jobTitle || "Not provided"}
+- About: ${posterInfo.about || "Not provided"}
+
+JOB DETAILS:
+- Job Title: ${jobTitle}
+- Job Description: ${jobDescription}
+
+Write a compelling email that:
+1. Addresses the recipient by name (or "Hiring Manager" if name not available)
+2. Shows genuine interest in the company based on the company information
+3. Demonstrates understanding of the role based on the job description
+4. Highlights how the applicant's skills match the requirements
+5. References specific aspects of the company or role to show research
+6. Maintains a professional yet personable tone
+7. Includes a clear call to action
+8. Is concise (around 250-300 words)
+
+Format the email with proper structure including greeting, body paragraphs, and professional closing.`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.7,
+        max_tokens: 800
+      });
+
+      const generatedEmail = response.choices[0].message.content;
+
+      res.json({
+        success: true,
+        email: generatedEmail,
+        recipientEmail: recipientEmail
+      });
+
+    } catch (error) {
+      console.error("Error generating email:", error);
+      res.status(500).json({ error: "Failed to generate email" });
     }
   });
 
@@ -511,7 +595,7 @@ async function processJobScraping(requestId: string) {
       return job;
     });
 
-    const jobsWithPosters = transformedJobs.filter(job => job.jobPosterLinkedinUrl);
+    const jobsWithPosters = transformedJobs.filter((job: any) => job.jobPosterLinkedinUrl);
     console.log(`Found ${jobsWithPosters.length} jobs with job poster profile URLs out of ${transformedJobs.length} total jobs`);
 
     const results = {

@@ -14,18 +14,52 @@ interface FilteredJobCardProps {
 export function FilteredJobCard({ job }: FilteredJobCardProps) {
   const [showCompanyModal, setShowCompanyModal] = useState(false);
   const [companyProfile, setCompanyProfile] = useState<any>(null);
+  const [generatedEmail, setGeneratedEmail] = useState<string>("");
+  const [isGeneratingEmail, setIsGeneratingEmail] = useState(false);
 
   const companyMutation = useMutation({
     mutationFn: async (companyLinkedinUrl: string) => {
       const response = await apiRequest('POST', '/api/scrape-company', { companyLinkedinUrl });
       return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       if (data.success) {
         setCompanyProfile(data.company);
+        // After company data is loaded, generate the email
+        await generateApplicationEmail(data.company);
       }
     },
   });
+
+  const generateApplicationEmail = async (companyData: any) => {
+    setIsGeneratingEmail(true);
+    try {
+      // For now, we'll use placeholder job poster data since we don't have it stored
+      // In a full implementation, this would come from the enriched job data
+      const jobPosterData = {
+        name: job.jobPosterName,
+        headline: "Professional at " + job.companyName,
+        about: ""
+      };
+
+      const response = await apiRequest('POST', '/api/generate-email', {
+        companyData,
+        jobPosterData,
+        jobDescription: job.requirement || `${job.title} position at ${job.companyName}`,
+        jobTitle: job.title,
+        recipientEmail: job.jobPosterEmail
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setGeneratedEmail(data.email);
+      }
+    } catch (error) {
+      console.error("Error generating email:", error);
+    } finally {
+      setIsGeneratingEmail(false);
+    }
+  };
 
   const handleApplyClick = () => {
     setShowCompanyModal(true);
@@ -35,8 +69,10 @@ export function FilteredJobCard({ job }: FilteredJobCardProps) {
   };
 
   const handleProceedToApply = () => {
+    const subject = encodeURIComponent(`Application for ${job.title} position`);
+    const body = encodeURIComponent(generatedEmail);
+    window.open(`mailto:${job.jobPosterEmail}?subject=${subject}&body=${body}`, '_blank');
     setShowCompanyModal(false);
-    window.open(`mailto:${job.jobPosterEmail}`, '_blank');
   };
   const handleViewJob = () => {
     window.open(job.link, "_blank", "noopener,noreferrer");
@@ -253,6 +289,8 @@ export function FilteredJobCard({ job }: FilteredJobCardProps) {
         isLoading={companyMutation.isPending}
         jobEmail={job.jobPosterEmail}
         onProceedToApply={handleProceedToApply}
+        generatedEmail={generatedEmail}
+        isGeneratingEmail={isGeneratingEmail}
       />
     </div>
   );

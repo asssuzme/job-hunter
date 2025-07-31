@@ -27,6 +27,8 @@ interface CompanyProfileModalProps {
   isLoading: boolean;
   jobEmail?: string;
   onProceedToApply?: () => void;
+  generatedEmail?: string;
+  isGeneratingEmail?: boolean;
 }
 
 export function CompanyProfileModal({ 
@@ -35,7 +37,9 @@ export function CompanyProfileModal({
   companyProfile, 
   isLoading, 
   jobEmail,
-  onProceedToApply 
+  onProceedToApply,
+  generatedEmail,
+  isGeneratingEmail 
 }: CompanyProfileModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -163,8 +167,38 @@ export function CompanyProfileModal({
                 )}
               </div>
 
+              {/* Generated Email Section */}
+              {(generatedEmail || isGeneratingEmail) && (
+                <div className="space-y-4 pt-4 border-t">
+                  <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Generated Application Email</h3>
+                  {isGeneratingEmail ? (
+                    <div className="space-y-3">
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-20 w-full" />
+                      <Skeleton className="h-4 w-5/6" />
+                    </div>
+                  ) : (
+                    <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                      <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans">
+                        {generatedEmail}
+                      </pre>
+                      <div className="flex justify-end space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigator.clipboard.writeText(generatedEmail || "")}
+                        >
+                          Copy Email
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Apply Action */}
-              {jobEmail && onProceedToApply && (
+              {jobEmail && onProceedToApply && generatedEmail && (
                 <div className="flex items-center justify-between pt-4 border-t bg-green-50 -mx-6 px-6 py-4 -mb-6">
                   <div>
                     <p className="text-sm font-medium text-gray-700">Ready to apply?</p>
@@ -173,9 +207,10 @@ export function CompanyProfileModal({
                   <Button 
                     className="bg-green-600 hover:bg-green-700"
                     onClick={onProceedToApply}
+                    disabled={!generatedEmail || isGeneratingEmail}
                   >
                     <Mail className="h-4 w-4 mr-1" />
-                    Proceed to Apply
+                    Send Application
                   </Button>
                 </div>
               )}
