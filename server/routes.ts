@@ -88,13 +88,24 @@ function filterJobs(jobs: JobData[]): FilteredJobData[] {
 }
 
 async function enrichJobsWithProfiles(jobs: FilteredJobData[]): Promise<FilteredJobData[]> {
-  // Get jobs that have poster LinkedIn URLs
-  const jobsWithProfiles = jobs.filter(job => job.jobPosterLinkedinUrl);
+  // Get jobs that have poster LinkedIn URLs - be very specific about checking
+  const jobsWithProfiles = jobs.filter(job => {
+    const hasUrl = job.jobPosterLinkedinUrl && job.jobPosterLinkedinUrl.trim() !== '' && job.jobPosterLinkedinUrl !== 'N/A';
+    if (hasUrl) {
+      console.log(`Job "${job.title}" has valid poster URL: ${job.jobPosterLinkedinUrl}`);
+    }
+    return hasUrl;
+  });
   
-  console.log(`Found ${jobsWithProfiles.length} jobs with LinkedIn profile URLs out of ${jobs.length} total jobs`);
+  console.log(`FILTERING RESULTS: Found ${jobsWithProfiles.length} jobs with valid LinkedIn profile URLs out of ${jobs.length} total filtered jobs`);
   
   if (jobsWithProfiles.length === 0) {
-    console.log("No jobs with LinkedIn profile URLs found, marking all as cannot apply");
+    console.log("❌ NO JOBS WITH LINKEDIN PROFILE URLs FOUND - All jobs will be marked as 'Cannot Apply'");
+    console.log("Jobs without profile URLs:", jobs.map(job => ({
+      title: job.title,
+      posterName: job.jobPosterName,
+      posterUrl: job.jobPosterLinkedinUrl
+    })));
     return jobs.map(job => ({ ...job, canApply: false }));
   }
 
@@ -205,9 +216,33 @@ async function processJobScraping(requestId: string) {
 
     const rawResults = await response.json();
     console.log("Raw job scraping results sample:", JSON.stringify(rawResults.slice(0, 2), null, 2));
+    console.log("Total jobs scraped:", rawResults.length);
     
     // Transform the results to match our schema
-    const transformedJobs = rawResults.map((item: any) => {
+    const transformedJobs = rawResults.map((item: any, index: number) => {
+      // Check all possible field names for job poster profile URL
+      const jobPosterProfileUrl = item.jobPosterProfileUrl || 
+                                 item.posterUrl || 
+                                 item.recruiterUrl || 
+                                 item.hiringManagerUrl || 
+                                 item.jobPosterLinkedinUrl ||
+                                 item.posterLinkedinUrl ||
+                                 item.recruiterLinkedinUrl ||
+                                 item.hiringManagerLinkedinUrl;
+
+      const jobPosterName = item.jobPosterName || 
+                           item.posterName || 
+                           item.recruiterName || 
+                           item.hiringManagerName;
+
+      console.log(`Job ${index + 1} "${item.title || 'N/A'}":`, {
+        hasJobPosterProfileUrl: !!jobPosterProfileUrl,
+        jobPosterProfileUrl: jobPosterProfileUrl,
+        hasJobPosterName: !!jobPosterName,
+        jobPosterName: jobPosterName,
+        availableFields: Object.keys(item)
+      });
+
       const job = {
         title: item.title || "N/A",
         company: {
@@ -226,18 +261,17 @@ async function processJobScraping(requestId: string) {
         originalUrl: item.url || item.jobUrl || request.linkedinUrl,
         companyWebsite: item.companyWebsite || item.website,
         companyLinkedinUrl: item.companyLinkedinUrl || item.companyUrl,
-        jobPosterName: item.jobPosterName || item.posterName || item.recruiterName || item.hiringManagerName,
-        jobPosterLinkedinUrl: item.jobPosterLinkedinUrl || item.posterUrl || item.recruiterUrl || item.hiringManagerUrl || item.jobPosterProfileUrl,
+        jobPosterName: jobPosterName,
+        jobPosterLinkedinUrl: jobPosterProfileUrl,
         requirement: item.requirement || item.requirements,
         salaryInfo: item.salaryInfo || item.salary
       };
       
-      if (job.jobPosterName || job.jobPosterLinkedinUrl) {
-        console.log(`Job "${job.title}" has poster info - Name: ${job.jobPosterName}, URL: ${job.jobPosterLinkedinUrl}`);
-      }
-      
       return job;
     });
+
+    const jobsWithPosters = transformedJobs.filter(job => job.jobPosterLinkedinUrl);
+    console.log(`Found ${jobsWithPosters.length} jobs with job poster profile URLs out of ${transformedJobs.length} total jobs`);
 
     const results = {
       jobs: transformedJobs,
