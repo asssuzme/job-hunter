@@ -117,30 +117,68 @@ export function FilteredJobCard({ job }: FilteredJobCardProps) {
             )}
           </div>
           {job.jobPosterEmail && (
-            <div className="flex items-center space-x-2 pt-2 border-t border-gray-200">
-              <Mail className="h-4 w-4 text-green-600" />
-              <span className="text-sm font-medium text-gray-700">Email:</span>
-              <a 
-                href={`mailto:${job.jobPosterEmail}`}
-                className="text-sm text-green-600 hover:text-green-500 transition-colors"
-              >
-                {job.jobPosterEmail}
-              </a>
-              {job.emailVerificationStatus && (
-                <Badge 
-                  variant="secondary" 
-                  className={`text-xs ${
-                    job.emailVerificationStatus === 'valid' 
-                      ? 'bg-green-100 text-green-700' 
-                      : job.emailVerificationStatus === 'catch-all' 
-                      ? 'bg-yellow-100 text-yellow-700'
-                      : job.emailVerificationStatus === 'error'
-                      ? 'bg-red-100 text-red-700'
-                      : 'bg-gray-100 text-gray-700'
-                  }`}
+            <div className="space-y-2 pt-2 border-t border-gray-200">
+              <div className="flex items-center space-x-2">
+                <Mail className="h-4 w-4 text-green-600" />
+                <span className="text-sm font-medium text-gray-700">Email:</span>
+                <a 
+                  href={`mailto:${job.jobPosterEmail}`}
+                  className="text-sm text-green-600 hover:text-green-500 transition-colors"
                 >
-                  {job.emailVerificationStatus}
-                </Badge>
+                  {job.jobPosterEmail}
+                </a>
+                {job.emailVerificationStatus && (
+                  <Badge 
+                    variant="secondary" 
+                    className={`text-xs ${
+                      job.emailVerificationStatus === 'valid' 
+                        ? 'bg-green-100 text-green-700' 
+                        : job.emailVerificationStatus === 'catch-all' 
+                        ? 'bg-yellow-100 text-yellow-700'
+                        : job.emailVerificationStatus === 'error'
+                        ? 'bg-red-100 text-red-700'
+                        : 'bg-gray-100 text-gray-700'
+                    }`}
+                  >
+                    {job.emailVerificationStatus}
+                  </Badge>
+                )}
+              </div>
+              {job.emailVerificationStatus && (
+                <div className="flex items-center space-x-2">
+                  {job.emailVerificationStatus === 'valid' && (
+                    <Button 
+                      size="sm" 
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                      onClick={() => window.open(`mailto:${job.jobPosterEmail}`, '_blank')}
+                    >
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Apply
+                    </Button>
+                  )}
+                  {job.emailVerificationStatus === 'catch-all' && (
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="border-yellow-600 text-yellow-700 hover:bg-yellow-50"
+                      onClick={() => window.open(`mailto:${job.jobPosterEmail}`, '_blank')}
+                    >
+                      <Mail className="h-3 w-3 mr-1" />
+                      Risky Apply
+                    </Button>
+                  )}
+                  {job.emailVerificationStatus === 'error' && (
+                    <Button 
+                      size="sm" 
+                      variant="secondary"
+                      className="bg-gray-200 text-gray-600 cursor-not-allowed"
+                      disabled
+                    >
+                      <XCircle className="h-3 w-3 mr-1" />
+                      Not Worth
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
           )}
