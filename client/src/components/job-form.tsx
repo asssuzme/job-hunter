@@ -30,10 +30,10 @@ export function JobForm({ onSubmit, isLoading }: JobFormProps) {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+    <div className="glass rounded-2xl shadow-xl p-8 mb-8 animate-fade-in">
       <div className="mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-2">Extract Job Data</h2>
-        <p className="text-sm text-gray-600">Enter a LinkedIn job URL to scrape comprehensive job and company information</p>
+        <h2 className="text-2xl font-bold gradient-text mb-2">Extract Job Data</h2>
+        <p className="text-gray-600">Enter a LinkedIn job URL to scrape comprehensive job and company information</p>
       </div>
       
       <Form {...form}>
@@ -72,9 +72,9 @@ export function JobForm({ onSubmit, isLoading }: JobFormProps) {
               <Button 
                 type="submit" 
                 disabled={isLoading}
-                className="bg-blue-600 hover:bg-blue-700 px-6 py-3 h-auto"
+                className="btn-gradient px-8 py-3 h-auto text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
               >
-                <Search className="h-4 w-4 mr-2" />
+                <Search className="h-5 w-5 mr-2" />
                 {isLoading ? "Scraping..." : "Scrape Job"}
               </Button>
             </div>

@@ -5,25 +5,38 @@ import { Search, Bot, Mail, Shield } from "lucide-react";
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-16">
+    <div className="min-h-screen overflow-hidden relative">
+      {/* Animated background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-400 rounded-full opacity-10 blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-400 rounded-full opacity-10 blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+      </div>
+      
+      <div className="container mx-auto px-4 py-16 relative z-10">
         {/* Header */}
-        <div className="text-center mb-16">
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
-            LinkedIn Job Scraper
+        <div className="text-center mb-20 animate-fade-in">
+          <div className="inline-flex items-center justify-center p-2 bg-primary/10 rounded-full mb-6">
+            <span className="px-4 py-1 text-sm font-medium text-primary bg-white rounded-full shadow-sm">
+              Powered by AI
+            </span>
+          </div>
+          <h1 className="text-6xl md:text-7xl font-bold mb-6">
+            <span className="gradient-text">LinkedIn Job</span>
+            <br />
+            <span className="text-foreground">Scraper</span>
           </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+          <p className="text-xl text-muted-foreground mb-10 max-w-3xl mx-auto leading-relaxed">
             Automate your job search with AI-powered LinkedIn scraping, 
             intelligent filtering, and personalized application emails.
           </p>
           <div className="flex gap-4 justify-center">
             <Link href="/register">
-              <Button size="lg" className="px-8 py-3">
+              <Button size="lg" className="btn-gradient px-10 py-6 text-lg rounded-xl hover:-translate-y-0.5 transition-all duration-200">
                 Get Started Free
               </Button>
             </Link>
             <Link href="/login">
-              <Button variant="outline" size="lg" className="px-8 py-3">
+              <Button variant="outline" size="lg" className="px-10 py-6 text-lg rounded-xl border-2 hover:border-primary hover:bg-primary/5 transition-all duration-200">
                 Sign In
               </Button>
             </Link>
@@ -31,61 +44,61 @@ export default function Landing() {
         </div>
 
         {/* Features */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-          <Card>
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
+          <Card className="card-hover border-0 shadow-lg animate-fade-in" style={{animationDelay: '0.1s'}}>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Search className="h-5 w-5 text-blue-600" />
-                Smart Scraping
-              </CardTitle>
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                <Search className="h-6 w-6 text-blue-600" />
+              </div>
+              <CardTitle className="text-lg">Smart Scraping</CardTitle>
             </CardHeader>
             <CardContent>
-              <CardDescription>
+              <CardDescription className="text-base">
                 Extract comprehensive job data from LinkedIn including company info, 
                 requirements, and contact details.
               </CardDescription>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="card-hover border-0 shadow-lg animate-fade-in" style={{animationDelay: '0.2s'}}>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bot className="h-5 w-5 text-green-600" />
-                AI Filtering
-              </CardTitle>
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                <Bot className="h-6 w-6 text-green-600" />
+              </div>
+              <CardTitle className="text-lg">AI Filtering</CardTitle>
             </CardHeader>
             <CardContent>
-              <CardDescription>
+              <CardDescription className="text-base">
                 Intelligent filtering to identify quality opportunities with 
                 verified email addresses and application pathways.
               </CardDescription>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="card-hover border-0 shadow-lg animate-fade-in" style={{animationDelay: '0.3s'}}>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Mail className="h-5 w-5 text-purple-600" />
-                Email Generation
-              </CardTitle>
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                <Mail className="h-6 w-6 text-purple-600" />
+              </div>
+              <CardTitle className="text-lg">Email Generation</CardTitle>
             </CardHeader>
             <CardContent>
-              <CardDescription>
+              <CardDescription className="text-base">
                 AI-powered personalized emails using your resume, company data, 
                 and job requirements for higher response rates.
               </CardDescription>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="card-hover border-0 shadow-lg animate-fade-in" style={{animationDelay: '0.4s'}}>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-orange-600" />
-                Secure & Private
-              </CardTitle>
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                <Shield className="h-6 w-6 text-orange-600" />
+              </div>
+              <CardTitle className="text-lg">Secure & Private</CardTitle>
             </CardHeader>
             <CardContent>
-              <CardDescription>
+              <CardDescription className="text-base">
                 Your data is protected with industry-standard security. 
                 Resume content stays private and is never shared.
               </CardDescription>

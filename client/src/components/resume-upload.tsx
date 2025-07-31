@@ -91,20 +91,22 @@ export function ResumeUpload({ onResumeTextChange }: ResumeUploadProps) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-5 w-5" />
+    <Card className="glass shadow-xl border-0 animate-fade-in">
+      <CardHeader className="pb-5">
+        <CardTitle className="flex items-center gap-3 text-xl">
+          <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg shadow-md">
+            <FileText className="h-5 w-5 text-white" />
+          </div>
           Resume Upload (Optional)
         </CardTitle>
-        <CardDescription>
-          Upload your resume to generate more personalized application emails
+        <CardDescription className="text-base">
+          Upload your resume to generate AI-powered personalized application emails
         </CardDescription>
       </CardHeader>
       <CardContent>
         {!fileName ? (
-          <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-gray-400 transition-colors">
-            <Upload className="h-10 w-10 text-gray-400 mb-3" />
+          <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl p-8 hover:border-primary hover:bg-primary/5 transition-all duration-300 group">
+            <Upload className="h-12 w-12 text-gray-400 mb-4 group-hover:text-primary transition-colors" />
             <label htmlFor="resume-upload" className="cursor-pointer">
               <span className="text-sm text-gray-600">
                 Click to upload or drag and drop
@@ -124,7 +126,7 @@ export function ResumeUpload({ onResumeTextChange }: ResumeUploadProps) {
             <Button
               variant="outline"
               size="sm"
-              className="mt-4"
+              className="mt-4 hover:shadow-md hover:border-primary transition-all duration-300"
               onClick={() => document.getElementById('resume-upload')?.click()}
               disabled={isProcessing}
             >
@@ -133,12 +135,14 @@ export function ResumeUpload({ onResumeTextChange }: ResumeUploadProps) {
             </Button>
           </div>
         ) : (
-          <div className="flex items-center justify-between bg-gray-50 rounded-lg p-4">
-            <div className="flex items-center gap-3">
-              <FileText className="h-8 w-8 text-green-600" />
+          <div className="flex items-center justify-between bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-5 border border-green-100 animate-fade-in">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-md">
+                <FileText className="h-6 w-6 text-white" />
+              </div>
               <div>
-                <p className="text-sm font-medium text-gray-900">{fileName}</p>
-                <p className="text-xs text-gray-500">Resume uploaded successfully</p>
+                <p className="text-base font-semibold text-foreground">{fileName}</p>
+                <p className="text-sm text-green-600">Resume uploaded successfully</p>
               </div>
             </div>
             <Button

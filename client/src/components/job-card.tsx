@@ -13,7 +13,7 @@ export function JobCard({ job }: JobCardProps) {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow p-6">
+    <div className="glass rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 card-hover animate-fade-in">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-start space-x-4">
           {job.company.logo && (
@@ -24,15 +24,15 @@ export function JobCard({ job }: JobCardProps) {
             />
           )}
           {!job.company.logo && (
-            <div className="w-12 h-12 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center">
-              <Briefcase className="h-6 w-6 text-gray-400" />
+            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-200 flex items-center justify-center shadow-sm">
+              <Briefcase className="h-6 w-6 text-gray-500" />
             </div>
           )}
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors cursor-pointer">
+            <h3 className="text-xl font-bold text-foreground hover:text-primary transition-colors cursor-pointer">
               {job.title}
             </h3>
-            <p className="text-sm font-medium text-gray-700">{job.company.name}</p>
+            <p className="text-base font-medium text-muted-foreground">{job.company.name}</p>
             <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
               <span className="flex items-center">
                 <MapPin className="h-3 w-3 mr-1" />
@@ -51,7 +51,7 @@ export function JobCard({ job }: JobCardProps) {
         </div>
         <div className="flex items-center space-x-2">
           {job.applicants && (
-            <Badge variant="secondary" className="bg-green-100 text-green-800">
+            <Badge variant="secondary" className="bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 font-semibold shadow-sm">
               {job.applicants}
             </Badge>
           )}
@@ -108,21 +108,21 @@ export function JobCard({ job }: JobCardProps) {
         </div>
       </div>
       
-      <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-4">
+      <div className="flex items-center justify-between pt-4 border-t border-gray-200/50 mt-4">
         <Button 
           variant="link" 
           onClick={handleViewOriginal}
-          className="text-blue-600 hover:text-blue-500 p-0 h-auto"
+          className="text-primary hover:text-primary/80 p-0 h-auto font-medium"
         >
           <ExternalLink className="h-4 w-4 mr-1" />
           View on LinkedIn
         </Button>
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="hover:shadow-md transition-all duration-300">
             <Share className="h-4 w-4 mr-1" />
             Share
           </Button>
-          <Button size="sm">
+          <Button size="sm" className="btn-gradient shadow-md hover:shadow-lg transition-all duration-300">
             <Eye className="h-4 w-4 mr-1" />
             View Details
           </Button>

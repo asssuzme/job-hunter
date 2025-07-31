@@ -97,11 +97,17 @@ export default function Home() {
   const enrichedResults = scrapingRequest?.enrichedResults as EnrichedResult | null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <Navbar />
 
+      {/* Hero Background */}
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-3xl"></div>
+      </div>
+
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
         {/* Resume Upload Section */}
         <div className="mb-8">
           <ResumeUpload onResumeTextChange={setResumeText} />
@@ -114,10 +120,12 @@ export default function Home() {
 
         {/* Loading State */}
         {scrapingState === 'loading' && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-            <div className="flex items-center justify-center space-x-3 py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-              <span className="text-gray-600">
+          <div className="glass rounded-2xl shadow-xl p-8 mb-8 animate-fade-in">
+            <div className="flex items-center justify-center space-x-4 py-8">
+              <div className="pulse-ring">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+              <span className="text-lg font-medium text-foreground">
                 {scrapingRequest?.status === 'enriching' 
                   ? 'Enriching job posts with contact information...' 
                   : scrapingRequest?.status === 'filtering'
@@ -125,11 +133,11 @@ export default function Home() {
                   : 'Scraping job data from LinkedIn...'}
               </span>
             </div>
-            <div className="mt-4">
-              <div className="bg-gray-200 rounded-full h-2">
-                <div className="bg-blue-600 h-2 rounded-full animate-pulse w-3/5"></div>
+            <div className="mt-6">
+              <div className="bg-gray-200/50 rounded-full h-3 overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full animate-pulse" style={{ width: '60%' }}></div>
               </div>
-              <p className="text-sm text-gray-500 mt-2">This may take 10-30 seconds depending on the job listing size</p>
+              <p className="text-sm text-muted-foreground mt-3 text-center">This may take 10-30 seconds depending on the job listing size</p>
             </div>
             <div className="mt-4 flex justify-center">
               <Button 
@@ -147,8 +155,8 @@ export default function Home() {
 
         {/* Error State */}
         {scrapingState === 'error' && (
-          <Alert className="mb-8 border-red-200 bg-red-50">
-            <AlertTriangle className="h-4 w-4 text-red-600" />
+          <Alert className="mb-8 border-2 border-red-200 bg-red-50/50 glass animate-fade-in">
+            <AlertTriangle className="h-5 w-5 text-red-600" />
             <AlertDescription className="text-red-700">
               <div className="flex items-start justify-between">
                 <div>
@@ -162,7 +170,7 @@ export default function Home() {
                   variant="outline" 
                   size="sm" 
                   onClick={handleRetry}
-                  className="ml-4 text-red-600 border-red-200 hover:bg-red-50"
+                  className="ml-4 text-red-600 border-red-200 hover:bg-red-50 hover:shadow-md transition-all duration-300"
                 >
                   Try Again
                 </Button>
@@ -173,8 +181,8 @@ export default function Home() {
 
         {/* Cancelled State */}
         {scrapingState === 'cancelled' && (
-          <Alert className="mb-8 border-yellow-200 bg-yellow-50">
-            <XCircle className="h-4 w-4 text-yellow-600" />
+          <Alert className="mb-8 border-2 border-yellow-200 bg-yellow-50/50 glass animate-fade-in">
+            <XCircle className="h-5 w-5 text-yellow-600" />
             <AlertDescription className="text-yellow-700">
               <div className="flex items-start justify-between">
                 <div>
@@ -200,14 +208,16 @@ export default function Home() {
         {scrapingState === 'success' && results && (
           <div className="space-y-6">
             {/* Results Header */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="glass rounded-2xl shadow-xl p-8 animate-fade-in">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900">
+                  <h2 className="text-2xl font-bold gradient-text mb-1">
                     Processing Complete
                   </h2>
-                  <p className="text-sm text-gray-500">
-                    Scraped: {results.totalCount} | Filtered: {filteredResults?.totalCount || 0} | Can Apply: {enrichedResults?.canApplyCount || 0} jobs
+                  <p className="text-base text-muted-foreground">
+                    Scraped: <span className="font-semibold text-foreground">{results.totalCount}</span> | 
+                    Filtered: <span className="font-semibold text-foreground">{filteredResults?.totalCount || 0}</span> | 
+                    Can Apply: <span className="font-semibold text-green-600">{enrichedResults?.canApplyCount || 0}</span> jobs
                   </p>
                 </div>
                 <div className="flex items-center space-x-3">

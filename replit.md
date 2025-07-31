@@ -2,21 +2,36 @@
 
 ## Overview
 
-A full-stack web application that extracts comprehensive job data from LinkedIn job postings. Users submit LinkedIn job URLs through a modern React interface, and the system scrapes detailed information including job details, company information, and posting metadata. The application uses a PostgreSQL database with Drizzle ORM for data persistence and provides real-time status updates during the scraping process. Supports resume upload functionality for both text and PDF files with automatic text extraction.
+A sophisticated web service that leverages Apify API to scrape, filter, and enrich LinkedIn job data with advanced contact information extraction and AI-powered email generation capabilities. Features Google OAuth authentication for seamless user access and a modern, visually appealing interface with glassmorphism effects, gradient designs, and smooth animations. Supports resume upload functionality for both text and PDF files with automatic text extraction.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+
+## Recent Changes (August 1, 2025)
+
+### UI/UX Enhancements
+- **Modern Design System**: Implemented glassmorphism effects across all cards and containers
+- **Color Scheme**: Added gradient designs with primary/secondary color combinations
+- **Typography**: Enhanced font weights and sizes for better readability
+- **Animations**: Added fade-in animations, hover effects, and smooth transitions
+- **Button Styles**: Created gradient buttons with shadow effects and hover states
+- **Form Components**: Improved input fields with icons and better visual hierarchy
+- **Status Indicators**: Enhanced loading states with pulse rings and animated progress bars
+- **Card Components**: Redesigned job cards and filtered job cards with modern styling
+- **Resume Upload**: Improved visual feedback with gradient backgrounds and icon styling
+- **Alert States**: Enhanced error, warning, and success states with better visual design
 
 ## System Architecture
 
 ### Frontend Architecture
 - **Framework**: React 18 with TypeScript using Vite as the build tool
 - **UI Components**: Shadcn/ui component library with Radix UI primitives
-- **Styling**: Tailwind CSS with CSS variables for theming support
+- **Styling**: Tailwind CSS with custom glassmorphism effects, gradient designs, and animation utilities
 - **State Management**: TanStack Query (React Query) for server state management
 - **Routing**: Wouter for lightweight client-side routing
 - **Forms**: React Hook Form with Zod validation for type-safe form handling
+- **Design Features**: Modern UI with gradient buttons, glassmorphic cards, animated elements, and enhanced visual feedback
 
 ### Backend Architecture
 - **Runtime**: Node.js with Express.js framework
@@ -49,3 +64,5 @@ Preferred communication style: Simple, everyday language.
 - **Validation**: Zod for runtime type checking and schema validation across client and server
 - **Styling**: Tailwind CSS for utility-first styling with custom design system variables
 - **Development**: Replit-specific tooling for development environment integration
+- **Authentication**: Google OAuth 2.0 for secure user authentication with Gmail permissions
+- **APIs**: Apify for LinkedIn job scraping and email verification, OpenAI for personalized email generation

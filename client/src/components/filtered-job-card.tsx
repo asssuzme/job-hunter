@@ -98,7 +98,7 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow p-6">
+    <div className="glass rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 card-hover animate-fade-in">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-start space-x-4">
           {job.companyLogo && (
@@ -109,8 +109,8 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
             />
           )}
           {!job.companyLogo && (
-            <div className="w-12 h-12 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center">
-              <Briefcase className="h-6 w-6 text-gray-400" />
+            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-200 flex items-center justify-center shadow-sm">
+              <Briefcase className="h-6 w-6 text-gray-500" />
             </div>
           )}
           <div className="flex-1">
@@ -142,12 +142,12 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
         </div>
         <div className="flex items-center space-x-2">
           {job.canApply ? (
-            <Badge variant="secondary" className="bg-green-100 text-green-800">
+            <Badge variant="secondary" className="bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 font-semibold shadow-sm">
               <CheckCircle className="h-3 w-3 mr-1" />
               Can Apply
             </Badge>
           ) : (
-            <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+            <Badge variant="secondary" className="bg-gradient-to-r from-orange-100 to-amber-100 text-orange-800 font-semibold shadow-sm">
               <XCircle className="h-3 w-3 mr-1" />
               Cannot Apply
             </Badge>
@@ -164,7 +164,7 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
       )}
       
       {job.jobPosterName && (
-        <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+        <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-2">
               <User className="h-4 w-4 text-gray-500" />
@@ -256,13 +256,13 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
         </div>
       )}
       
-      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+      <div className="flex items-center justify-between pt-4 border-t border-gray-200/50">
         <div className="flex items-center space-x-3 text-sm">
           <Button 
             variant="outline" 
             size="sm"
             onClick={handleViewCompany}
-            className="text-gray-600 hover:text-gray-700"
+            className="hover:shadow-md transition-all duration-300"
           >
             <Briefcase className="h-3 w-3 mr-1" />
             Company
@@ -271,7 +271,7 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
             variant="outline" 
             size="sm"
             onClick={handleViewCompanyLinkedIn}
-            className="text-blue-600 hover:text-blue-500"
+            className="text-primary hover:text-primary/80 hover:shadow-md transition-all duration-300"
           >
             LinkedIn
           </Button>
@@ -279,7 +279,7 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
         <Button 
           onClick={handleViewJob}
           size="sm"
-          className="bg-blue-600 hover:bg-blue-700"
+          className="btn-gradient shadow-md hover:shadow-lg transition-all duration-300"
         >
           <ExternalLink className="h-4 w-4 mr-1" />
           View Job
