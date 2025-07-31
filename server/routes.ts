@@ -49,21 +49,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastName: validatedData.lastName,
       });
 
-      // Log the user in automatically
-      req.login(user, (err) => {
-        if (err) {
-          return res.status(500).json({ message: "Login failed after registration" });
-        }
-        res.json({ 
-          success: true, 
-          user: { 
-            id: user.id, 
-            username: user.username, 
-            email: user.email,
-            firstName: user.firstName,
-            lastName: user.lastName 
-          } 
-        });
+      // Return success without automatic login
+      res.json({ 
+        success: true, 
+        message: "Account created successfully! Please sign in with your credentials.",
+        user: { 
+          id: user.id, 
+          username: user.username, 
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName 
+        } 
       });
     } catch (error) {
       if (error instanceof z.ZodError) {

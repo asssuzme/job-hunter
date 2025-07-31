@@ -36,12 +36,11 @@ export default function Register() {
       });
     },
     onSuccess: (data) => {
-      queryClient.setQueryData(["/api/user"], data.user);
       toast({
         title: "Registration successful",
-        description: "Welcome to LinkedIn Job Scraper!",
+        description: data.message || "Account created successfully! Please sign in.",
       });
-      setLocation("/");
+      setLocation("/login");
     },
     onError: (error: Error) => {
       toast({
