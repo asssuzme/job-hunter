@@ -33,6 +33,8 @@ export default function Home() {
       setScrapingState('success');
     } else if (scrapingRequest?.status === 'failed') {
       setScrapingState('error');
+    } else if (scrapingRequest?.status === 'cancelled') {
+      setScrapingState('cancelled');
     } else if (['filtering', 'enriching'].includes(scrapingRequest?.status || '')) {
       // Keep loading state during filtering and enriching
       if (scrapingState !== 'loading') setScrapingState('loading');
@@ -70,6 +72,19 @@ export default function Home() {
   const handleClear = () => {
     setCurrentRequestId(null);
     setScrapingState('idle');
+  };
+
+  const handleCancel = async () => {
+    if (!currentRequestId) return;
+    
+    try {
+      await apiRequest('POST', `/api/scrape-job/${currentRequestId}/cancel`);
+      setScrapingState('cancelled');
+      // Refresh the query to get the cancelled status
+      queryClient.invalidateQueries({ queryKey: ['/api/scrape-job', currentRequestId] });
+    } catch (error) {
+      console.error('Failed to cancel scraping:', error);
+    }
   };
 
   const results = scrapingRequest?.results as ScrapingResult | null;
@@ -134,6 +149,17 @@ export default function Home() {
               </div>
               <p className="text-sm text-gray-500 mt-2">This may take 10-30 seconds depending on the job listing size</p>
             </div>
+            <div className="mt-4 flex justify-center">
+              <Button 
+                variant="destructive" 
+                size="sm"
+                onClick={handleCancel}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                <XCircle className="h-4 w-4 mr-2" />
+                Cancel Scraping
+              </Button>
+            </div>
           </div>
         )}
 
@@ -157,6 +183,31 @@ export default function Home() {
                   className="ml-4 text-red-600 border-red-200 hover:bg-red-50"
                 >
                   Try Again
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Cancelled State */}
+        {scrapingState === 'cancelled' && (
+          <Alert className="mb-8 border-yellow-200 bg-yellow-50">
+            <XCircle className="h-4 w-4 text-yellow-600" />
+            <AlertDescription className="text-yellow-700">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="font-medium mb-1">Scraping Cancelled</h3>
+                  <p className="text-sm">
+                    The scraping process was cancelled by user request.
+                  </p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleClear}
+                  className="ml-4 text-yellow-600 border-yellow-200 hover:bg-yellow-50"
+                >
+                  Clear
                 </Button>
               </div>
             </AlertDescription>

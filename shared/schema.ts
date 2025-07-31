@@ -7,7 +7,7 @@ export const jobScrapingRequests = pgTable("job_scraping_requests", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   linkedinUrl: text("linkedin_url").notNull(),
   resumeText: text("resume_text"), // Optional resume text for personalized emails
-  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, processing, filtering, enriching, completed, failed
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, processing, filtering, enriching, completed, failed, cancelled
   results: jsonb("results"),
   filteredResults: jsonb("filtered_results"),
   enrichedResults: jsonb("enriched_results"),

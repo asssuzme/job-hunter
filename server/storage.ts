@@ -8,6 +8,7 @@ export interface IStorage {
   createJobScrapingRequest(request: InsertJobScrapingRequest): Promise<JobScrapingRequest>;
   updateJobScrapingRequest(id: string, updates: Partial<JobScrapingRequest>): Promise<JobScrapingRequest | undefined>;
   getJobScrapingRequestsByStatus(status: string): Promise<JobScrapingRequest[]>;
+  cancelJobScrapingRequest(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -35,6 +36,13 @@ export class DatabaseStorage implements IStorage {
 
   async getJobScrapingRequestsByStatus(status: string): Promise<JobScrapingRequest[]> {
     return await db.select().from(jobScrapingRequests).where(eq(jobScrapingRequests.status, status));
+  }
+
+  async cancelJobScrapingRequest(id: string): Promise<void> {
+    await db
+      .update(jobScrapingRequests)
+      .set({ status: "cancelled", completedAt: new Date() })
+      .where(eq(jobScrapingRequests.id, id));
   }
 }
 

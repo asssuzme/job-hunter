@@ -57,6 +57,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Cancel a scraping request
+  app.post("/api/scrape-job/:id/cancel", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const request = await storage.getJobScrapingRequest(id);
+      
+      if (!request) {
+        return res.status(404).json({ message: "Scraping request not found" });
+      }
+
+      if (request.status === "completed" || request.status === "failed" || request.status === "cancelled") {
+        return res.status(400).json({ message: "Cannot cancel a request that is already complete" });
+      }
+
+      await storage.cancelJobScrapingRequest(id);
+      res.json({ success: true, message: "Scraping request cancelled" });
+    } catch (error) {
+      console.error("Error cancelling scraping request:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Scrape company profile
   app.post("/api/scrape-company", async (req, res) => {
     try {
