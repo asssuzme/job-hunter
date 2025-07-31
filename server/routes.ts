@@ -20,11 +20,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { linkedinUrl } = validation.data;
       const { resumeText } = req.body; // Get optional resume text
+      
+      // Clean the resume text to remove null bytes and other invalid characters
+      const cleanedResumeText = resumeText ? resumeText.replace(/\0/g, '').trim() : null;
 
       // Create the scraping request with optional resume
       const request = await storage.createJobScrapingRequest({ 
         linkedinUrl,
-        resumeText: resumeText || null 
+        resumeText: cleanedResumeText 
       });
       
       // Start the scraping process asynchronously
