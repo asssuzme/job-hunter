@@ -26,10 +26,10 @@ Preferred communication style: Simple, everyday language.
 - **Development**: Hot reloading with Vite integration for seamless development experience
 
 ### Data Storage Solutions
-- **Database**: PostgreSQL configured through environment variables
+- **Database**: PostgreSQL with Neon Database serverless PostgreSQL for production data storage
 - **ORM**: Drizzle ORM with TypeScript-first schema definitions
 - **Schema Management**: Drizzle Kit for database migrations and schema management
-- **Development Storage**: In-memory storage implementation for development/testing with interface-based design for easy production database swapping
+- **Production Storage**: DatabaseStorage class implementing IStorage interface for PostgreSQL operations
 
 ### Database Schema Design
 - **Job Scraping Requests Table**: Stores request metadata including LinkedIn URL, processing status, results JSON, error messages, and timestamps

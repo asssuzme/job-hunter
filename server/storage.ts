@@ -1,4 +1,6 @@
-import { type JobScrapingRequest, type InsertJobScrapingRequest } from "@shared/schema";
+import { type JobScrapingRequest, type InsertJobScrapingRequest, jobScrapingRequests } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -8,44 +10,32 @@ export interface IStorage {
   getJobScrapingRequestsByStatus(status: string): Promise<JobScrapingRequest[]>;
 }
 
-export class MemStorage implements IStorage {
-  private jobRequests: Map<string, JobScrapingRequest>;
-
-  constructor() {
-    this.jobRequests = new Map();
-  }
-
+export class DatabaseStorage implements IStorage {
   async getJobScrapingRequest(id: string): Promise<JobScrapingRequest | undefined> {
-    return this.jobRequests.get(id);
+    const [request] = await db.select().from(jobScrapingRequests).where(eq(jobScrapingRequests.id, id));
+    return request || undefined;
   }
 
   async createJobScrapingRequest(insertRequest: InsertJobScrapingRequest): Promise<JobScrapingRequest> {
-    const id = randomUUID();
-    const request: JobScrapingRequest = {
-      ...insertRequest,
-      id,
-      status: "pending",
-      results: null,
-      errorMessage: null,
-      createdAt: new Date(),
-      completedAt: null,
-    };
-    this.jobRequests.set(id, request);
+    const [request] = await db
+      .insert(jobScrapingRequests)
+      .values(insertRequest)
+      .returning();
     return request;
   }
 
   async updateJobScrapingRequest(id: string, updates: Partial<JobScrapingRequest>): Promise<JobScrapingRequest | undefined> {
-    const existing = this.jobRequests.get(id);
-    if (!existing) return undefined;
-
-    const updated = { ...existing, ...updates };
-    this.jobRequests.set(id, updated);
-    return updated;
+    const [updated] = await db
+      .update(jobScrapingRequests)
+      .set(updates)
+      .where(eq(jobScrapingRequests.id, id))
+      .returning();
+    return updated || undefined;
   }
 
   async getJobScrapingRequestsByStatus(status: string): Promise<JobScrapingRequest[]> {
-    return Array.from(this.jobRequests.values()).filter(request => request.status === status);
+    return await db.select().from(jobScrapingRequests).where(eq(jobScrapingRequests.status, status));
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
