@@ -27,12 +27,12 @@ export function ResumeUpload({ onResumeTextChange }: ResumeUploadProps) {
       return;
     }
 
-    // Check file type
-    const validTypes = ['text/plain', 'application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    // Check file type - only accepting text files for now
+    const validTypes = ['text/plain'];
     if (!validTypes.includes(file.type)) {
       toast({
         title: "Invalid file type",
-        description: "Please upload a .txt, .pdf, or .docx file",
+        description: "Please upload a .txt file. PDF and DOCX support coming soon!",
         variant: "destructive",
       });
       return;
@@ -45,18 +45,19 @@ export function ResumeUpload({ onResumeTextChange }: ResumeUploadProps) {
       if (file.type === 'text/plain') {
         // Handle text files
         const text = await file.text();
-        onResumeTextChange(text);
+        // Clean the text to remove null bytes and other invalid characters
+        const cleanedText = text.replace(/\0/g, '').trim();
+        onResumeTextChange(cleanedText);
       } else {
-        // For PDF and DOCX files, we'll just read them as text for now
-        // In a production app, you'd use proper libraries to extract text
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const content = e.target?.result as string;
-          // For demo purposes, we'll use the raw content
-          // In production, use pdf.js for PDFs or mammoth.js for DOCX
-          onResumeTextChange(content);
-        };
-        reader.readAsText(file);
+        // For now, only support plain text files
+        toast({
+          title: "File format not supported",
+          description: "Currently only .txt files are supported. Please convert your resume to plain text.",
+          variant: "destructive",
+        });
+        setFileName(null);
+        setIsProcessing(false);
+        return;
       }
 
       toast({
@@ -107,14 +108,14 @@ export function ResumeUpload({ onResumeTextChange }: ResumeUploadProps) {
               <input
                 id="resume-upload"
                 type="file"
-                accept=".txt,.pdf,.docx"
+                accept=".txt"
                 onChange={handleFileUpload}
                 className="sr-only"
                 disabled={isProcessing}
               />
             </label>
             <p className="text-xs text-gray-500 mt-2">
-              TXT, PDF, or DOCX (max. 5MB)
+              Plain text files only (.txt) - max 5MB
             </p>
             <Button
               variant="outline"
