@@ -269,6 +269,100 @@ async function enrichJobsWithProfiles(jobs: FilteredJobData[]): Promise<Filtered
   }
 }
 
+async function verifyEmails(jobs: any[]) {
+  try {
+    // Extract emails from jobs that can apply
+    const emailsToVerify = jobs
+      .filter(job => job.canApply && job.jobPosterEmail)
+      .map(job => job.jobPosterEmail);
+
+    if (emailsToVerify.length === 0) {
+      console.log("No emails to verify");
+      return jobs;
+    }
+
+    console.log(`\n📧 Verifying ${emailsToVerify.length} emails...`);
+    
+    const verificationUrl = 'https://api.apify.com/v2/acts/devil_port369-owner~email-verifier/run-sync-get-dataset-items?token=apify_api_4zPr6hJ4tX3HD8Iqkc5WjRx4Q54biX11P0vs';
+    
+    const requestBody = {
+      emails: emailsToVerify,
+      proxy: {
+        useApifyProxy: true,
+        groups: ["RESIDENTIAL"]
+      }
+    };
+
+    console.log("Email verification request:", JSON.stringify(requestBody, null, 2));
+
+    const response = await fetch(verificationUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Email verification API error: ${response.status} - ${errorText}`);
+      // Return jobs with unknown status if verification fails
+      return jobs.map(job => ({
+        ...job,
+        emailVerificationStatus: job.canApply ? 'unknown' : undefined
+      }));
+    }
+
+    const verificationResults = await response.json();
+    console.log("Email verification results:", JSON.stringify(verificationResults, null, 2));
+
+    // Create a map of email to verification status
+    const emailStatusMap = new Map();
+    verificationResults.forEach((result: any) => {
+      const email = result.email || result.Email;
+      const status = result.status || result.email_status || result.result || 'unknown';
+      
+      // Normalize status values
+      let normalizedStatus = 'unknown';
+      if (status.toLowerCase().includes('valid')) {
+        normalizedStatus = 'valid';
+      } else if (status.toLowerCase().includes('catch')) {
+        normalizedStatus = 'catch-all';
+      } else if (status.toLowerCase().includes('error') || status.toLowerCase().includes('invalid')) {
+        normalizedStatus = 'error';
+      }
+      
+      emailStatusMap.set(email, normalizedStatus);
+      console.log(`Email ${email} verification status: ${normalizedStatus}`);
+    });
+
+    // Update jobs with verification status
+    const verifiedJobs = jobs.map(job => {
+      if (job.canApply && job.jobPosterEmail) {
+        const verificationStatus = emailStatusMap.get(job.jobPosterEmail) || 'unknown';
+        return {
+          ...job,
+          emailVerificationStatus: verificationStatus
+        };
+      }
+      return job;
+    });
+
+    const verifiedCount = verifiedJobs.filter(job => job.emailVerificationStatus === 'valid').length;
+    console.log(`\n✅ Email verification complete: ${verifiedCount} valid emails out of ${emailsToVerify.length} verified`);
+
+    return verifiedJobs;
+
+  } catch (error) {
+    console.error("Error verifying emails:", error);
+    // Return jobs with unknown status if verification fails
+    return jobs.map(job => ({
+      ...job,
+      emailVerificationStatus: job.canApply ? 'unknown' : undefined
+    }));
+  }
+}
+
 async function processJobScraping(requestId: string) {
   try {
     // Update status to processing
@@ -389,10 +483,14 @@ async function processJobScraping(requestId: string) {
     // Profile enrichment step
     const enrichedJobs = await enrichJobsWithProfiles(filteredJobs);
     
+    // Email verification step
+    console.log('\n📧 Step 4: Starting email verification...');
+    const verifiedJobs = await verifyEmails(enrichedJobs);
+    
     const enrichedResults = {
-      jobs: enrichedJobs,
-      totalCount: enrichedJobs.length,
-      canApplyCount: enrichedJobs.filter(job => job.canApply).length,
+      jobs: verifiedJobs,
+      totalCount: verifiedJobs.length,
+      canApplyCount: verifiedJobs.filter(job => job.canApply).length,
       enrichedAt: new Date().toISOString()
     };
 
