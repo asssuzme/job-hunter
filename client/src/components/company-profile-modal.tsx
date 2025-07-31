@@ -2,7 +2,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Building2, Users, Globe, Calendar, MapPin, Briefcase, ExternalLink, Mail } from "lucide-react";
+import { Building2, Users, Globe, Calendar, MapPin, Briefcase, ExternalLink, Mail, Check, Copy } from "lucide-react";
+import { useState } from "react";
 
 interface CompanyProfile {
   name?: string;
@@ -41,6 +42,7 @@ export function CompanyProfileModal({
   generatedEmail,
   isGeneratingEmail 
 }: CompanyProfileModalProps) {
+  const [copied, setCopied] = useState(false);
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
@@ -187,9 +189,23 @@ export function CompanyProfileModal({
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => navigator.clipboard.writeText(generatedEmail || "")}
+                          onClick={() => {
+                            navigator.clipboard.writeText(generatedEmail || "");
+                            setCopied(true);
+                            setTimeout(() => setCopied(false), 2000);
+                          }}
                         >
-                          Copy Email
+                          {copied ? (
+                            <>
+                              <Check className="h-3 w-3 mr-1" />
+                              Copied!
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="h-3 w-3 mr-1" />
+                              Copy Email
+                            </>
+                          )}
                         </Button>
                       </div>
                     </div>
