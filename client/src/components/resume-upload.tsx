@@ -16,6 +16,17 @@ export function ResumeUpload({ onResumeTextChange }: ResumeUploadProps) {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Check file size (5MB limit to be safe)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      toast({
+        title: "File too large",
+        description: "Please upload a file smaller than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Check file type
     const validTypes = ['text/plain', 'application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
     if (!validTypes.includes(file.type)) {
@@ -103,7 +114,7 @@ export function ResumeUpload({ onResumeTextChange }: ResumeUploadProps) {
               />
             </label>
             <p className="text-xs text-gray-500 mt-2">
-              TXT, PDF, or DOCX (max. 10MB)
+              TXT, PDF, or DOCX (max. 5MB)
             </p>
             <Button
               variant="outline"
