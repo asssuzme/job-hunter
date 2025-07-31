@@ -2,7 +2,7 @@
 
 ## Overview
 
-A full-stack web application that extracts comprehensive job data from LinkedIn job postings. Users submit LinkedIn job URLs through a modern React interface, and the system scrapes detailed information including job details, company information, and posting metadata. The application uses a PostgreSQL database with Drizzle ORM for data persistence and provides real-time status updates during the scraping process.
+A full-stack web application that extracts comprehensive job data from LinkedIn job postings. Users submit LinkedIn job URLs through a modern React interface, and the system scrapes detailed information including job details, company information, and posting metadata. The application uses a PostgreSQL database with Drizzle ORM for data persistence and provides real-time status updates during the scraping process. Supports resume upload functionality for both text and PDF files with automatic text extraction.
 
 ## User Preferences
 

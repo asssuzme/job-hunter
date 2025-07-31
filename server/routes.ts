@@ -4,6 +4,10 @@ import { storage } from "./storage";
 import { insertJobScrapingRequestSchema, linkedinUrlSchema, type FilteredJobData, type JobData } from "@shared/schema";
 import { z } from "zod";
 import OpenAI from "openai";
+import multer from "multer";
+
+// Configure multer for memory storage
+const upload = multer({ storage: multer.memoryStorage() });
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Create a new job scraping request
@@ -76,6 +80,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error cancelling scraping request:", error);
       res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Parse PDF file to extract text
+  app.post("/api/parse-pdf", upload.single("file"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      // Dynamically import pdf-parse to avoid module loading issues
+      const pdfParse = (await import("pdf-parse")).default;
+      
+      // Parse the PDF buffer
+      const data = await pdfParse(req.file.buffer);
+      
+      // Clean the text to remove null bytes and other invalid characters
+      const cleanedText = data.text.replace(/\0/g, '').trim();
+      
+      res.json({ text: cleanedText });
+    } catch (error) {
+      console.error("Error parsing PDF:", error);
+      res.status(500).json({ error: "Failed to parse PDF file" });
     }
   });
 

@@ -16,23 +16,12 @@ export function ResumeUpload({ onResumeTextChange }: ResumeUploadProps) {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Check file size (5MB limit to be safe)
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSize) {
-      toast({
-        title: "File too large",
-        description: "Please upload a file smaller than 5MB",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Check file type - only accepting text files for now
-    const validTypes = ['text/plain'];
+    // Check file type
+    const validTypes = ['text/plain', 'application/pdf'];
     if (!validTypes.includes(file.type)) {
       toast({
         title: "Invalid file type",
-        description: "Please upload a .txt file. PDF and DOCX support coming soon!",
+        description: "Please upload a .txt or .pdf file",
         variant: "destructive",
       });
       return;
@@ -48,16 +37,22 @@ export function ResumeUpload({ onResumeTextChange }: ResumeUploadProps) {
         // Clean the text to remove null bytes and other invalid characters
         const cleanedText = text.replace(/\0/g, '').trim();
         onResumeTextChange(cleanedText);
-      } else {
-        // For now, only support plain text files
-        toast({
-          title: "File format not supported",
-          description: "Currently only .txt files are supported. Please convert your resume to plain text.",
-          variant: "destructive",
+      } else if (file.type === 'application/pdf') {
+        // Handle PDF files by sending to server for parsing
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const response = await fetch('/api/parse-pdf', {
+          method: 'POST',
+          body: formData
         });
-        setFileName(null);
-        setIsProcessing(false);
-        return;
+        
+        if (!response.ok) {
+          throw new Error('Failed to parse PDF');
+        }
+        
+        const { text } = await response.json();
+        onResumeTextChange(text);
       }
 
       toast({
@@ -108,14 +103,14 @@ export function ResumeUpload({ onResumeTextChange }: ResumeUploadProps) {
               <input
                 id="resume-upload"
                 type="file"
-                accept=".txt"
+                accept=".txt,.pdf"
                 onChange={handleFileUpload}
                 className="sr-only"
                 disabled={isProcessing}
               />
             </label>
             <p className="text-xs text-gray-500 mt-2">
-              Plain text files only (.txt) - max 5MB
+              Accepts .txt and .pdf files (no size limit)
             </p>
             <Button
               variant="outline"
