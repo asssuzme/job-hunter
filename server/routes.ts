@@ -90,8 +90,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No file uploaded" });
       }
 
-      // Dynamically import pdf-parse to avoid module loading issues
-      const pdfParse = (await import("pdf-parse")).default;
+      // Use require for CommonJS module
+      const pdfParse = eval('require')("pdf-parse");
       
       // Parse the PDF buffer
       const data = await pdfParse(req.file.buffer);

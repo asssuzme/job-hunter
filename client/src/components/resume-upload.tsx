@@ -53,6 +53,15 @@ export function ResumeUpload({ onResumeTextChange }: ResumeUploadProps) {
         
         const { text } = await response.json();
         onResumeTextChange(text);
+      } else {
+        toast({
+          title: "File format not supported",
+          description: "Only .txt and .pdf files are supported.",
+          variant: "destructive",
+        });
+        setFileName(null);
+        setIsProcessing(false);
+        return;
       }
 
       toast({
