@@ -6,9 +6,10 @@ import { z } from "zod";
 export const jobScrapingRequests = pgTable("job_scraping_requests", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   linkedinUrl: text("linkedin_url").notNull(),
-  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, processing, filtering, completed, failed
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, processing, filtering, enriching, completed, failed
   results: jsonb("results"),
   filteredResults: jsonb("filtered_results"),
+  enrichedResults: jsonb("enriched_results"),
   errorMessage: text("error_message"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   completedAt: timestamp("completed_at"),
@@ -65,10 +66,12 @@ export const filteredJobDataSchema = z.object({
   companyLinkedinUrl: z.string(),
   jobPosterName: z.string().optional(),
   jobPosterLinkedinUrl: z.string().optional(),
+  jobPosterEmail: z.string().optional(),
   requirement: z.string().optional(),
   location: z.string(),
   link: z.string(),
   salaryInfo: z.string().optional(),
+  canApply: z.boolean().optional(),
 });
 
 export type FilteredJobData = z.infer<typeof filteredJobDataSchema>;
@@ -86,5 +89,13 @@ export const filteredResultSchema = z.object({
   filteredAt: z.string(),
 });
 
+export const enrichedResultSchema = z.object({
+  jobs: z.array(filteredJobDataSchema),
+  totalCount: z.number(),
+  canApplyCount: z.number(),
+  enrichedAt: z.string(),
+});
+
 export type ScrapingResult = z.infer<typeof scrapingResultSchema>;
 export type FilteredResult = z.infer<typeof filteredResultSchema>;
+export type EnrichedResult = z.infer<typeof enrichedResultSchema>;

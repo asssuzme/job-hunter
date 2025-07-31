@@ -87,6 +87,65 @@ function filterJobs(jobs: JobData[]): FilteredJobData[] {
   return Array.from(companyMap.values());
 }
 
+async function enrichJobsWithProfiles(jobs: FilteredJobData[]): Promise<FilteredJobData[]> {
+  // Get jobs that have poster LinkedIn URLs
+  const jobsWithProfiles = jobs.filter(job => job.jobPosterLinkedinUrl);
+  
+  if (jobsWithProfiles.length === 0) {
+    return jobs.map(job => ({ ...job, canApply: false }));
+  }
+
+  try {
+    // Extract profile URLs for batch scraping
+    const profileUrls = jobsWithProfiles.map(job => job.jobPosterLinkedinUrl!);
+
+    const response = await fetch(
+      "https://api.apify.com/v2/acts/dev_fusion~linkedin-profile-scraper/run-sync-get-dataset-items?token=apify_api_HrPjMf1C0y5C8CyoiA5iAeJmjsjfLY0XXGHG",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          profileUrls: profileUrls
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      console.error("Profile scraping failed:", response.status, response.statusText);
+      return jobs.map(job => ({ ...job, canApply: false }));
+    }
+
+    const profileResults = await response.json();
+    
+    // Create a map of profile URL to email
+    const profileEmailMap = new Map<string, string>();
+    
+    if (Array.isArray(profileResults)) {
+      profileResults.forEach((profile: any) => {
+        if (profile.profileUrl && profile.email) {
+          profileEmailMap.set(profile.profileUrl, profile.email);
+        }
+      });
+    }
+
+    // Enrich jobs with profile data
+    return jobs.map(job => {
+      const email = job.jobPosterLinkedinUrl ? profileEmailMap.get(job.jobPosterLinkedinUrl) : undefined;
+      return {
+        ...job,
+        jobPosterEmail: email,
+        canApply: !!email
+      };
+    });
+
+  } catch (error) {
+    console.error("Error enriching profiles:", error);
+    return jobs.map(job => ({ ...job, canApply: false }));
+  }
+}
+
 async function processJobScraping(requestId: string) {
   try {
     // Update status to processing
@@ -168,8 +227,23 @@ async function processJobScraping(requestId: string) {
     };
 
     await storage.updateJobScrapingRequest(requestId, {
+      status: "enriching",
+      filteredResults
+    });
+
+    // Profile enrichment step
+    const enrichedJobs = await enrichJobsWithProfiles(filteredJobs);
+    
+    const enrichedResults = {
+      jobs: enrichedJobs,
+      totalCount: enrichedJobs.length,
+      canApplyCount: enrichedJobs.filter(job => job.canApply).length,
+      enrichedAt: new Date().toISOString()
+    };
+
+    await storage.updateJobScrapingRequest(requestId, {
       status: "completed",
-      filteredResults,
+      enrichedResults,
       completedAt: new Date()
     });
 

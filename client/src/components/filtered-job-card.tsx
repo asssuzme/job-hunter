@@ -1,7 +1,7 @@
 import { FilteredJobData } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, ExternalLink, User, Briefcase, DollarSign } from "lucide-react";
+import { MapPin, ExternalLink, User, Briefcase, DollarSign, Mail, CheckCircle, XCircle } from "lucide-react";
 
 interface FilteredJobCardProps {
   job: FilteredJobData;
@@ -70,9 +70,17 @@ export function FilteredJobCard({ job }: FilteredJobCardProps) {
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          <Badge variant="secondary" className="bg-green-100 text-green-800">
-            Filtered
-          </Badge>
+          {job.canApply ? (
+            <Badge variant="secondary" className="bg-green-100 text-green-800">
+              <CheckCircle className="h-3 w-3 mr-1" />
+              Can Apply
+            </Badge>
+          ) : (
+            <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+              <XCircle className="h-3 w-3 mr-1" />
+              Cannot Apply
+            </Badge>
+          )}
         </div>
       </div>
       
@@ -86,7 +94,7 @@ export function FilteredJobCard({ job }: FilteredJobCardProps) {
       
       {job.jobPosterName && (
         <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-2">
               <User className="h-4 w-4 text-gray-500" />
               <span className="text-sm font-medium text-gray-700">Job Poster:</span>
@@ -108,6 +116,18 @@ export function FilteredJobCard({ job }: FilteredJobCardProps) {
               </Button>
             )}
           </div>
+          {job.jobPosterEmail && (
+            <div className="flex items-center space-x-2 pt-2 border-t border-gray-200">
+              <Mail className="h-4 w-4 text-green-600" />
+              <span className="text-sm font-medium text-gray-700">Email:</span>
+              <a 
+                href={`mailto:${job.jobPosterEmail}`}
+                className="text-sm text-green-600 hover:text-green-500 transition-colors"
+              >
+                {job.jobPosterEmail}
+              </a>
+            </div>
+          )}
         </div>
       )}
       
