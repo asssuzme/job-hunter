@@ -91,13 +91,22 @@ async function enrichJobsWithProfiles(jobs: FilteredJobData[]): Promise<Filtered
   // Get jobs that have poster LinkedIn URLs
   const jobsWithProfiles = jobs.filter(job => job.jobPosterLinkedinUrl);
   
+  console.log(`Found ${jobsWithProfiles.length} jobs with LinkedIn profile URLs out of ${jobs.length} total jobs`);
+  
   if (jobsWithProfiles.length === 0) {
+    console.log("No jobs with LinkedIn profile URLs found, marking all as cannot apply");
     return jobs.map(job => ({ ...job, canApply: false }));
   }
 
   try {
     // Extract profile URLs for batch scraping
     const profileUrls = jobsWithProfiles.map(job => job.jobPosterLinkedinUrl!);
+    console.log("Profile URLs to scrape:", profileUrls);
+
+    const requestBody = {
+      profileUrls: profileUrls
+    };
+    console.log("Sending request to profile scraper:", JSON.stringify(requestBody, null, 2));
 
     const response = await fetch(
       "https://api.apify.com/v2/acts/dev_fusion~linkedin-profile-scraper/run-sync-get-dataset-items?token=apify_api_HrPjMf1C0y5C8CyoiA5iAeJmjsjfLY0XXGHG",
@@ -106,39 +115,56 @@ async function enrichJobsWithProfiles(jobs: FilteredJobData[]): Promise<Filtered
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          profileUrls: profileUrls
-        }),
+        body: JSON.stringify(requestBody),
       }
     );
 
+    console.log("Profile scraper response status:", response.status);
+
     if (!response.ok) {
-      console.error("Profile scraping failed:", response.status, response.statusText);
+      const errorText = await response.text();
+      console.error("Profile scraping failed:", response.status, response.statusText, errorText);
       return jobs.map(job => ({ ...job, canApply: false }));
     }
 
     const profileResults = await response.json();
+    console.log("Profile scraper results:", JSON.stringify(profileResults, null, 2));
     
     // Create a map of profile URL to email
     const profileEmailMap = new Map<string, string>();
     
     if (Array.isArray(profileResults)) {
       profileResults.forEach((profile: any) => {
+        console.log("Processing profile:", profile);
         if (profile.profileUrl && profile.email) {
           profileEmailMap.set(profile.profileUrl, profile.email);
+          console.log(`Mapped ${profile.profileUrl} to ${profile.email}`);
+        } else {
+          console.log("Profile missing URL or email:", profile);
         }
       });
+    } else {
+      console.log("Profile results is not an array:", profileResults);
     }
 
+    console.log("Profile email map:", Object.fromEntries(profileEmailMap));
+
     // Enrich jobs with profile data
-    return jobs.map(job => {
+    const enrichedJobs = jobs.map(job => {
       const email = job.jobPosterLinkedinUrl ? profileEmailMap.get(job.jobPosterLinkedinUrl) : undefined;
+      const canApply = !!email;
+      console.log(`Job "${job.title}" - Profile: ${job.jobPosterLinkedinUrl} - Email: ${email} - Can Apply: ${canApply}`);
       return {
         ...job,
         jobPosterEmail: email,
-        canApply: !!email
+        canApply: canApply
       };
     });
+
+    const canApplyCount = enrichedJobs.filter(job => job.canApply).length;
+    console.log(`Enrichment complete: ${canApplyCount} out of ${enrichedJobs.length} jobs can apply`);
+
+    return enrichedJobs;
 
   } catch (error) {
     console.error("Error enriching profiles:", error);
@@ -178,31 +204,40 @@ async function processJobScraping(requestId: string) {
     }
 
     const rawResults = await response.json();
+    console.log("Raw job scraping results sample:", JSON.stringify(rawResults.slice(0, 2), null, 2));
     
     // Transform the results to match our schema
-    const transformedJobs = rawResults.map((item: any) => ({
-      title: item.title || "N/A",
-      company: {
-        name: item.companyName || item.company || "N/A",
-        industry: item.industry,
-        size: item.companySize,
-        founded: item.founded,
-        logo: item.companyLogo
-      },
-      location: item.location || "N/A",
-      workType: item.employmentType || item.workType || "N/A",
-      postedDate: item.postedDate || item.datePosted || "N/A",
-      applicants: item.applicants,
-      description: item.description || item.jobDescription || "No description available",
-      skills: item.skills || [],
-      originalUrl: item.url || item.jobUrl || request.linkedinUrl,
-      companyWebsite: item.companyWebsite || item.website,
-      companyLinkedinUrl: item.companyLinkedinUrl || item.companyUrl,
-      jobPosterName: item.jobPosterName || item.posterName,
-      jobPosterLinkedinUrl: item.jobPosterLinkedinUrl || item.posterUrl,
-      requirement: item.requirement || item.requirements,
-      salaryInfo: item.salaryInfo || item.salary
-    }));
+    const transformedJobs = rawResults.map((item: any) => {
+      const job = {
+        title: item.title || "N/A",
+        company: {
+          name: item.companyName || item.company || "N/A",
+          industry: item.industry,
+          size: item.companySize,
+          founded: item.founded,
+          logo: item.companyLogo
+        },
+        location: item.location || "N/A",
+        workType: item.employmentType || item.workType || "N/A",
+        postedDate: item.postedDate || item.datePosted || "N/A",
+        applicants: item.applicants,
+        description: item.description || item.jobDescription || "No description available",
+        skills: item.skills || [],
+        originalUrl: item.url || item.jobUrl || request.linkedinUrl,
+        companyWebsite: item.companyWebsite || item.website,
+        companyLinkedinUrl: item.companyLinkedinUrl || item.companyUrl,
+        jobPosterName: item.jobPosterName || item.posterName || item.recruiterName || item.hiringManagerName,
+        jobPosterLinkedinUrl: item.jobPosterLinkedinUrl || item.posterUrl || item.recruiterUrl || item.hiringManagerUrl || item.jobPosterProfileUrl,
+        requirement: item.requirement || item.requirements,
+        salaryInfo: item.salaryInfo || item.salary
+      };
+      
+      if (job.jobPosterName || job.jobPosterLinkedinUrl) {
+        console.log(`Job "${job.title}" has poster info - Name: ${job.jobPosterName}, URL: ${job.jobPosterLinkedinUrl}`);
+      }
+      
+      return job;
+    });
 
     const results = {
       jobs: transformedJobs,
