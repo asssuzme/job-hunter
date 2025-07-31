@@ -1,17 +1,115 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertJobScrapingRequestSchema, linkedinUrlSchema, type FilteredJobData, type JobData } from "@shared/schema";
+import { setupSession, setupAuth, requireAuth } from "./auth";
+import { 
+  insertJobScrapingRequestSchema, 
+  linkedinUrlSchema, 
+  loginSchema,
+  registerSchema,
+  type FilteredJobData, 
+  type JobData,
+  type User 
+} from "@shared/schema";
 import { z } from "zod";
 import OpenAI from "openai";
 import multer from "multer";
+import passport from "passport";
 
 // Configure multer for memory storage
 const upload = multer({ storage: multer.memoryStorage() });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Create a new job scraping request
-  app.post("/api/scrape-job", async (req, res) => {
+  // Setup authentication
+  setupSession(app);
+  setupAuth(app);
+
+  // Auth routes
+  app.post("/api/register", async (req, res) => {
+    try {
+      const validatedData = registerSchema.parse(req.body);
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByUsername(validatedData.username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+
+      const existingEmail = await storage.getUserByEmail(validatedData.email);
+      if (existingEmail) {
+        return res.status(400).json({ message: "Email already exists" });
+      }
+
+      // Create user
+      const user = await storage.createUser({
+        username: validatedData.username,
+        email: validatedData.email,
+        passwordHash: validatedData.password, // Will be hashed in storage layer
+        firstName: validatedData.firstName,
+        lastName: validatedData.lastName,
+      });
+
+      // Log the user in automatically
+      req.login(user, (err) => {
+        if (err) {
+          return res.status(500).json({ message: "Login failed after registration" });
+        }
+        res.json({ 
+          success: true, 
+          user: { 
+            id: user.id, 
+            username: user.username, 
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName 
+          } 
+        });
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors[0].message });
+      }
+      console.error("Registration error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/login", passport.authenticate("local"), async (req, res) => {
+    const user = req.user as User;
+    res.json({ 
+      success: true, 
+      user: { 
+        id: user.id, 
+        username: user.username, 
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName 
+      } 
+    });
+  });
+
+  app.post("/api/logout", (req, res) => {
+    req.logout((err) => {
+      if (err) {
+        return res.status(500).json({ message: "Logout failed" });
+      }
+      res.json({ success: true });
+    });
+  });
+
+  app.get("/api/user", requireAuth, async (req, res) => {
+    const user = req.user as User;
+    res.json({ 
+      id: user.id, 
+      username: user.username, 
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName 
+    });
+  });
+
+  // Create a new job scraping request (now requires authentication)
+  app.post("/api/scrape-job", requireAuth, async (req, res) => {
     try {
       // Validate the request body
       const validation = linkedinUrlSchema.safeParse(req.body);
@@ -29,9 +127,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const cleanedResumeText = resumeText ? resumeText.replace(/\0/g, '').trim() : null;
 
       // Create the scraping request with optional resume
+      const user = req.user as User;
       const request = await storage.createJobScrapingRequest({ 
         linkedinUrl,
-        resumeText: cleanedResumeText 
+        resumeText: cleanedResumeText,
+        userId: user.id
       });
       
       // Start the scraping process asynchronously
@@ -44,8 +144,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get user's scraping requests
+  app.get("/api/scrape-jobs", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const requests = await storage.getJobScrapingRequestsByUser(user.id);
+      res.json(requests);
+    } catch (error) {
+      console.error("Error fetching user's scraping requests:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Get scraping request status and results
-  app.get("/api/scrape-job/:id", async (req, res) => {
+  app.get("/api/scrape-job/:id", requireAuth, async (req, res) => {
     try {
       const { id } = req.params;
       const request = await storage.getJobScrapingRequest(id);
@@ -62,7 +174,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Cancel a scraping request
-  app.post("/api/scrape-job/:id/cancel", async (req, res) => {
+  app.post("/api/scrape-job/:id/cancel", requireAuth, async (req, res) => {
     try {
       const { id } = req.params;
       const request = await storage.getJobScrapingRequest(id);
