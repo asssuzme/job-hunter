@@ -16,21 +16,19 @@ export default function Home() {
   const [scrapingState, setScrapingState] = useState<ScrapingState>('idle');
 
   // Query to poll for scraping results
-  const { data: scrapingRequest, isLoading: isPolling } = useQuery({
+  const { data: scrapingRequest, isLoading: isPolling } = useQuery<JobScrapingRequest>({
     queryKey: ['/api/scrape-job', currentRequestId],
-    enabled: !!currentRequestId && (scrapingState === 'loading'),
+    enabled: !!currentRequestId,
     refetchInterval: (data) => {
-      if (!data) return 2000;
-      const status = (data as JobScrapingRequest).status;
-      if (status === 'completed' || status === 'failed') {
-        if (status === 'completed') {
-          setScrapingState('success');
-        } else {
-          setScrapingState('error');
-        }
-        return false; // Stop polling
+      if (data?.status === 'completed') {
+        if (scrapingState !== 'success') setScrapingState('success');
+        return false;
       }
-      return 2000; // Continue polling every 2 seconds
+      if (data?.status === 'failed') {
+        if (scrapingState !== 'error') setScrapingState('error');
+        return false;
+      }
+      return scrapingState === 'loading' ? 2000 : false;
     },
   });
 
