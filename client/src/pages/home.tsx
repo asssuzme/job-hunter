@@ -1,0 +1,289 @@
+import { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { JobForm } from "@/components/job-form";
+import { JobCard } from "@/components/job-card";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { ScrapingState } from "@/lib/types";
+import { JobScrapingRequest, ScrapingResult } from "@shared/schema";
+import { Loader2, AlertTriangle, Download, Trash2, Linkedin, Settings, HelpCircle, Plus } from "lucide-react";
+
+export default function Home() {
+  const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
+  const [scrapingState, setScrapingState] = useState<ScrapingState>('idle');
+
+  // Query to poll for scraping results
+  const { data: scrapingRequest, isLoading: isPolling } = useQuery({
+    queryKey: ['/api/scrape-job', currentRequestId],
+    enabled: !!currentRequestId && (scrapingState === 'loading'),
+    refetchInterval: (data) => {
+      if (!data?.data) return 2000;
+      const status = (data.data as JobScrapingRequest).status;
+      if (status === 'completed' || status === 'failed') {
+        if (status === 'completed') {
+          setScrapingState('success');
+        } else {
+          setScrapingState('error');
+        }
+        return false; // Stop polling
+      }
+      return 2000; // Continue polling every 2 seconds
+    },
+  });
+
+  const scrapeMutation = useMutation({
+    mutationFn: async (linkedinUrl: string) => {
+      const response = await apiRequest('POST', '/api/scrape-job', { linkedinUrl });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setCurrentRequestId(data.requestId);
+      setScrapingState('loading');
+    },
+    onError: () => {
+      setScrapingState('error');
+    },
+  });
+
+  const handleSubmit = (url: string) => {
+    setScrapingState('loading');
+    scrapeMutation.mutate(url);
+  };
+
+  const handleRetry = () => {
+    if (scrapingRequest?.data?.linkedinUrl) {
+      handleSubmit(scrapingRequest.data.linkedinUrl);
+    }
+  };
+
+  const handleClear = () => {
+    setCurrentRequestId(null);
+    setScrapingState('idle');
+  };
+
+  const results = scrapingRequest?.data?.results as ScrapingResult | null;
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <Linkedin className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900">LinkedIn Scraper</h1>
+                <p className="text-xs text-gray-500">Professional Job Data Extraction</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost" size="sm">
+                <HelpCircle className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm">
+                <Settings className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <JobForm 
+          onSubmit={handleSubmit} 
+          isLoading={scrapingState === 'loading'} 
+        />
+
+        {/* Loading State */}
+        {scrapingState === 'loading' && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+            <div className="flex items-center justify-center space-x-3 py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+              <span className="text-gray-600">Scraping job data from LinkedIn...</span>
+            </div>
+            <div className="mt-4">
+              <div className="bg-gray-200 rounded-full h-2">
+                <div className="bg-blue-600 h-2 rounded-full animate-pulse w-3/5"></div>
+              </div>
+              <p className="text-sm text-gray-500 mt-2">This may take 10-30 seconds depending on the job listing size</p>
+            </div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {scrapingState === 'error' && (
+          <Alert className="mb-8 border-red-200 bg-red-50">
+            <AlertTriangle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-700">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="font-medium mb-1">Scraping Failed</h3>
+                  <p className="text-sm">
+                    {scrapingRequest?.data?.errorMessage || 
+                     "Unable to process the LinkedIn URL. Please check that the URL is valid and the job posting is accessible."}
+                  </p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleRetry}
+                  className="ml-4 text-red-600 border-red-200 hover:bg-red-50"
+                >
+                  Try Again
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Success State */}
+        {scrapingState === 'success' && results && (
+          <div className="space-y-6">
+            {/* Results Header */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    {results.totalCount} Jobs Found
+                  </h2>
+                  <p className="text-sm text-gray-500">
+                    Scraped {new Date(results.scrapedAt).toLocaleString()} from LinkedIn
+                  </p>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Button variant="outline" size="sm">
+                    <Download className="h-4 w-4 mr-1" />
+                    Export
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleClear}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Filter and Sort Controls */}
+              <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-gray-100">
+                <div className="flex items-center space-x-2">
+                  <label className="text-sm font-medium text-gray-700">Sort by:</label>
+                  <Select defaultValue="date">
+                    <SelectTrigger className="w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="date">Date Posted</SelectItem>
+                      <SelectItem value="company">Company Name</SelectItem>
+                      <SelectItem value="title">Job Title</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <label className="text-sm font-medium text-gray-700">Location:</label>
+                  <Select defaultValue="all">
+                    <SelectTrigger className="w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Locations</SelectItem>
+                      {/* Dynamically populate based on available locations */}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            {/* Job Results */}
+            <div className="space-y-6">
+              {results.jobs.map((job, index) => (
+                <JobCard key={index} job={job} />
+              ))}
+            </div>
+
+            {/* Load More Button (if there are more results to show) */}
+            <div className="text-center pt-6">
+              <Button variant="outline">
+                <Plus className="h-4 w-4 mr-2" />
+                Load More Results
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Loading Skeletons for job cards */}
+        {scrapingState === 'loading' && (
+          <div className="space-y-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="flex items-start space-x-4 mb-4">
+                  <Skeleton className="w-12 h-12 rounded-lg" />
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-6 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                    <Skeleton className="h-4 w-full" />
+                  </div>
+                </div>
+                <Skeleton className="h-20 w-full mb-4" />
+                <div className="flex gap-2 mb-4">
+                  <Skeleton className="h-6 w-20" />
+                  <Skeleton className="h-6 w-16" />
+                  <Skeleton className="h-6 w-24" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-white border-t border-gray-200 mt-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div className="col-span-1 md:col-span-2">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <Linkedin className="h-4 w-4 text-white" />
+                </div>
+                <span className="text-lg font-semibold text-gray-900">LinkedIn Scraper</span>
+              </div>
+              <p className="text-sm text-gray-600 max-w-md">
+                Professional job data extraction service powered by Apify. Scrape comprehensive job and company information from LinkedIn efficiently and accurately.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Features</h3>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li>• Job data extraction</li>
+                <li>• Company information</li>
+                <li>• Bulk processing</li>
+                <li>• Export capabilities</li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Support</h3>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li><a href="#" className="hover:text-gray-900 transition-colors">Documentation</a></li>
+                <li><a href="#" className="hover:text-gray-900 transition-colors">API Reference</a></li>
+                <li><a href="#" className="hover:text-gray-900 transition-colors">Contact Support</a></li>
+                <li><a href="#" className="hover:text-gray-900 transition-colors">Status Page</a></li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-gray-200 mt-8 pt-6 flex items-center justify-between">
+            <p className="text-sm text-gray-500">
+              © 2024 LinkedIn Scraper. Built with Apify API.
+            </p>
+            <div className="flex items-center space-x-4 text-sm text-gray-500">
+              <a href="#" className="hover:text-gray-700 transition-colors">Privacy</a>
+              <a href="#" className="hover:text-gray-700 transition-colors">Terms</a>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
