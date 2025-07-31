@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { JobForm } from "@/components/job-form";
 import { JobCard } from "@/components/job-card";
 import { FilteredJobCard } from "@/components/filtered-job-card";
+import { ResumeUpload } from "@/components/resume-upload";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,6 +18,7 @@ export default function Home() {
   const [scrapingState, setScrapingState] = useState<ScrapingState>('idle');
   const [showFiltered, setShowFiltered] = useState(true);
   const [viewMode, setViewMode] = useState<'all' | 'can-apply' | 'cannot-apply'>('all');
+  const [resumeText, setResumeText] = useState<string | null>(null);
 
   // Query to poll for scraping results
   const { data: scrapingRequest, isLoading: isPolling } = useQuery<JobScrapingRequest>({
@@ -39,7 +41,10 @@ export default function Home() {
 
   const scrapeMutation = useMutation({
     mutationFn: async (linkedinUrl: string) => {
-      const response = await apiRequest('POST', '/api/scrape-job', { linkedinUrl });
+      const response = await apiRequest('POST', '/api/scrape-job', { 
+        linkedinUrl,
+        resumeText 
+      });
       return response.json();
     },
     onSuccess: (data) => {
@@ -100,6 +105,11 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Resume Upload Section */}
+        <div className="mb-8">
+          <ResumeUpload onResumeTextChange={setResumeText} />
+        </div>
+
         <JobForm 
           onSubmit={handleSubmit} 
           isLoading={scrapingState === 'loading'} 
@@ -254,7 +264,7 @@ export default function Home() {
                           enrichedResults.jobs
                             .filter(job => job.canApply)
                             .map((job, index) => (
-                              <FilteredJobCard key={`can-apply-${index}`} job={job} />
+                              <FilteredJobCard key={`can-apply-${index}`} job={job} resumeText={resumeText} />
                             ))
                         ) : (
                           <div className="text-center py-8 text-green-700">
@@ -283,7 +293,7 @@ export default function Home() {
                           enrichedResults.jobs
                             .filter(job => !job.canApply)
                             .map((job, index) => (
-                              <FilteredJobCard key={`cannot-apply-${index}`} job={job} />
+                              <FilteredJobCard key={`cannot-apply-${index}`} job={job} resumeText={resumeText} />
                             ))
                         ) : (
                           <div className="text-center py-8 text-gray-600">
@@ -320,13 +330,13 @@ export default function Home() {
                 }
 
                 return jobsToShow.map((job, index) => (
-                  <FilteredJobCard key={index} job={job} />
+                  <FilteredJobCard key={index} job={job} resumeText={resumeText} />
                 ));
               })()}
 
               {/* Display Filtered Results (fallback if no enrichment) */}
               {showFiltered && !enrichedResults && filteredResults && filteredResults.jobs.map((job, index) => (
-                <FilteredJobCard key={index} job={job} />
+                <FilteredJobCard key={index} job={job} resumeText={resumeText} />
               ))}
 
               {/* No Results Message */}

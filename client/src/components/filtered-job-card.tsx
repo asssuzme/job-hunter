@@ -9,9 +9,10 @@ import { apiRequest } from "@/lib/queryClient";
 
 interface FilteredJobCardProps {
   job: FilteredJobData;
+  resumeText?: string | null;
 }
 
-export function FilteredJobCard({ job }: FilteredJobCardProps) {
+export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
   const [showCompanyModal, setShowCompanyModal] = useState(false);
   const [companyProfile, setCompanyProfile] = useState<any>(null);
   const [generatedEmail, setGeneratedEmail] = useState<string>("");
@@ -47,7 +48,8 @@ export function FilteredJobCard({ job }: FilteredJobCardProps) {
         jobPosterData,
         jobDescription: job.requirement || `${job.title} position at ${job.companyName}`,
         jobTitle: job.title,
-        recipientEmail: job.jobPosterEmail
+        recipientEmail: job.jobPosterEmail,
+        resumeText: resumeText
       });
 
       const data = await response.json();

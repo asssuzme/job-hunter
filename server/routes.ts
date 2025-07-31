@@ -19,9 +19,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { linkedinUrl } = validation.data;
+      const { resumeText } = req.body; // Get optional resume text
 
-      // Create the scraping request
-      const request = await storage.createJobScrapingRequest({ linkedinUrl });
+      // Create the scraping request with optional resume
+      const request = await storage.createJobScrapingRequest({ 
+        linkedinUrl,
+        resumeText: resumeText || null 
+      });
       
       // Start the scraping process asynchronously
       processJobScraping(request.id);
@@ -119,7 +123,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         jobPosterData, 
         jobDescription, 
         jobTitle,
-        recipientEmail 
+        recipientEmail,
+        resumeText 
       } = req.body;
 
       if (!process.env.OPENAI_API_KEY) {
@@ -161,13 +166,23 @@ JOB DETAILS:
 - Job Title: ${jobTitle}
 - Job Description: ${jobDescription}
 
+${resumeText ? `APPLICANT'S RESUME:
+${resumeText}
+
+Use the resume information to:
+- Highlight specific relevant experiences and achievements
+- Match the applicant's skills with job requirements
+- Reference specific accomplishments that align with the company's needs
+- Demonstrate how their background makes them a perfect fit for this role
+` : ''}
+
 Write a compelling email that:
 1. Addresses the recipient by name (or "Hiring Manager" if name not available)
 2. Shows genuine interest in the company based on the company information
 3. Demonstrates understanding of the role based on the job description
-4. Highlights how the applicant's skills match the requirements
+4. ${resumeText ? 'Highlights specific experiences from the resume that match the requirements' : 'Highlights how the applicant\'s skills match the requirements'}
 5. References specific aspects of the company or role to show research
-6. Maintains a professional yet personable tone
+6. ${resumeText ? 'Mentions quantifiable achievements from the resume when relevant' : 'Maintains professional tone'}
 7. Includes a clear call to action
 8. Is concise (around 250-300 words)
 
