@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ScrapingState } from "@/lib/types";
 import { JobScrapingRequest, ScrapingResult, FilteredResult, EnrichedResult } from "@shared/schema";
-import { Loader2, AlertTriangle, Download, Trash2, Linkedin, Settings, HelpCircle, Plus, Filter } from "lucide-react";
+import { Loader2, AlertTriangle, Download, Trash2, Linkedin, Settings, HelpCircle, Plus, Filter, CheckCircle, XCircle } from "lucide-react";
 
 export default function Home() {
   const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
@@ -234,15 +234,76 @@ export default function Home() {
               ))}
 
               {/* Display Enriched Results */}
-              {showFiltered && enrichedResults && (() => {
+              {showFiltered && enrichedResults && viewMode === 'all' && (
+                <div className="space-y-12">
+                  {/* Can Apply Section */}
+                  <div className="space-y-4">
+                    <div className="bg-green-50 border border-green-200 rounded-xl p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-xl font-semibold text-green-900 flex items-center gap-2">
+                          <CheckCircle className="h-6 w-6 text-green-600" />
+                          Can Apply Directly ({enrichedResults.jobs.filter(job => job.canApply).length} jobs)
+                        </h3>
+                        <span className="text-sm text-green-700 bg-green-100 px-3 py-1 rounded-full">
+                          Jobs with Email Contacts
+                        </span>
+                      </div>
+                      <p className="text-green-800 mb-6">These jobs have email contacts available for direct outreach</p>
+                      <div className="space-y-4">
+                        {enrichedResults.jobs.filter(job => job.canApply).length > 0 ? (
+                          enrichedResults.jobs
+                            .filter(job => job.canApply)
+                            .map((job, index) => (
+                              <FilteredJobCard key={`can-apply-${index}`} job={job} />
+                            ))
+                        ) : (
+                          <div className="text-center py-8 text-green-700">
+                            No jobs with contact information found in this batch
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Cannot Apply Section */}
+                  <div className="space-y-4">
+                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                          <XCircle className="h-6 w-6 text-gray-500" />
+                          Cannot Apply Directly ({enrichedResults.jobs.filter(job => !job.canApply).length} jobs)
+                        </h3>
+                        <span className="text-sm text-gray-700 bg-gray-100 px-3 py-1 rounded-full">
+                          Apply via LinkedIn/Company Portal
+                        </span>
+                      </div>
+                      <p className="text-gray-700 mb-6">These jobs require applying through LinkedIn or company websites</p>
+                      <div className="space-y-4">
+                        {enrichedResults.jobs.filter(job => !job.canApply).length > 0 ? (
+                          enrichedResults.jobs
+                            .filter(job => !job.canApply)
+                            .map((job, index) => (
+                              <FilteredJobCard key={`cannot-apply-${index}`} job={job} />
+                            ))
+                        ) : (
+                          <div className="text-center py-8 text-gray-600">
+                            All jobs have contact information available!
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Display filtered view based on viewMode */}
+              {showFiltered && enrichedResults && viewMode !== 'all' && (() => {
                 let jobsToShow = enrichedResults.jobs;
 
                 // Apply viewMode filtering
-                if (viewMode !== 'all') {
-                  jobsToShow = jobsToShow.filter(job => 
-                    viewMode === 'can-apply' ? job.canApply : !job.canApply
-                  );
-                }
+                jobsToShow = jobsToShow.filter(job => 
+                  viewMode === 'can-apply' ? job.canApply : !job.canApply
+                );
 
                 if (jobsToShow.length === 0) {
                   return (
