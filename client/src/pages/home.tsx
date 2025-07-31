@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { JobForm } from "@/components/job-form";
 import { JobCard } from "@/components/job-card";
@@ -19,18 +19,17 @@ export default function Home() {
   const { data: scrapingRequest, isLoading: isPolling } = useQuery<JobScrapingRequest>({
     queryKey: ['/api/scrape-job', currentRequestId],
     enabled: !!currentRequestId,
-    refetchInterval: (data) => {
-      if (data?.status === 'completed') {
-        if (scrapingState !== 'success') setScrapingState('success');
-        return false;
-      }
-      if (data?.status === 'failed') {
-        if (scrapingState !== 'error') setScrapingState('error');
-        return false;
-      }
-      return scrapingState === 'loading' ? 2000 : false;
-    },
+    refetchInterval: scrapingState === 'loading' ? 2000 : false,
   });
+
+  // Check status and update state
+  useEffect(() => {
+    if (scrapingRequest?.status === 'completed') {
+      setScrapingState('success');
+    } else if (scrapingRequest?.status === 'failed') {
+      setScrapingState('error');
+    }
+  }, [scrapingRequest?.status]);
 
   const scrapeMutation = useMutation({
     mutationFn: async (linkedinUrl: string) => {
