@@ -20,8 +20,10 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
 
   const companyMutation = useMutation({
     mutationFn: async (companyLinkedinUrl: string) => {
-      const response = await apiRequest('POST', '/api/scrape-company', { companyLinkedinUrl });
-      return response.json();
+      return await apiRequest('/api/scrape-company', {
+        method: 'POST',
+        body: JSON.stringify({ companyLinkedinUrl })
+      });
     },
     onSuccess: async (data) => {
       if (data.success) {
@@ -43,16 +45,17 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
         about: ""
       };
 
-      const response = await apiRequest('POST', '/api/generate-email', {
-        companyData,
-        jobPosterData,
-        jobDescription: job.requirement || `${job.title} position at ${job.companyName}`,
-        jobTitle: job.title,
-        recipientEmail: job.jobPosterEmail,
-        resumeText: resumeText
+      const data = await apiRequest('/api/generate-email', {
+        method: 'POST',
+        body: JSON.stringify({
+          companyData,
+          jobPosterData,
+          jobDescription: job.requirement || `${job.title} position at ${job.companyName}`,
+          jobTitle: job.title,
+          recipientEmail: job.jobPosterEmail,
+          resumeText: resumeText
+        })
       });
-
-      const data = await response.json();
       if (data.success) {
         setGeneratedEmail(data.email);
       }

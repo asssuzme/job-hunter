@@ -44,11 +44,13 @@ export default function Home() {
 
   const scrapeMutation = useMutation({
     mutationFn: async (linkedinUrl: string) => {
-      const response = await apiRequest('POST', '/api/scrape-job', { 
-        linkedinUrl,
-        resumeText 
+      return await apiRequest('/api/scrape-job', {
+        method: 'POST',
+        body: JSON.stringify({ 
+          linkedinUrl,
+          resumeText 
+        })
       });
-      return response.json();
     },
     onSuccess: (data) => {
       setCurrentRequestId(data.requestId);
@@ -79,7 +81,9 @@ export default function Home() {
     if (!currentRequestId) return;
     
     try {
-      await apiRequest('POST', `/api/scrape-job/${currentRequestId}/cancel`);
+      await apiRequest(`/api/scrape-job/${currentRequestId}/cancel`, {
+        method: 'POST'
+      });
       setScrapingState('cancelled');
       // Refresh the query to get the cancelled status
       queryClient.invalidateQueries({ queryKey: ['/api/scrape-job', currentRequestId] });
