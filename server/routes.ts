@@ -90,8 +90,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No file uploaded" });
       }
 
-      // Use require for CommonJS module
-      const pdfParse = eval('require')("pdf-parse");
+      // Use createRequire to load CommonJS module in ESM context
+      const { createRequire } = await import('module');
+      const require = createRequire(import.meta.url);
+      const pdfParse = require("pdf-parse");
       
       // Parse the PDF buffer
       const data = await pdfParse(req.file.buffer);
