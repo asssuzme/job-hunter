@@ -24,6 +24,9 @@ export const users = pgTable("users", {
   profileImageUrl: varchar("profile_image_url"),
   totalJobsScraped: integer("total_jobs_scraped").default(0),
   totalApplicationsSent: integer("total_applications_sent").default(0),
+  resumeText: text("resume_text"), // Permanent storage for user's resume
+  resumeFileName: varchar("resume_file_name"), // Store the original file name
+  resumeUploadedAt: timestamp("resume_uploaded_at"), // Track when resume was uploaded
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

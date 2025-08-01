@@ -43,6 +43,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
   const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
   const [resumeText, setResumeText] = useState<string>("");
   const [resumeFileName, setResumeFileName] = useState<string>("");
+  const [isLoadingResume, setIsLoadingResume] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -53,6 +54,32 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
       linkedinUrl: "",
     },
   });
+
+  // Check for existing resume on component mount
+  useEffect(() => {
+    const checkExistingResume = async () => {
+      try {
+        const response = await fetch('/api/user/resume');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.hasResume && data.resumeText) {
+            setResumeText(data.resumeText);
+            setResumeFileName(data.fileName || 'Saved Resume');
+            toast({
+              title: "Resume Loaded",
+              description: "Your saved resume has been loaded automatically."
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Error checking for existing resume:", error);
+      } finally {
+        setIsLoadingResume(false);
+      }
+    };
+
+    checkExistingResume();
+  }, [toast]);
 
   // Scrape mutation
   const scrapeMutation = useMutation({

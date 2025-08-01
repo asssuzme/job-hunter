@@ -10,6 +10,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (August 1, 2025)
 
+### Resume Storage and Automatic Reuse
+- **Persistent Resume Storage**: User resumes are now permanently stored in the database
+- **Database Schema Update**: Added resumeText, resumeFileName, and resumeUploadedAt fields to users table
+- **Automatic Loading**: Resume automatically loads when users visit job scraper or results pages
+- **API Endpoints**: New `/api/user/resume` endpoint to check and retrieve stored resumes
+- **Email Personalization**: Stored resume is automatically used for all email generation
+- **One-time Upload**: Users only need to upload their resume once; it's reused for all future applications
+
 ### Complete UI/UX Redesign - SaaS-Style Interface
 - **Design System**: Implemented modern SaaS-inspired UI similar to Linear.app/Framer/Vercel
 - **Color Scheme**: Deep navy blue (#0a0f1c), marble white (#fafafa), and muted gold accent (#d4af37)

@@ -24,6 +24,10 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   
+  // Resume operations
+  updateUserResume(userId: string, resumeText: string, fileName: string): Promise<User | undefined>;
+  getUserResume(userId: string): Promise<{ resumeText: string | null; resumeFileName: string | null; resumeUploadedAt: Date | null } | undefined>;
+  
   // Dashboard operations
   getDashboardStats(userId: string): Promise<{
     totalJobsScraped: number;
@@ -91,6 +95,32 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return user;
+  }
+
+  async updateUserResume(userId: string, resumeText: string, fileName: string): Promise<User | undefined> {
+    const [updated] = await db
+      .update(users)
+      .set({
+        resumeText,
+        resumeFileName: fileName,
+        resumeUploadedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return updated || undefined;
+  }
+
+  async getUserResume(userId: string): Promise<{ resumeText: string | null; resumeFileName: string | null; resumeUploadedAt: Date | null } | undefined> {
+    const [user] = await db
+      .select({
+        resumeText: users.resumeText,
+        resumeFileName: users.resumeFileName,
+        resumeUploadedAt: users.resumeUploadedAt
+      })
+      .from(users)
+      .where(eq(users.id, userId));
+    return user || undefined;
   }
 
   async getDashboardStats(userId: string): Promise<{

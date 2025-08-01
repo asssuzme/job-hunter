@@ -142,6 +142,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check if user has a resume
+  app.get("/api/user/resume", isSimpleAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+
+      const resumeData = await storage.getUserResume(userId);
+      
+      res.json({
+        hasResume: !!resumeData?.resumeText,
+        fileName: resumeData?.resumeFileName || null,
+        uploadedAt: resumeData?.resumeUploadedAt || null,
+        resumeText: resumeData?.resumeText || null
+      });
+    } catch (error) {
+      console.error("Error fetching user resume:", error);
+      res.status(500).json({ error: "Failed to fetch resume data" });
+    }
+  });
+
   // Upload resume endpoint
   app.post("/api/upload-resume", isSimpleAuthenticated, upload.single("file"), async (req: any, res) => {
     try {
@@ -187,6 +209,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Clean the text to remove null bytes and other invalid characters
       const cleanedText = text.replace(/\0/g, '').trim();
+      
+      // Save the resume to the user's database record
+      const userId = req.user?.id;
+      if (userId) {
+        await storage.updateUserResume(userId, cleanedText, req.file.originalname);
+      }
       
       res.json({ text: cleanedText });
     } catch (error) {

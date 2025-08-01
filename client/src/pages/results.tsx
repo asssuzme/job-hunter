@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -43,11 +44,31 @@ interface ScrapingResult {
 export default function Results() {
   const { requestId } = useParams();
   const { user } = useAuth();
+  const [userResume, setUserResume] = useState<string | null>(null);
   
   const { data: scrapingResult, isLoading } = useQuery<ScrapingResult>({
     queryKey: ['/api/scrape-job', requestId],
     enabled: !!requestId,
   });
+
+  // Load user's saved resume when component mounts
+  useEffect(() => {
+    const loadUserResume = async () => {
+      try {
+        const response = await fetch('/api/user/resume');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.hasResume && data.resumeText) {
+            setUserResume(data.resumeText);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading user resume:", error);
+      }
+    };
+
+    loadUserResume();
+  }, []);
 
   if (!user) {
     return null;
@@ -251,7 +272,7 @@ export default function Results() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
                 >
-                  <FilteredJobCard job={job} />
+                  <FilteredJobCard job={job} resumeText={userResume} />
                 </motion.div>
               ))
             )}
@@ -316,7 +337,7 @@ export default function Results() {
                 transition={{ delay: index * 0.05 }}
               >
                 {job.canApply ? (
-                  <FilteredJobCard job={job} />
+                  <FilteredJobCard job={job} resumeText={userResume} />
                 ) : (
                   <div className="glass-card p-4 hover:shadow-lg transition-shadow">
                     <div className="flex items-center justify-between">
