@@ -17,9 +17,11 @@ Preferred communication style: Simple, everyday language.
   - Location: Free text input with AI-powered normalization
   - Work Type: Dropdown with On-site, Remote, and Hybrid options
 - **LinkedIn URL Generation**: New `/api/generate-linkedin-url` endpoint uses OpenAI to:
-  - Normalize location names to LinkedIn geoIds (supports major Indian cities)
+  - Normalize location names to LinkedIn geoIds (supports countries and Indian cities)
+  - Supported countries: USA, India, China, Japan, Singapore, France, Belgium, Spain, UK, Germany, Italy, Canada, Australia, Brazil, Mexico, Netherlands, Switzerland, Sweden, South Korea, Russia, UAE
+  - Supported Indian cities: Bengaluru, Mumbai, Delhi, Chennai, Hyderabad, Kolkata, Pune, Ahmedabad, Jaipur, Lucknow, Noida, Gurugram, Indore, Kochi
   - Always map to exact location geoId, never substitute with nearby locations
-  - Returns error if no exact match found (no defaulting to other cities)
+  - Returns error if no exact match found (no defaulting to other locations)
   - Map work types to LinkedIn format (1=On-site, 2=Remote, 3=Hybrid)
   - Generate proper LinkedIn search URLs automatically
 - **Seamless Integration**: Generated URLs pass directly to existing scraping pipeline

@@ -332,8 +332,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // LinkedIn geoId mapping for Indian cities
-      const cityGeoIds: Record<string, string> = {
+      // LinkedIn geoId mapping for countries and cities
+      const locationGeoIds: Record<string, string> = {
+        // Countries
+        "united states": "103644278",
+        "usa": "103644278",
+        "us": "103644278",
+        "america": "103644278",
+        "india": "102713980",
+        "china": "102890883",
+        "japan": "101355337",
+        "singapore": "102454443",
+        "france": "105015875",
+        "belgium": "100565514",
+        "spain": "105646813",
+        "united kingdom": "102299470",
+        "uk": "102299470",
+        "england": "102299470",
+        "britain": "102299470",
+        "germany": "101282230",
+        "italy": "103350119",
+        "canada": "101174742",
+        "australia": "101452733",
+        "brazil": "106057199",
+        "mexico": "103323778",
+        "netherlands": "102890719",
+        "switzerland": "106693272",
+        "sweden": "105117694",
+        "south korea": "105149562",
+        "korea": "105149562",
+        "russia": "101728296",
+        "united arab emirates": "104305776",
+        "uae": "104305776",
+        "dubai": "104305776",
+        
+        // Indian cities
         "bengaluru": "105214831",
         "bangalore": "105214831",
         "mumbai": "106164952",
@@ -360,14 +393,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
       
       // Use OpenAI to normalize the location
-      const locationPrompt = `Given a user's location input "${location}", find and return the correct LinkedIn geoId for that exact city or country by searching LinkedIn's location taxonomy from this list: ${Object.keys(cityGeoIds).filter((city, index, arr) => arr.indexOf(city) === index).join(", ")}. 
+      const locationPrompt = `Given a user's location input "${location}", find and return the correct LinkedIn geoId for that exact city or country by searching LinkedIn's location taxonomy from this list: ${Object.keys(locationGeoIds).filter((city, index, arr) => arr.indexOf(city) === index).join(", ")}. 
       
       CRITICAL REQUIREMENTS:
       - Never substitute with a nearby or similar location
       - Only return the exact match for the user's requested location
       - If uncertain or no exact match exists, return "NO_MATCH" instead of guessing
       
-      Return only the exact city name in lowercase if found, or "NO_MATCH" if not found. No explanations.`;
+      Return only the exact location name in lowercase if found, or "NO_MATCH" if not found. No explanations.`;
 
       const completion = await openai.chat.completions.create({
         model: "gpt-4o",
@@ -388,7 +421,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      const geoId = cityGeoIds[normalizedLocation];
+      const geoId = locationGeoIds[normalizedLocation];
 
       if (!geoId) {
         // This shouldn't happen if AI follows instructions, but handle it just in case
