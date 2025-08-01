@@ -65,18 +65,32 @@ export async function setupAuth(app: Express) {
   app.use(passport.session());
 
   // Configure Google OAuth strategy
+  const baseUrl = process.env.REPLIT_DEV_DOMAIN 
+    ? `https://${process.env.REPLIT_DEV_DOMAIN}`
+    : 'http://localhost:5000';
+    
+  console.log("Configuring Google OAuth with base URL:", baseUrl);
+  console.log("Client ID:", process.env.GOOGLE_CLIENT_ID);
+  
   passport.use(
     new GoogleStrategy(
       {
         clientID: process.env.GOOGLE_CLIENT_ID || "",
         clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-        callbackURL: "/api/auth/google/callback",
+        callbackURL: `${baseUrl}/api/auth/google/callback`,
       },
       async (accessToken: string, refreshToken: string, profile: any, done: any) => {
         try {
+          console.log("Google OAuth callback - Profile:", JSON.stringify(profile, null, 2));
+          console.log("Access Token received:", accessToken ? "Yes" : "No");
+          console.log("Refresh Token received:", refreshToken ? "Yes" : "No");
+          
           const user = await upsertUser(profile, accessToken, refreshToken);
+          console.log("User upserted successfully:", user);
+          
           done(null, user);
         } catch (error) {
+          console.error("Error in Google OAuth callback:", error);
           done(error as Error);
         }
       }
@@ -128,9 +142,13 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/auth/google/callback",
     passport.authenticate("google", {
-      failureRedirect: "/login",
-      successRedirect: "/"
-    })
+      failureRedirect: "/",
+      failureMessage: true
+    }),
+    (req, res) => {
+      console.log("Authentication successful, redirecting to home");
+      res.redirect("/");
+    }
   );
 
   app.get("/api/logout", (req, res) => {
