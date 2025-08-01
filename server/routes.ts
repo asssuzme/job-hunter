@@ -120,7 +120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Parse PDF file to extract text
-  app.post("/api/parse-pdf", upload.single("file"), async (req, res) => {
+  app.post("/api/parse-pdf", isAuthenticated, upload.single("file"), async (req: any, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
