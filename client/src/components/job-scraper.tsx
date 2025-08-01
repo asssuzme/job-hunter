@@ -281,7 +281,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
                 </div>
                 <div className="text-center">
                   <p className="font-medium">
-                    {resumeFileName ? resumeFileName : 'Drop your resume here'}
+                    {resumeFileName ? resumeFileName : isLoadingResume ? 'Loading saved resume...' : 'Drop your resume here'}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     {resumeFileName ? 'Click to replace' : 'Supports .txt and .pdf files'}
@@ -289,14 +289,14 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
                 </div>
               </button>
             </div>
-            {resumeFileName && (
+            {(resumeFileName || (resumeText && !isLoadingResume)) && (
               <motion.div
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 className="flex items-center gap-2 text-sm text-green-600"
               >
                 <CheckCircle className="h-4 w-4" />
-                <span>Resume uploaded successfully</span>
+                <span>{resumeFileName ? 'Resume uploaded successfully' : 'Using your saved resume'}</span>
               </motion.div>
             )}
           </motion.div>

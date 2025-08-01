@@ -146,11 +146,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/user/resume", isSimpleAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.id;
+      console.log("Get resume - User ID:", userId);
+      console.log("Get resume - User object:", req.user);
+      
       if (!userId) {
         return res.status(401).json({ error: "User not authenticated" });
       }
 
       const resumeData = await storage.getUserResume(userId);
+      console.log("Resume data from database:", resumeData);
       
       res.json({
         hasResume: !!resumeData?.resumeText,
@@ -212,8 +216,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Save the resume to the user's database record
       const userId = req.user?.id;
+      console.log("Upload resume - User ID:", userId);
+      console.log("Upload resume - User object:", req.user);
+      
       if (userId) {
+        console.log("Saving resume to database for user:", userId);
         await storage.updateUserResume(userId, cleanedText, req.file.originalname);
+      } else {
+        console.log("No user ID found, resume not saved to database");
       }
       
       res.json({ text: cleanedText });
