@@ -8,6 +8,15 @@ A sophisticated web service that leverages Apify API to scrape, filter, and enri
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes (August 2, 2025)
+
+### Gmail Token Refresh Implementation
+- **Fixed Token Expiration Issue**: Implemented automatic token refresh for Gmail API
+- **Refresh Token Function**: Added `refreshGoogleToken` function to handle expired access tokens
+- **Enhanced Send-Email Endpoint**: Updated to automatically refresh tokens on 401 errors
+- **Session Management**: Properly stores new access tokens after refresh
+- **User Experience**: Eliminates repeated sign-in requirements, tokens refresh seamlessly
+
 ## Recent Changes (August 1, 2025)
 
 ### Resume Storage and Automatic Reuse

@@ -17,6 +17,33 @@ import express from "express";
 import session from "express-session";
 import { getSession } from "./googleAuth";
 
+// Token refresh function
+async function refreshGoogleToken(refreshToken: string): Promise<{ access_token: string; refresh_token?: string } | null> {
+  try {
+    const response = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: process.env.GOOGLE_CLIENT_ID || '',
+        client_secret: process.env.GOOGLE_CLIENT_SECRET || '',
+        refresh_token: refreshToken,
+        grant_type: 'refresh_token'
+      })
+    });
+
+    if (!response.ok) {
+      console.error('Token refresh failed:', await response.text());
+      return null;
+    }
+
+    const tokens = await response.json();
+    return tokens;
+  } catch (error) {
+    console.error('Error refreshing token:', error);
+    return null;
+  }
+}
+
 // Configure multer for memory storage
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -36,7 +63,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (req.user) {
       res.json({
         ...req.user,
-        googleAccessToken: req.session?.googleAccessToken
+        googleAccessToken: req.session?.googleAccessToken,
+        hasRefreshToken: !!req.session?.googleRefreshToken
       });
     } else {
       res.status(401).json({ message: "Unauthorized" });
@@ -446,7 +474,8 @@ Format the email with proper structure including greeting, body paragraphs, and 
         attachments 
       } = req.body;
 
-      const googleAccessToken = req.session?.googleAccessToken;
+      let googleAccessToken = req.session?.googleAccessToken;
+      const googleRefreshToken = req.session?.googleRefreshToken;
       
       if (!googleAccessToken) {
         return res.status(401).json({ error: "No Gmail access token found. Please re-authenticate." });
@@ -465,8 +494,8 @@ Format the email with proper structure including greeting, body paragraphs, and 
       const message = messageParts.join('\n');
       const encodedMessage = Buffer.from(message).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
-      // Send email using Gmail API
-      const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+      // Try to send email
+      let response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${googleAccessToken}`,
@@ -477,12 +506,48 @@ Format the email with proper structure including greeting, body paragraphs, and 
         })
       });
 
+      // If token expired, try to refresh it
+      if (response.status === 401 && googleRefreshToken) {
+        console.log('Access token expired, attempting to refresh...');
+        
+        const newTokens = await refreshGoogleToken(googleRefreshToken);
+        
+        if (newTokens && newTokens.access_token) {
+          // Update session with new access token
+          req.session!.googleAccessToken = newTokens.access_token;
+          if (newTokens.refresh_token) {
+            req.session!.googleRefreshToken = newTokens.refresh_token;
+          }
+          
+          // Save session
+          await new Promise((resolve) => req.session!.save(resolve));
+          
+          googleAccessToken = newTokens.access_token;
+          console.log('Token refreshed successfully, retrying email send...');
+          
+          // Retry with new token
+          response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${googleAccessToken}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              raw: encodedMessage
+            })
+          });
+        } else {
+          console.error('Failed to refresh token');
+          return res.status(401).json({ error: "Failed to refresh authentication. Please sign in again." });
+        }
+      }
+
       if (!response.ok) {
         const error = await response.json();
         console.error('Gmail API error:', error);
         
         if (response.status === 401) {
-          return res.status(401).json({ error: "Gmail access token expired. Please sign in again." });
+          return res.status(401).json({ error: "Authentication failed. Please sign in again." });
         }
         
         return res.status(response.status).json({ error: error.error?.message || "Failed to send email" });
