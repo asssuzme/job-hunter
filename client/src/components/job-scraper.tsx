@@ -18,13 +18,17 @@ import {
   Activity,
   Sparkles,
   Globe,
-  Zap
+  Zap,
+  MapPin,
+  Briefcase
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { z } from "zod";
 
 interface JobScrapingResponse {
   id: string;
@@ -34,6 +38,17 @@ interface JobScrapingResponse {
   filteredResults?: any;
   enrichedResults?: any;
 }
+
+// Define new schema for job search form
+const jobSearchSchema = z.object({
+  keyword: z.string().min(1, "Job keyword is required"),
+  location: z.string().min(1, "Location is required"),
+  workType: z.enum(["1", "2", "3"], {
+    required_error: "Please select a work type",
+  }),
+});
+
+type JobSearchFormData = z.infer<typeof jobSearchSchema>;
 
 interface JobScraperProps {
   onComplete?: (requestId: string) => void;
@@ -48,10 +63,12 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
-  const form = useForm({
-    resolver: zodResolver(linkedinUrlSchema),
+  const form = useForm<JobSearchFormData>({
+    resolver: zodResolver(jobSearchSchema),
     defaultValues: {
-      linkedinUrl: "",
+      keyword: "",
+      location: "",
+      workType: "1",
     },
   });
 
@@ -83,10 +100,36 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
 
   // Scrape mutation
   const scrapeMutation = useMutation({
-    mutationFn: async (data: { linkedinUrl: string; resumeText?: string }) => {
+    mutationFn: async (data: { keyword: string; location: string; workType: string; resumeText?: string }) => {
+      // First, generate the LinkedIn URL
+      const urlResponse = await apiRequest('/api/generate-linkedin-url', {
+        method: 'POST',
+        body: JSON.stringify({
+          keyword: data.keyword,
+          location: data.location,
+          workType: data.workType
+        })
+      });
+
+      if (!urlResponse.linkedinUrl) {
+        throw new Error("Failed to generate LinkedIn URL");
+      }
+
+      // Show location normalization info if available
+      if (urlResponse.message) {
+        toast({
+          title: "Location Normalized",
+          description: urlResponse.message,
+        });
+      }
+
+      // Then, start the scraping process with the generated URL
       const response = await apiRequest('/api/scrape-job', {
         method: 'POST',
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          linkedinUrl: urlResponse.linkedinUrl,
+          resumeText: data.resumeText
+        }),
       });
       return response;
     },
@@ -173,9 +216,11 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
     }
   };
 
-  const handleSubmit = (data: { linkedinUrl: string }) => {
+  const handleSubmit = (data: JobSearchFormData) => {
     scrapeMutation.mutate({ 
-      linkedinUrl: data.linkedinUrl,
+      keyword: data.keyword,
+      location: data.location,
+      workType: data.workType,
       resumeText: resumeText || undefined
     });
   };
@@ -220,30 +265,90 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
     <div className="space-y-6">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-          {/* LinkedIn URL Input */}
+          {/* Job Keyword Input */}
           <FormField
             control={form.control}
-            name="linkedinUrl"
+            name="keyword"
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-sm font-medium flex items-center gap-2">
-                  <Globe className="h-4 w-4 text-primary" />
-                  LinkedIn Job Search URL
+                  <Briefcase className="h-4 w-4 text-primary" />
+                  Job Keyword
                 </FormLabel>
                 <FormControl>
                   <div className="relative">
                     <Input
                       {...field}
-                      type="url"
-                      placeholder="https://www.linkedin.com/jobs/search/..."
+                      type="text"
+                      placeholder="e.g., Software Engineer, Product Manager"
                       className="pl-10 glass-input"
                       disabled={isProcessing}
                     />
-                    <Link className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   </div>
                 </FormControl>
                 <p className="text-xs text-muted-foreground">
-                  Paste the URL from your LinkedIn job search
+                  Enter the job title or keywords to search for
+                </p>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Location Input */}
+          <FormField
+            control={form.control}
+            name="location"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-medium flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-primary" />
+                  Location
+                </FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Input
+                      {...field}
+                      type="text"
+                      placeholder="e.g., Bengaluru, Mumbai, Delhi"
+                      className="pl-10 glass-input"
+                      disabled={isProcessing}
+                    />
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  </div>
+                </FormControl>
+                <p className="text-xs text-muted-foreground">
+                  Enter city name (we'll normalize it automatically)
+                </p>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Work Type Dropdown */}
+          <FormField
+            control={form.control}
+            name="workType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-medium flex items-center gap-2">
+                  <Globe className="h-4 w-4 text-primary" />
+                  Work Type
+                </FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger className="glass-input" disabled={isProcessing}>
+                      <SelectValue placeholder="Select work type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="1">On-site</SelectItem>
+                    <SelectItem value="2">Remote</SelectItem>
+                    <SelectItem value="3">Hybrid</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Select your preferred work arrangement
                 </p>
                 <FormMessage />
               </FormItem>

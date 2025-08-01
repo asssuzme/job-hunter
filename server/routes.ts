@@ -321,6 +321,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Generate LinkedIn search URL using OpenAI
+  app.post("/api/generate-linkedin-url", isSimpleAuthenticated, async (req: any, res) => {
+    try {
+      const { keyword, location, workType } = req.body;
+      
+      if (!keyword || !location || !workType) {
+        return res.status(400).json({ 
+          error: "Missing required fields: keyword, location, and workType are required" 
+        });
+      }
+
+      // LinkedIn geoId mapping for Indian cities
+      const cityGeoIds: Record<string, string> = {
+        "bengaluru": "105214831",
+        "bangalore": "105214831",
+        "mumbai": "106164952",
+        "bombay": "106164952",
+        "delhi": "102713980",
+        "new delhi": "102713980",
+        "chennai": "114467055",
+        "madras": "114467055",
+        "hyderabad": "104076507",
+        "kolkata": "102282711",
+        "calcutta": "102282711",
+        "pune": "114806696",
+        "ahmedabad": "104035573",
+        "jaipur": "104522388",
+        "lucknow": "103150703",
+        "noida": "103144308",
+        "gurugram": "105373241",
+        "gurgaon": "105373241",
+        "indore": "105413271",
+        "kochi": "104905452",
+        "cochin": "104905452",
+      };
+
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      
+      // Use OpenAI to normalize the location
+      const locationPrompt = `Given the location "${location}", identify the closest matching Indian city from this list: ${Object.keys(cityGeoIds).filter((city, index, arr) => arr.indexOf(city) === index).join(", ")}. 
+      
+      Return only the exact city name in lowercase, no explanation. If the location doesn't match any city in the list, return the closest major city.`;
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: "You are a location normalizer. Return only the normalized city name in lowercase." },
+          { role: "user", content: locationPrompt }
+        ],
+        max_tokens: 50,
+      });
+
+      const normalizedLocation = completion.choices[0].message.content?.trim().toLowerCase() || "";
+      const geoId = cityGeoIds[normalizedLocation];
+
+      if (!geoId) {
+        // Default to Bengaluru if no match found
+        const defaultGeoId = "105214831";
+        const linkedinUrl = `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(keyword)}&geoId=${defaultGeoId}&f_WT=${workType}`;
+        
+        return res.json({ 
+          linkedinUrl,
+          normalizedLocation: "bengaluru",
+          originalLocation: location,
+          message: `Location "${location}" not found in our database. Using Bengaluru as default.`
+        });
+      }
+
+      // Construct LinkedIn URL
+      const linkedinUrl = `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(keyword)}&geoId=${geoId}&f_WT=${workType}`;
+      
+      res.json({ 
+        linkedinUrl,
+        normalizedLocation,
+        originalLocation: location
+      });
+
+    } catch (error) {
+      console.error("Error generating LinkedIn URL:", error);
+      res.status(500).json({ error: "Failed to generate LinkedIn URL" });
+    }
+  });
+
   // Scrape company profile
   app.post("/api/scrape-company", async (req, res) => {
     try {

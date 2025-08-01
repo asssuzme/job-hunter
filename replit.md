@@ -10,6 +10,18 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (August 2, 2025)
 
+### Job Search Form Update
+- **Replaced LinkedIn URL Input**: Changed from single URL input to comprehensive job search form
+- **New Form Fields**:
+  - Job Keyword: Text input for job titles/keywords
+  - Location: Free text input with AI-powered normalization
+  - Work Type: Dropdown with On-site, Remote, and Hybrid options
+- **LinkedIn URL Generation**: New `/api/generate-linkedin-url` endpoint uses OpenAI to:
+  - Normalize location names to LinkedIn geoIds (supports major Indian cities)
+  - Map work types to LinkedIn format (1=On-site, 2=Remote, 3=Hybrid)
+  - Generate proper LinkedIn search URLs automatically
+- **Seamless Integration**: Generated URLs pass directly to existing scraping pipeline
+
 ### Gmail Token Refresh Implementation
 - **Fixed Token Expiration Issue**: Implemented automatic token refresh for Gmail API
 - **Refresh Token Function**: Added `refreshGoogleToken` function to handle expired access tokens
