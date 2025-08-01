@@ -19,9 +19,12 @@ import {
   Binary,
   Cpu,
   BarChart3,
-  Calendar
+  Calendar,
+  Send,
+  CheckCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { JobForm } from "@/components/job-form";
 import { JobScraper } from "@/components/job-scraper";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -60,23 +63,23 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-background cyber-grid">
-      {/* Tech Header */}
-      <header className="tech-glass border-b border-primary/20 sticky top-0 z-50">
+    <div className="min-h-screen bg-background">
+      {/* Modern Header */}
+      <header className="bg-card/50 backdrop-blur-lg border-b sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Activity className="h-8 w-8 text-primary animate-pulse" />
+              <Activity className="h-8 w-8 text-primary" />
               <div>
-                <h1 className="text-2xl font-bold gradient-text">NEXUS JOB HUNTER</h1>
-                <p className="text-xs text-primary/60 font-mono">AGENT ID: {user.id.slice(0, 8).toUpperCase()}</p>
+                <h1 className="text-2xl font-bold">LinkedIn Job Scraper</h1>
+                <p className="text-xs text-muted-foreground">Professional Job Search Tool</p>
               </div>
             </div>
             
             <div className="flex items-center space-x-6">
               <div className="flex items-center space-x-2">
-                <div className="h-2 w-2 bg-primary rounded-full animate-pulse"></div>
-                <span className="text-sm font-mono text-primary">SYSTEM ACTIVE</span>
+                <div className="h-2 w-2 bg-primary rounded-full"></div>
+                <span className="text-sm text-muted-foreground">System Active</span>
               </div>
               
               <div className="flex items-center space-x-4">
@@ -84,22 +87,23 @@ export default function Home() {
                   <img 
                     src={user.profileImageUrl} 
                     alt={user.firstName || "User"} 
-                    className="h-8 w-8 rounded-full border-2 border-primary/50"
+                    className="h-8 w-8 rounded-full border-2 border-border"
                   />
                 )}
                 <div className="text-right">
-                  <p className="text-sm font-semibold text-primary">{user.firstName} {user.lastName}</p>
-                  <p className="text-xs text-muted-foreground font-mono">{user.email}</p>
+                  <p className="text-sm font-semibold">{user.firstName} {user.lastName}</p>
+                  <p className="text-xs text-muted-foreground">{user.email}</p>
                 </div>
               </div>
               
-              <button
+              <Button
                 onClick={() => logoutMutation.mutate()}
-                className="tech-btn px-4 py-2 text-sm"
+                variant="outline"
+                className="text-sm"
               >
-                <Terminal className="h-4 w-4 mr-2 inline-block" />
-                LOGOUT
-              </button>
+                <Terminal className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
             </div>
           </div>
         </div>
@@ -108,64 +112,58 @@ export default function Home() {
       <div className="container mx-auto px-4 py-8">
         {/* Stats Dashboard */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="tech-card p-6 relative overflow-hidden scanner">
+          <div className="tech-card p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 rounded bg-primary/10">
-                <Database className="h-8 w-8 text-primary" />
+              <div className="p-3 rounded-lg bg-primary/10">
+                <Database className="h-6 w-6 text-primary" />
               </div>
-              <span className="text-xs text-primary/60 font-mono">STAT_01</span>
+              <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </div>
-            <h3 className="text-3xl font-bold text-primary font-mono">
+            <h3 className="text-3xl font-bold mb-1">
               {statsLoading ? (
-                <Loader2 className="h-8 w-8 animate-spin" />
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
               ) : (
                 stats?.totalJobsScraped || 0
               )}
             </h3>
-            <p className="text-sm text-muted-foreground font-mono">TOTAL JOBS ANALYZED</p>
+            <p className="text-sm text-muted-foreground">Total Jobs Analyzed</p>
             <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary/20">
               <div className="h-full bg-primary processing-bar"></div>
             </div>
           </div>
 
-          <div className="tech-card p-6 relative overflow-hidden scanner">
+          <div className="tech-card p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 rounded bg-primary/10">
-                <Mail className="h-8 w-8 text-primary" />
+              <div className="p-3 rounded-lg bg-primary/10">
+                <Mail className="h-6 w-6 text-primary" />
               </div>
-              <span className="text-xs text-primary/60 font-mono">STAT_02</span>
+              <Send className="h-4 w-4 text-muted-foreground" />
             </div>
-            <h3 className="text-3xl font-bold text-primary font-mono">
+            <h3 className="text-3xl font-bold mb-1">
               {statsLoading ? (
-                <Loader2 className="h-8 w-8 animate-spin" />
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
               ) : (
                 stats?.totalApplicationsSent || 0
               )}
             </h3>
-            <p className="text-sm text-muted-foreground font-mono">APPLICATIONS TRANSMITTED</p>
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary/20">
-              <div className="h-full bg-primary processing-bar"></div>
-            </div>
+            <p className="text-sm text-muted-foreground">Applications Sent</p>
           </div>
 
-          <div className="tech-card p-6 relative overflow-hidden scanner">
+          <div className="tech-card p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 rounded bg-primary/10">
-                <TrendingUp className="h-8 w-8 text-primary" />
+              <div className="p-3 rounded-lg bg-primary/10">
+                <TrendingUp className="h-6 w-6 text-primary" />
               </div>
-              <span className="text-xs text-primary/60 font-mono">STAT_03</span>
+              <Activity className="h-4 w-4 text-muted-foreground" />
             </div>
-            <h3 className="text-3xl font-bold text-primary font-mono">
+            <h3 className="text-3xl font-bold mb-1">
               {statsLoading ? (
-                <Loader2 className="h-8 w-8 animate-spin" />
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
               ) : (
                 `${((stats?.totalApplicationsSent || 0) / Math.max(stats?.totalJobsScraped || 1, 1) * 100).toFixed(1)}%`
               )}
             </h3>
-            <p className="text-sm text-muted-foreground font-mono">SUCCESS RATE</p>
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary/20">
-              <div className="h-full bg-primary processing-bar"></div>
-            </div>
+            <p className="text-sm text-muted-foreground">Success Rate</p>
           </div>
         </div>
 
@@ -173,21 +171,21 @@ export default function Home() {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-2">
             <Network className="h-6 w-6 text-primary" />
-            <h2 className="text-2xl font-bold text-primary">MISSION CONTROL</h2>
+            <h2 className="text-2xl font-bold">Job Search Dashboard</h2>
           </div>
           
           <Dialog open={showNewSearch} onOpenChange={setShowNewSearch}>
             <DialogTrigger asChild>
-              <button className="tech-btn group">
+              <Button className="tech-btn">
                 <Plus className="h-4 w-4 mr-2" />
-                INITIALIZE NEW SCAN
-              </button>
+                New Job Search
+              </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl tech-glass border-primary/20">
+            <DialogContent className="max-w-4xl">
               <DialogHeader>
-                <DialogTitle className="text-2xl font-bold gradient-text flex items-center space-x-2">
-                  <Cpu className="h-6 w-6" />
-                  <span>NEW JOB SCAN PROTOCOL</span>
+                <DialogTitle className="text-2xl font-bold flex items-center space-x-2">
+                  <Search className="h-6 w-6 text-primary" />
+                  <span>Start New Job Search</span>
                 </DialogTitle>
               </DialogHeader>
               <JobScraper onComplete={(requestId) => {
@@ -205,8 +203,7 @@ export default function Home() {
         <div className="tech-card p-6">
           <div className="flex items-center space-x-2 mb-6">
             <History className="h-6 w-6 text-primary" />
-            <h3 className="text-xl font-bold text-primary">SCAN HISTORY</h3>
-            <div className="flex-1 h-px bg-primary/20"></div>
+            <h3 className="text-xl font-bold">Recent Searches</h3>
           </div>
 
           {statsLoading ? (
@@ -218,27 +215,26 @@ export default function Home() {
               {stats.recentSearches.map((search) => (
                 <div 
                   key={search.id} 
-                  className="tech-glass p-4 flex items-center justify-between group cursor-pointer hover:border-primary/50 transition-all"
+                  className="bg-card/50 p-4 rounded-lg flex items-center justify-between group cursor-pointer hover:bg-card transition-all border border-border/50"
                   onClick={() => setLocation(`/results/${search.id}`)}
                 >
                   <div className="flex-1">
                     <div className="flex items-center space-x-4 mb-2">
-                      <Search className="h-5 w-5 text-primary" />
-                      <span className="text-sm font-mono text-primary">
-                        SCAN_{search.id.slice(0, 8).toUpperCase()}
+                      <Search className="h-5 w-5 text-muted-foreground" />
+                      <span className="text-sm font-medium">
+                        Search {search.id.slice(0, 8)}
                       </span>
-                      <span className={`text-xs px-2 py-1 rounded font-mono ${
-                        search.status === 'completed' ? 'bg-primary/20 text-primary' :
-                        search.status === 'failed' ? 'bg-destructive/20 text-destructive' :
-                        'bg-yellow-500/20 text-yellow-500'
-                      }`}>
-                        {search.status.toUpperCase()}
-                      </span>
+                      <Badge 
+                        variant={search.status === 'completed' ? 'default' : search.status === 'failed' ? 'destructive' : 'secondary'}
+                        className="text-xs"
+                      >
+                        {search.status}
+                      </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground truncate">
                       {search.linkedinUrl}
                     </p>
-                    <div className="flex items-center space-x-4 mt-2 text-xs text-muted-foreground font-mono">
+                    <div className="flex items-center space-x-4 mt-2 text-xs text-muted-foreground">
                       <span className="flex items-center space-x-1">
                         <Calendar className="h-3 w-3" />
                         <span>{format(new Date(search.createdAt), 'MMM dd, HH:mm')}</span>
@@ -247,29 +243,33 @@ export default function Home() {
                         <>
                           <span className="flex items-center space-x-1">
                             <BarChart3 className="h-3 w-3" />
-                            <span>{(search.filteredResults as any).totalCount || 0} TARGETS</span>
+                            <span>{(search.filteredResults as any).totalCount || 0} jobs</span>
                           </span>
                           <span className="flex items-center space-x-1">
-                            <Binary className="h-3 w-3" />
-                            <span>{(search.filteredResults as any).canApplyCount || 0} VIABLE</span>
+                            <CheckCircle className="h-3 w-3" />
+                            <span>{(search.filteredResults as any).canApplyCount || 0} with contacts</span>
                           </span>
                         </>
                       )}
                     </div>
                   </div>
                   
-                  <button className="tech-btn px-4 py-2 text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
                     <Eye className="h-4 w-4 mr-2" />
-                    VIEW
-                  </button>
+                    View
+                  </Button>
                 </div>
               ))}
             </div>
           ) : (
             <div className="text-center py-12">
-              <Database className="h-16 w-16 text-primary/20 mx-auto mb-4" />
-              <p className="text-lg text-muted-foreground font-mono">NO SCAN DATA AVAILABLE</p>
-              <p className="text-sm text-muted-foreground mt-2">Initialize your first job scan to begin tracking</p>
+              <Database className="h-16 w-16 text-muted-foreground/20 mx-auto mb-4" />
+              <p className="text-lg text-muted-foreground">No searches yet</p>
+              <p className="text-sm text-muted-foreground mt-2">Start your first job search to see history</p>
             </div>
           )}
         </div>

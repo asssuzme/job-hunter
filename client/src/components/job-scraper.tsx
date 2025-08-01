@@ -64,15 +64,14 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
     onSuccess: (data) => {
       setCurrentRequestId(data.requestId);
       toast({
-        title: "SCAN INITIATED",
-        description: "Neural network processing engaged...",
-        className: "tech-glass border-primary/50"
+        title: "Search Started",
+        description: "Searching for job listings..."
       });
     },
     onError: (error: any) => {
       toast({
-        title: "SYSTEM ERROR",
-        description: error.message || "Failed to initialize scan protocol",
+        title: "Error",
+        description: error.message || "Failed to start job search",
         variant: "destructive",
       });
     },
@@ -95,9 +94,8 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
       
       // Show completion message
       toast({
-        title: "SCAN COMPLETE",
-        description: `${results.totalCount || 0} jobs found, ${results.canApplyCount || 0} with contact information`,
-        className: "tech-glass border-primary/50"
+        title: "Search Complete",
+        description: `Found ${results.totalCount || 0} jobs, ${results.canApplyCount || 0} with contact information`
       });
 
       // Invalidate dashboard stats to refresh
@@ -134,13 +132,12 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
       setResumeText(data.text);
       setResumeFileName(file.name);
       toast({
-        title: "FILE UPLOADED",
-        description: `${file.name} processed successfully`,
-        className: "tech-glass border-primary/50"
+        title: "Resume Uploaded",
+        description: `${file.name} processed successfully`
       });
     } catch (error: any) {
       toast({
-        title: "UPLOAD ERROR",
+        title: "Upload Failed",
         description: error.message || "Failed to process file",
         variant: "destructive",
       });

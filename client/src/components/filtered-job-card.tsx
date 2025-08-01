@@ -143,31 +143,31 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
   };
 
   return (
-    <div className="glass rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 card-hover animate-fade-in">
+    <div className="tech-card hover:scale-[1.02] transition-all duration-300 p-6">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-start space-x-4">
           {job.companyLogo && (
             <img 
               src={job.companyLogo} 
               alt={`${job.companyName} logo`} 
-              className="w-12 h-12 rounded-lg object-cover border border-gray-200" 
+              className="w-12 h-12 rounded-lg object-cover border border-border" 
             />
           )}
           {!job.companyLogo && (
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-200 flex items-center justify-center shadow-sm">
-              <Briefcase className="h-6 w-6 text-gray-500" />
+            <div className="w-12 h-12 rounded-lg bg-gradient-secondary flex items-center justify-center">
+              <Briefcase className="h-6 w-6 text-muted-foreground" />
             </div>
           )}
           <div className="flex-1">
             <h3 
-              className="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors cursor-pointer mb-2"
+              className="text-lg font-semibold hover:text-primary transition-colors cursor-pointer mb-2"
               onClick={handleViewJob}
             >
               {job.title}
             </h3>
-            <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
+            <div className="flex items-center space-x-4 text-sm text-muted-foreground mb-3">
               <span 
-                className="font-medium hover:text-blue-600 cursor-pointer transition-colors"
+                className="font-medium hover:text-primary cursor-pointer transition-colors"
                 onClick={handleViewCompany}
               >
                 {job.companyName}
@@ -187,12 +187,12 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
         </div>
         <div className="flex items-center space-x-2">
           {job.canApply ? (
-            <Badge variant="secondary" className="bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 font-semibold shadow-sm">
+            <Badge className="bg-primary/10 text-primary border-primary/20 font-semibold">
               <CheckCircle className="h-3 w-3 mr-1" />
               Can Apply
             </Badge>
           ) : (
-            <Badge variant="secondary" className="bg-gradient-to-r from-orange-100 to-amber-100 text-orange-800 font-semibold shadow-sm">
+            <Badge className="bg-muted text-muted-foreground border-muted font-semibold">
               <XCircle className="h-3 w-3 mr-1" />
               Cannot Apply
             </Badge>
@@ -200,8 +200,7 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
           {job.canApply && (
             <Button 
               size="sm" 
-              variant="outline"
-              className="border-blue-400 text-blue-600 hover:bg-blue-50"
+              className="tech-btn"
               onClick={handleApplyClick}
             >
               <Send className="h-3 w-3 mr-1" />
@@ -220,13 +219,13 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
       )}
       
       {job.jobPosterName && (
-        <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
+        <div className="mb-4 p-4 bg-primary/5 rounded-lg border border-primary/10">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-2">
-              <User className="h-4 w-4 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">Job Poster:</span>
+              <User className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Job Poster:</span>
               <span 
-                className="text-sm text-blue-600 hover:text-blue-500 cursor-pointer transition-colors"
+                className="text-sm text-primary hover:underline cursor-pointer transition-colors"
                 onClick={handleViewPoster}
               >
                 {job.jobPosterName}
@@ -237,20 +236,20 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
                 variant="ghost" 
                 size="sm"
                 onClick={handleViewPoster}
-                className="text-blue-600 hover:text-blue-500"
+                className="text-primary hover:text-primary/80"
               >
                 <ExternalLink className="h-3 w-3" />
               </Button>
             )}
           </div>
           {job.jobPosterEmail && (
-            <div className="space-y-2 pt-2 border-t border-gray-200">
+            <div className="space-y-2 pt-2 border-t border-border">
               <div className="flex items-center space-x-2">
-                <Mail className="h-4 w-4 text-green-600" />
-                <span className="text-sm font-medium text-gray-700">Email:</span>
+                <Mail className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">Email:</span>
                 <a 
                   href={`mailto:${job.jobPosterEmail}`}
-                  className="text-sm text-green-600 hover:text-green-500 transition-colors"
+                  className="text-sm text-primary hover:underline transition-colors"
                 >
                   {job.jobPosterEmail}
                 </a>
@@ -259,12 +258,12 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
                     variant="secondary" 
                     className={`text-xs ${
                       job.emailVerificationStatus === 'valid' 
-                        ? 'bg-green-100 text-green-700' 
+                        ? 'bg-primary/10 text-primary' 
                         : job.emailVerificationStatus === 'catch-all' 
-                        ? 'bg-yellow-100 text-yellow-700'
+                        ? 'bg-yellow-500/10 text-yellow-600'
                         : job.emailVerificationStatus === 'error'
-                        ? 'bg-red-100 text-red-700'
-                        : 'bg-gray-100 text-gray-700'
+                        ? 'bg-destructive/10 text-destructive'
+                        : 'bg-muted text-muted-foreground'
                     }`}
                   >
                     {job.emailVerificationStatus}
@@ -276,7 +275,7 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
                   {job.emailVerificationStatus === 'valid' && (
                     <Button 
                       size="sm" 
-                      className="bg-green-600 hover:bg-green-700 text-white"
+                      className="tech-btn"
                       onClick={handleApplyClick}
                     >
                       <CheckCircle className="h-3 w-3 mr-1" />
@@ -287,7 +286,7 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
                     <Button 
                       size="sm" 
                       variant="outline"
-                      className="border-yellow-600 text-yellow-700 hover:bg-yellow-50"
+                      className="border-yellow-600 text-yellow-600 hover:bg-yellow-500/10"
                       onClick={handleApplyClick}
                     >
                       <Mail className="h-3 w-3 mr-1" />
@@ -298,7 +297,7 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
                     <Button 
                       size="sm" 
                       variant="outline"
-                      className="border-gray-400 text-gray-600 hover:bg-gray-50"
+                      className="border-muted-foreground text-muted-foreground hover:bg-muted"
                       onClick={handleApplyClick}
                     >
                       <Mail className="h-3 w-3 mr-1" />
@@ -312,13 +311,13 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
         </div>
       )}
       
-      <div className="flex items-center justify-between pt-4 border-t border-gray-200/50">
+      <div className="flex items-center justify-between pt-4 border-t border-border">
         <div className="flex items-center space-x-3 text-sm">
           <Button 
             variant="outline" 
             size="sm"
             onClick={handleViewCompany}
-            className="hover:shadow-md transition-all duration-300"
+            className="hover:bg-secondary transition-all duration-300"
           >
             <Briefcase className="h-3 w-3 mr-1" />
             Company
@@ -327,7 +326,7 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
             variant="outline" 
             size="sm"
             onClick={handleViewCompanyLinkedIn}
-            className="text-primary hover:text-primary/80 hover:shadow-md transition-all duration-300"
+            className="text-primary hover:bg-primary/10 transition-all duration-300"
           >
             LinkedIn
           </Button>
@@ -335,7 +334,7 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
         <Button 
           onClick={handleViewJob}
           size="sm"
-          className="btn-gradient shadow-md hover:shadow-lg transition-all duration-300"
+          className="tech-btn"
         >
           <ExternalLink className="h-4 w-4 mr-1" />
           View Job
