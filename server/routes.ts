@@ -23,8 +23,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
+      const user = req.user as User & { googleAccessToken?: string };
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -51,11 +50,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const cleanedResumeText = resumeText ? resumeText.replace(/\0/g, '').trim() : null;
 
       // Create the scraping request with optional resume
-      const userId = req.user.claims.sub;
+      const user = req.user as User;
       const request = await storage.createJobScrapingRequest({ 
         linkedinUrl,
         resumeText: cleanedResumeText,
-        userId: userId
+        userId: user.id
       });
       
       // Start the scraping process asynchronously
@@ -71,8 +70,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's scraping requests
   app.get("/api/scrape-jobs", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const requests = await storage.getJobScrapingRequestsByUser(userId);
+      const user = req.user as User;
+      const requests = await storage.getJobScrapingRequestsByUser(user.id);
       res.json(requests);
     } catch (error) {
       console.error("Error fetching user's scraping requests:", error);

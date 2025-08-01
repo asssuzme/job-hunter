@@ -30,9 +30,9 @@ export default function Landing() {
             intelligent filtering, and personalized application emails.
           </p>
           <div className="flex gap-4 justify-center">
-            <a href="/api/login">
+            <a href="/api/auth/google">
               <Button size="lg" className="btn-gradient px-10 py-6 text-lg rounded-xl hover:-translate-y-0.5 transition-all duration-200">
-                Get Started
+                Sign in with Google
               </Button>
             </a>
           </div>

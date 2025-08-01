@@ -10,6 +10,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (August 1, 2025)
 
+### Authentication Update
+- **Replaced Replit Auth with Google OAuth 2.0**: Full migration to Google OAuth authentication
+- **Gmail Integration**: Added full Gmail API access scopes for sending emails on behalf of users
+- **OAuth Scopes**: Configured with openid, email, profile, and Gmail send/compose/modify permissions
+- **Session Management**: Using PostgreSQL-backed sessions with secure cookies
+- **Google Client Credentials**: Using new OAuth 2.0 client with ID: 819154232203-ank4nbeji2dge34c7lqob8qgt3ng8bqe.apps.googleusercontent.com
+
+## Previous Changes (August 1, 2025)
+
 ### UI/UX Enhancements
 - **Modern Design System**: Implemented glassmorphism effects across all cards and containers
 - **Color Scheme**: Added gradient designs with primary/secondary color combinations
@@ -64,5 +73,5 @@ Preferred communication style: Simple, everyday language.
 - **Validation**: Zod for runtime type checking and schema validation across client and server
 - **Styling**: Tailwind CSS for utility-first styling with custom design system variables
 - **Development**: Replit-specific tooling for development environment integration
-- **Authentication**: Google OAuth 2.0 for secure user authentication with Gmail permissions
+- **Authentication**: Google OAuth 2.0 for secure user authentication with full Gmail send/compose permissions
 - **APIs**: Apify for LinkedIn job scraping and email verification, OpenAI for personalized email generation

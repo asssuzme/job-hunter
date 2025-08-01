@@ -71,11 +71,8 @@ export async function setupAuth(app: Express) {
         clientID: process.env.GOOGLE_CLIENT_ID || "",
         clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
         callbackURL: "/api/auth/google/callback",
-        scope: GOOGLE_SCOPES,
-        accessType: "offline",
-        prompt: "consent"
       },
-      async (accessToken, refreshToken, profile, done) => {
+      async (accessToken: string, refreshToken: string, profile: any, done: any) => {
         try {
           const user = await upsertUser(profile, accessToken, refreshToken);
           done(null, user);
