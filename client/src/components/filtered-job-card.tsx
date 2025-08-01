@@ -38,31 +38,46 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
 
   const generateApplicationEmail = async (companyData: any) => {
     setIsGeneratingEmail(true);
+    console.log("Starting email generation with company data:", companyData);
+    console.log("Resume text available:", !!resumeText);
+    
     try {
       // For now, we'll use placeholder job poster data since we don't have it stored
       // In a full implementation, this would come from the enriched job data
       const jobPosterData = {
-        name: job.jobPosterName,
-        headline: "Professional at " + job.companyName,
+        name: job.jobPosterName || "Hiring Manager",
+        headline: job.jobPosterName ? `Professional at ${job.companyName}` : "",
         about: ""
       };
 
+      const requestBody = {
+        companyData: companyData || { name: job.companyName },
+        jobPosterData,
+        jobDescription: job.requirement || `${job.title} position at ${job.companyName}`,
+        jobTitle: job.title,
+        recipientEmail: job.jobPosterEmail || "",
+        resumeText: resumeText
+      };
+
+      console.log("Email generation request body:", requestBody);
+
       const data = await apiRequest('/api/generate-email', {
         method: 'POST',
-        body: JSON.stringify({
-          companyData,
-          jobPosterData,
-          jobDescription: job.requirement || `${job.title} position at ${job.companyName}`,
-          jobTitle: job.title,
-          recipientEmail: job.jobPosterEmail,
-          resumeText: resumeText
-        })
+        body: JSON.stringify(requestBody)
       });
+      
+      console.log("Email generation response:", data);
+      
       if (data.success) {
         setGeneratedEmail(data.email);
+        console.log("Email generated successfully");
+      } else {
+        console.error("Email generation failed:", data.error);
+        alert(`Email generation failed: ${data.error || 'Unknown error'}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error generating email:", error);
+      alert(`Error generating email: ${error.message || 'Please check if you are logged in'}`);
     } finally {
       setIsGeneratingEmail(false);
     }
@@ -71,9 +86,14 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
   const handleApplyClick = () => {
     setShowEmailComposer(true);
     // Generate email if not already generated
-    if (!generatedEmail && job.companyLinkedinUrl) {
-      setShowCompanyModal(true);
-      companyMutation.mutate(job.companyLinkedinUrl);
+    if (!generatedEmail) {
+      if (job.companyLinkedinUrl) {
+        setShowCompanyModal(true);
+        companyMutation.mutate(job.companyLinkedinUrl);
+      } else {
+        // Generate email without company data
+        generateApplicationEmail(null);
+      }
     }
   };
 
@@ -85,6 +105,8 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
   const handleRegenerateEmail = () => {
     if (job.companyLinkedinUrl) {
       companyMutation.mutate(job.companyLinkedinUrl);
+    } else {
+      generateApplicationEmail(null);
     }
   };
   const handleViewJob = () => {

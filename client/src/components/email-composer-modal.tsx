@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -37,11 +37,11 @@ export function EmailComposerModal({
   const { toast } = useToast();
 
   // Update email content when generated email changes
-  useState(() => {
+  useEffect(() => {
     if (generatedEmail) {
       setEmailContent(generatedEmail);
     }
-  });
+  }, [generatedEmail]);
 
   const sendEmailMutation = useMutation({
     mutationFn: async () => {
@@ -150,6 +150,11 @@ export function EmailComposerModal({
             <Alert>
               <AlertDescription>
                 Click "Regenerate Email" to generate a personalized email based on your resume and the job details.
+                {!emailContent && (
+                  <div className="mt-2 text-sm text-muted-foreground">
+                    Note: Make sure you are signed in with Google to generate emails.
+                  </div>
+                )}
               </AlertDescription>
             </Alert>
           )}
