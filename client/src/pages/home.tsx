@@ -112,19 +112,19 @@ export default function Home() {
         className="space-y-8"
       >
         {/* Welcome section */}
-        <div className="glass-card p-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">
+        <div className="glass-card p-4 md:p-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex-1">
+              <h1 className="text-xl md:text-3xl font-bold mb-2">
                 Welcome back, {user.firstName || "User"}! 👋
               </h1>
-              <p className="text-muted-foreground">
+              <p className="text-sm md:text-base text-muted-foreground">
                 Ready to find your next opportunity? Let's get started.
               </p>
             </div>
             <Button
               onClick={() => setShowNewSearch(true)}
-              className="btn-primary"
+              className="btn-primary w-full md:w-auto h-12 text-base"
               size="lg"
             >
               <Plus className="h-5 w-5 mr-2" />
@@ -134,16 +134,16 @@ export default function Home() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
           {/* Total Jobs Card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 0.5 }}
             whileHover={{ y: -4 }}
-            className="glass-card p-6"
+            className="glass-card p-4 md:p-6"
           >
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4 md:mb-6">
               <div className="inline-flex p-3 rounded-xl bg-primary/10">
                 <Database className="h-6 w-6 text-primary" />
               </div>
@@ -174,9 +174,9 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
             whileHover={{ y: -4 }}
-            className="glass-card p-6"
+            className="glass-card p-4 md:p-6"
           >
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4 md:mb-6">
               <div className="inline-flex p-3 rounded-xl bg-accent/10">
                 <Mail className="h-6 w-6 text-accent" />
               </div>
@@ -207,9 +207,9 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.5 }}
             whileHover={{ y: -4 }}
-            className="glass-card p-6"
+            className="glass-card p-4 md:p-6"
           >
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4 md:mb-6">
               <div className="inline-flex p-3 rounded-xl bg-green-500/10">
                 <Target className="h-6 w-6 text-green-600" />
               </div>

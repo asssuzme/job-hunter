@@ -6,11 +6,21 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 
+interface EmailApplication {
+  id: string;
+  jobTitle: string;
+  companyName: string;
+  companyEmail: string;
+  sentAt: string;
+  jobUrl?: string;
+  companyWebsite?: string;
+}
+
 export default function Applications() {
   const { user } = useAuth();
   
   // Fetch real email applications from the API
-  const { data: applications = [], isLoading } = useQuery({
+  const { data: applications = [], isLoading } = useQuery<EmailApplication[]>({
     queryKey: ['/api/email-applications'],
     enabled: !!user,
   });
@@ -38,17 +48,17 @@ export default function Applications() {
         className="space-y-6"
       >
         {/* Header */}
-        <div className="glass-card p-6">
-          <div className="flex items-center justify-between">
+        <div className="glass-card p-4 md:p-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold mb-2">Email Applications</h1>
-              <p className="text-muted-foreground">
+              <h1 className="text-xl md:text-2xl font-bold mb-1 md:mb-2">Email Applications</h1>
+              <p className="text-sm md:text-base text-muted-foreground">
                 Track all your job applications sent via email
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 self-start md:self-auto">
               <Mail className="h-5 w-5 text-muted-foreground" />
-              <span className="text-2xl font-bold">{applications.length}</span>
+              <span className="text-xl md:text-2xl font-bold">{applications.length}</span>
             </div>
           </div>
         </div>
@@ -69,19 +79,19 @@ export default function Applications() {
               </p>
             </Card>
           ) : (
-            applications.map((app: any, index: number) => (
+            applications.map((app, index) => (
               <motion.div
                 key={app.id}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="glass-card p-6"
+                className="glass-card p-4 md:p-6"
               >
-                <div className="flex items-start justify-between">
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold mb-1">{app.jobTitle}</h3>
-                    <p className="text-muted-foreground mb-3">{app.companyName}</p>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <h3 className="text-base md:text-lg font-semibold mb-1">{app.jobTitle}</h3>
+                    <p className="text-sm md:text-base text-muted-foreground mb-2 md:mb-3">{app.companyName}</p>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs md:text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
                         Sent on {formatDate(app.sentAt)}
@@ -92,12 +102,12 @@ export default function Applications() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                    <Badge className="bg-green-500/10 text-green-600 border-green-500/20 text-xs">
                       <CheckCircle className="h-3 w-3 mr-1" />
                       Sent
                     </Badge>
-                    <div className="flex gap-2">
+                    <div className="flex gap-3">
                       {app.jobUrl && (
                         <a
                           href={app.jobUrl}

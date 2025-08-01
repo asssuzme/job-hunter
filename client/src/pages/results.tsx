@@ -166,16 +166,16 @@ export default function Results() {
         className="space-y-8"
       >
         {/* Header with stats */}
-        <div className="glass-card p-6">
-          <div className="flex items-center justify-between mb-6">
+        <div className="glass-card p-4 md:p-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 md:mb-6">
             <div>
-              <h1 className="text-2xl font-bold mb-2">Search Results</h1>
-              <p className="text-sm text-muted-foreground">
+              <h1 className="text-xl md:text-2xl font-bold mb-1 md:mb-2">Search Results</h1>
+              <p className="text-xs md:text-sm text-muted-foreground">
                 Request ID: {requestId?.slice(0, 8).toUpperCase()}
               </p>
             </div>
             <Link href="/">
-              <Button variant="outline">
+              <Button variant="outline" className="w-full md:w-auto h-10 md:h-9">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Dashboard
               </Button>
@@ -183,19 +183,19 @@ export default function Results() {
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-2 md:gap-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.1 }}
-              className="glass-card p-4"
+              className="glass-card p-3 md:p-4"
             >
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col items-center text-center md:flex-row md:justify-between md:text-left">
                 <div>
-                  <p className="text-2xl font-bold text-primary">{enrichedJobs.length}</p>
-                  <p className="text-sm text-muted-foreground">Total Jobs</p>
+                  <p className="text-xl md:text-2xl font-bold text-primary">{enrichedJobs.length}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Total Jobs</p>
                 </div>
-                <Briefcase className="h-8 w-8 text-primary/20" />
+                <Briefcase className="h-6 w-6 md:h-8 md:w-8 text-primary/20 hidden md:block" />
               </div>
             </motion.div>
 
@@ -203,14 +203,14 @@ export default function Results() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2 }}
-              className="glass-card p-4"
+              className="glass-card p-3 md:p-4"
             >
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col items-center text-center md:flex-row md:justify-between md:text-left">
                 <div>
-                  <p className="text-2xl font-bold text-accent">{canApplyJobs.length}</p>
-                  <p className="text-sm text-muted-foreground">With Contacts</p>
+                  <p className="text-xl md:text-2xl font-bold text-accent">{canApplyJobs.length}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">With Contacts</p>
                 </div>
-                <Users className="h-8 w-8 text-accent/20" />
+                <Users className="h-6 w-6 md:h-8 md:w-8 text-accent/20 hidden md:block" />
               </div>
             </motion.div>
 
@@ -218,34 +218,38 @@ export default function Results() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3 }}
-              className="glass-card p-4"
+              className="glass-card p-3 md:p-4"
             >
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col items-center text-center md:flex-row md:justify-between md:text-left">
                 <div>
-                  <p className="text-2xl font-bold text-green-600">
+                  <p className="text-xl md:text-2xl font-bold text-green-600">
                     {Math.round((canApplyJobs.length / Math.max(enrichedJobs.length, 1)) * 100)}%
                   </p>
-                  <p className="text-sm text-muted-foreground">Success Rate</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Success Rate</p>
                 </div>
-                <Target className="h-8 w-8 text-green-600/20" />
+                <Target className="h-6 w-6 md:h-8 md:w-8 text-green-600/20 hidden md:block" />
               </div>
             </motion.div>
           </div>
         </div>
 
         {/* Tabs for different job categories */}
-        <Tabs defaultValue="with-contacts" className="space-y-6">
-          <TabsList className="glass-card p-1 w-full">
-            <TabsTrigger value="with-contacts" className="flex-1 flex items-center gap-2">
-              <Sparkles className="h-4 w-4" />
-              <span>With Contacts ({canApplyJobs.length})</span>
+        <Tabs defaultValue="with-contacts" className="space-y-4 md:space-y-6">
+          <TabsList className="glass-card p-1 w-full flex-col md:flex-row h-auto">
+            <TabsTrigger value="with-contacts" className="flex-1 flex items-center gap-1 md:gap-2 text-xs md:text-sm py-3 w-full md:w-auto">
+              <Sparkles className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">With Contacts</span>
+              <span className="sm:hidden">Contacts</span>
+              <span>({canApplyJobs.length})</span>
             </TabsTrigger>
-            <TabsTrigger value="without-contacts" className="flex-1 flex items-center gap-2">
-              <Filter className="h-4 w-4" />
-              <span>Without Contacts ({cannotApplyJobs.length})</span>
+            <TabsTrigger value="without-contacts" className="flex-1 flex items-center gap-1 md:gap-2 text-xs md:text-sm py-3 w-full md:w-auto">
+              <Filter className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Without Contacts</span>
+              <span className="sm:hidden">No Contacts</span>
+              <span>({cannotApplyJobs.length})</span>
             </TabsTrigger>
-            <TabsTrigger value="all" className="flex-1 flex items-center gap-2">
-              <Briefcase className="h-4 w-4" />
+            <TabsTrigger value="all" className="flex-1 flex items-center gap-1 md:gap-2 text-xs md:text-sm py-3 w-full md:w-auto">
+              <Briefcase className="h-3 w-3 md:h-4 md:w-4" />
               <span>All Jobs ({enrichedJobs.length})</span>
             </TabsTrigger>
           </TabsList>

@@ -262,16 +262,16 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 md:space-y-6">
           {/* Job Keyword Input */}
           <FormField
             control={form.control}
             name="keyword"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm font-medium flex items-center gap-2">
+                <FormLabel className="text-sm font-medium flex items-center gap-2 mb-2">
                   <Briefcase className="h-4 w-4 text-primary" />
                   Job Keyword
                 </FormLabel>
@@ -281,10 +281,10 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
                       {...field}
                       type="text"
                       placeholder="e.g., Software Engineer, Product Manager"
-                      className="pl-10 glass-input"
+                      className="pl-10 glass-input h-12 text-base"
                       disabled={isProcessing}
                     />
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   </div>
                 </FormControl>
                 <p className="text-xs text-muted-foreground">
@@ -301,7 +301,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
             name="location"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm font-medium flex items-center gap-2">
+                <FormLabel className="text-sm font-medium flex items-center gap-2 mb-2">
                   <MapPin className="h-4 w-4 text-primary" />
                   Location
                 </FormLabel>
@@ -311,10 +311,10 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
                       {...field}
                       type="text"
                       placeholder="e.g., Bengaluru, Mumbai, Delhi"
-                      className="pl-10 glass-input"
+                      className="pl-10 glass-input h-12 text-base"
                       disabled={isProcessing}
                     />
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   </div>
                 </FormControl>
                 <p className="text-xs text-muted-foreground">
@@ -331,13 +331,13 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
             name="workType"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm font-medium flex items-center gap-2">
+                <FormLabel className="text-sm font-medium flex items-center gap-2 mb-2">
                   <Globe className="h-4 w-4 text-primary" />
                   Work Type
                 </FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger className="glass-input" disabled={isProcessing}>
+                    <SelectTrigger className="glass-input h-12 text-base" disabled={isProcessing}>
                       <SelectValue placeholder="Select work type" />
                     </SelectTrigger>
                   </FormControl>
@@ -362,11 +362,11 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
             transition={{ delay: 0.1 }}
             className="space-y-2"
           >
-            <label className="text-sm font-medium flex items-center gap-2">
+            <label className="text-sm font-medium flex items-center gap-2 mb-2">
               <FileText className="h-4 w-4 text-primary" />
               Resume (Optional)
             </label>
-            <div className="glass-card p-6 border-dashed border-2 border-primary/20 hover:border-primary/40 transition-all cursor-pointer group">
+            <div className="glass-card p-4 md:p-6 border-dashed border-2 border-primary/20 hover:border-primary/40 transition-all cursor-pointer group min-h-[120px] flex items-center">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -410,7 +410,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
           <Button
             type="submit"
             disabled={isProcessing}
-            className="btn-primary w-full"
+            className="btn-primary w-full h-12 text-base"
             size="lg"
           >
             {isProcessing ? (

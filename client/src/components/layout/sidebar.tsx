@@ -48,37 +48,33 @@ const sidebarItems = [
 interface SidebarProps {
   user?: any;
   onLogout: () => void;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-export function Sidebar({ user, onLogout }: SidebarProps) {
+export function Sidebar({ user, onLogout, isOpen = false, onClose }: SidebarProps) {
   const [location] = useLocation();
   const { theme, toggleTheme } = useTheme();
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  
+  // Use props if provided, otherwise use internal state
+  const isSidebarOpen = isOpen !== undefined ? isOpen : internalOpen;
+  const handleClose = onClose || (() => setInternalOpen(false));
 
   return (
     <>
-      {/* Mobile menu button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="fixed top-4 left-4 z-50 md:hidden"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-      </Button>
-
       {/* Overlay for mobile */}
-      {isOpen && (
+      {isSidebarOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-40 md:hidden"
-          onClick={() => setIsOpen(false)}
+          onClick={handleClose}
         />
       )}
 
       {/* Sidebar */}
       <motion.aside
         initial={{ x: -320 }}
-        animate={{ x: isOpen || window.innerWidth >= 768 ? 0 : -320 }}
+        animate={{ x: isSidebarOpen || window.innerWidth >= 768 ? 0 : -320 }}
         transition={{ type: "spring", damping: 20 }}
         className={cn(
           "fixed left-0 top-0 h-full w-64 bg-card border-r z-50",
@@ -104,7 +100,7 @@ export function Sidebar({ user, onLogout }: SidebarProps) {
                       "sidebar-item flex items-center gap-3",
                       isActive && "sidebar-item-active"
                     )}
-                    onClick={() => setIsOpen(false)}
+                    onClick={handleClose}
                   >
                     <item.icon className="h-5 w-5" />
                     <span>{item.label}</span>

@@ -106,15 +106,15 @@ export function EmailComposerModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-full max-w-[95vw] md:max-w-4xl max-h-[90vh] overflow-y-auto p-4 md:p-6">
         <DialogHeader>
-          <DialogTitle className="text-2xl flex items-center gap-2">
-            <Mail className="h-6 w-6 text-blue-600" />
+          <DialogTitle className="text-lg md:text-2xl flex items-center gap-2">
+            <Mail className="h-5 w-5 md:h-6 md:w-6 text-blue-600" />
             Compose Application Email
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="space-y-3 md:space-y-4 py-3 md:py-4">
           <div className="space-y-2">
             <Label htmlFor="to">To</Label>
             <Input

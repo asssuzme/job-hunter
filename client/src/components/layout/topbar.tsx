@@ -2,14 +2,16 @@ import { Bell, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface TopbarProps {
   title?: string;
+  className?: string;
 }
 
-export function Topbar({ title = "Dashboard" }: TopbarProps) {
+export function Topbar({ title = "Dashboard", className }: TopbarProps) {
   return (
-    <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b">
+    <header className={cn("sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b", className)}>
       <div className="flex items-center justify-between px-6 py-4">
         {/* Title */}
         <h2 className="text-2xl font-semibold">{title}</h2>
