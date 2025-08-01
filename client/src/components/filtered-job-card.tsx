@@ -2,8 +2,9 @@ import { useState } from "react";
 import { FilteredJobData } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, ExternalLink, User, Briefcase, DollarSign, Mail, CheckCircle, XCircle } from "lucide-react";
+import { MapPin, ExternalLink, User, Briefcase, DollarSign, Mail, CheckCircle, XCircle, Send } from "lucide-react";
 import { CompanyProfileModal } from "./company-profile-modal";
+import { EmailComposerModal } from "./email-composer-modal";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -14,6 +15,7 @@ interface FilteredJobCardProps {
 
 export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
   const [showCompanyModal, setShowCompanyModal] = useState(false);
+  const [showEmailComposer, setShowEmailComposer] = useState(false);
   const [companyProfile, setCompanyProfile] = useState<any>(null);
   const [generatedEmail, setGeneratedEmail] = useState<string>("");
   const [isGeneratingEmail, setIsGeneratingEmail] = useState(false);
@@ -67,17 +69,23 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
   };
 
   const handleApplyClick = () => {
-    setShowCompanyModal(true);
-    if (job.companyLinkedinUrl && !companyProfile) {
+    setShowEmailComposer(true);
+    // Generate email if not already generated
+    if (!generatedEmail && job.companyLinkedinUrl) {
+      setShowCompanyModal(true);
       companyMutation.mutate(job.companyLinkedinUrl);
     }
   };
 
   const handleProceedToApply = () => {
-    const subject = encodeURIComponent(`Application for ${job.title} position`);
-    const body = encodeURIComponent(generatedEmail);
-    window.open(`mailto:${job.jobPosterEmail}?subject=${subject}&body=${body}`, '_blank');
     setShowCompanyModal(false);
+    setShowEmailComposer(true);
+  };
+
+  const handleRegenerateEmail = () => {
+    if (job.companyLinkedinUrl) {
+      companyMutation.mutate(job.companyLinkedinUrl);
+    }
   };
   const handleViewJob = () => {
     window.open(job.link, "_blank", "noopener,noreferrer");
@@ -151,6 +159,17 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
               <XCircle className="h-3 w-3 mr-1" />
               Cannot Apply
             </Badge>
+          )}
+          {!job.jobPosterEmail && (
+            <Button 
+              size="sm" 
+              variant="outline"
+              className="border-blue-400 text-blue-600 hover:bg-blue-50"
+              onClick={handleApplyClick}
+            >
+              <Send className="h-3 w-3 mr-1" />
+              Generate Email
+            </Button>
           )}
         </div>
       </div>
@@ -241,12 +260,12 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
                   {job.emailVerificationStatus === 'error' && (
                     <Button 
                       size="sm" 
-                      variant="secondary"
-                      className="bg-gray-200 text-gray-600 cursor-not-allowed"
-                      disabled
+                      variant="outline"
+                      className="border-gray-400 text-gray-600 hover:bg-gray-50"
+                      onClick={handleApplyClick}
                     >
-                      <XCircle className="h-3 w-3 mr-1" />
-                      Not Worth
+                      <Mail className="h-3 w-3 mr-1" />
+                      Generate Email
                     </Button>
                   )}
                 </div>
@@ -296,6 +315,18 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
         onProceedToApply={handleProceedToApply}
         generatedEmail={generatedEmail}
         isGeneratingEmail={isGeneratingEmail}
+      />
+      
+      {/* Email Composer Modal */}
+      <EmailComposerModal 
+        isOpen={showEmailComposer}
+        onClose={() => setShowEmailComposer(false)}
+        recipientEmail={job.jobPosterEmail || ""}
+        jobTitle={job.title}
+        companyName={job.companyName}
+        generatedEmail={generatedEmail}
+        isGeneratingEmail={isGeneratingEmail}
+        onRegenerateEmail={handleRegenerateEmail}
       />
     </div>
   );

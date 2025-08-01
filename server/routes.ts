@@ -240,7 +240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Generate application email using OpenAI
-  app.post("/api/generate-email", async (req, res) => {
+  app.post("/api/generate-email", isSimpleAuthenticated, async (req, res) => {
     try {
       const { 
         companyData, 
@@ -330,6 +330,72 @@ Format the email with proper structure including greeting, body paragraphs, and 
     } catch (error) {
       console.error("Error generating email:", error);
       res.status(500).json({ error: "Failed to generate email" });
+    }
+  });
+
+  // Send email via Gmail API
+  app.post("/api/send-email", isSimpleAuthenticated, async (req: any, res) => {
+    try {
+      const { 
+        to, 
+        subject, 
+        body,
+        attachments 
+      } = req.body;
+
+      const googleAccessToken = req.session?.googleAccessToken;
+      
+      if (!googleAccessToken) {
+        return res.status(401).json({ error: "No Gmail access token found. Please re-authenticate." });
+      }
+
+      // Create email message in RFC 2822 format
+      const messageParts = [
+        `To: ${to}`,
+        `Subject: ${subject}`,
+        'MIME-Version: 1.0',
+        'Content-Type: text/html; charset=utf-8',
+        '',
+        body
+      ];
+      
+      const message = messageParts.join('\n');
+      const encodedMessage = Buffer.from(message).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+      // Send email using Gmail API
+      const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${googleAccessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          raw: encodedMessage
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Gmail API error:', error);
+        
+        if (response.status === 401) {
+          return res.status(401).json({ error: "Gmail access token expired. Please sign in again." });
+        }
+        
+        return res.status(response.status).json({ error: error.error?.message || "Failed to send email" });
+      }
+
+      const result = await response.json();
+      
+      res.json({
+        success: true,
+        messageId: result.id,
+        message: "Email sent successfully!"
+      });
+
+    } catch (error) {
+      console.error("Error sending email:", error);
+      res.status(500).json({ error: "Failed to send email" });
     }
   });
 
