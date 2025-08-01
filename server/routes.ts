@@ -126,12 +126,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No file uploaded" });
       }
 
-      // Import pdf-parse properly for ESM
-      const pdfParseModule = await import("pdf-parse");
-      const pdfParse = pdfParseModule.default || pdfParseModule;
+      // Create a simple workaround for pdf-parse initialization issue
+      const fs = await import('fs');
+      const path = await import('path');
+      
+      // Create the expected test directory structure temporarily
+      const testDir = path.join(process.cwd(), 'test', 'data');
+      if (!fs.existsSync(testDir)) {
+        fs.mkdirSync(testDir, { recursive: true });
+      }
+      
+      // Create a dummy test file that pdf-parse expects
+      const testFile = path.join(testDir, '05-versions-space.pdf');
+      if (!fs.existsSync(testFile)) {
+        fs.writeFileSync(testFile, '');
+      }
+      
+      // Now import pdf-parse after creating the expected structure
+      const pdfParse = (await import("pdf-parse")).default;
       
       // Parse the PDF buffer
       const data = await pdfParse(req.file.buffer);
+      
+      // Clean up the temporary files
+      try {
+        fs.unlinkSync(testFile);
+        fs.rmdirSync(testDir);
+        fs.rmdirSync(path.join(process.cwd(), 'test'));
+      } catch (e) {
+        // Ignore cleanup errors
+      }
       
       // Clean the text to remove null bytes and other invalid characters
       const cleanedText = data.text.replace(/\0/g, '').trim();
