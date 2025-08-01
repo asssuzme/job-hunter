@@ -189,7 +189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("🏢 Scraping company profile:", companyLinkedinUrl);
       
-      const apiUrl = 'https://api.apify.com/v2/acts/fetchclub~linkedin-company-profiles-scraper/run-sync-get-dataset-items?token=apify_api_4zPr6hJ4tX3HD8Iqkc5WjRx4Q54biX11P0vs';
+      const apiUrl = 'https://api.apify.com/v2/acts/fetchclub~linkedin-company-profiles-scraper/run-sync-get-dataset-items?token=apify_api_9dhAJl3j2KT3Ew2l5Na8I8r0byW2Gn3QVX4g';
       
       const requestBody = {
         company_profile_urls: [companyLinkedinUrl]
@@ -470,7 +470,7 @@ async function enrichJobsWithProfiles(jobs: FilteredJobData[]): Promise<Filtered
     console.log("Sending request to profile scraper:", JSON.stringify(requestBody, null, 2));
 
     const response = await fetch(
-      "https://api.apify.com/v2/acts/dev_fusion~linkedin-profile-scraper/run-sync-get-dataset-items?token=apify_api_HrPjMf1C0y5C8CyoiA5iAeJmjsjfLY0XXGHG",
+      "https://api.apify.com/v2/acts/dev_fusion~linkedin-profile-scraper/run-sync-get-dataset-items?token=apify_api_9dhAJl3j2KT3Ew2l5Na8I8r0byW2Gn3QVX4g",
       {
         method: "POST",
         headers: {
@@ -633,7 +633,7 @@ async function verifyEmails(jobs: any[]) {
 
     console.log(`\n📧 Verifying ${emailsToVerify.length} emails...`);
     
-    const verificationUrl = 'https://api.apify.com/v2/acts/devil_port369-owner~email-verifier/run-sync-get-dataset-items?token=apify_api_4zPr6hJ4tX3HD8Iqkc5WjRx4Q54biX11P0vs';
+    const verificationUrl = 'https://api.apify.com/v2/acts/devil_port369-owner~email-verifier/run-sync-get-dataset-items?token=apify_api_9dhAJl3j2KT3Ew2l5Na8I8r0byW2Gn3QVX4g';
     
     const requestBody = {
       emails: emailsToVerify,
@@ -731,7 +731,7 @@ async function processJobScraping(requestId: string) {
     };
 
     // Call Apify LinkedIn scraper API using the sync endpoint
-    const response = await fetch("https://api.apify.com/v2/acts/curious_coder~linkedin-jobs-scraper/run-sync-get-dataset-items?token=apify_api_HrPjMf1C0y5C8CyoiA5iAeJmjsjfLY0XXGHG", {
+    const response = await fetch("https://api.apify.com/v2/acts/curious_coder~linkedin-jobs-scraper/run-sync-get-dataset-items?token=apify_api_9dhAJl3j2KT3Ew2l5Na8I8r0byW2Gn3QVX4g", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
