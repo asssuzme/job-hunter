@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useLocation } from "wouter";
 import { 
   Activity, 
   Database, 
@@ -36,6 +37,7 @@ interface DashboardStats {
 export default function Home() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [showNewSearch, setShowNewSearch] = useState(false);
   const [selectedSearch, setSelectedSearch] = useState<string | null>(null);
 
@@ -188,7 +190,13 @@ export default function Home() {
                   <span>NEW JOB SCAN PROTOCOL</span>
                 </DialogTitle>
               </DialogHeader>
-              <JobScraper />
+              <JobScraper onComplete={(requestId) => {
+                setShowNewSearch(false);
+                // Navigate to results page after completion
+                setTimeout(() => {
+                  setLocation(`/results/${requestId}`);
+                }, 500);
+              }} />
             </DialogContent>
           </Dialog>
         </div>
@@ -211,7 +219,7 @@ export default function Home() {
                 <div 
                   key={search.id} 
                   className="tech-glass p-4 flex items-center justify-between group cursor-pointer hover:border-primary/50 transition-all"
-                  onClick={() => setSelectedSearch(search.id)}
+                  onClick={() => setLocation(`/results/${search.id}`)}
                 >
                   <div className="flex-1">
                     <div className="flex items-center space-x-4 mb-2">
@@ -267,22 +275,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Selected Search View */}
-      {selectedSearch && (
-        <Dialog open={!!selectedSearch} onOpenChange={() => setSelectedSearch(null)}>
-          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto tech-glass border-primary/20">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-bold gradient-text">
-                SCAN RESULTS: {selectedSearch.slice(0, 8).toUpperCase()}
-              </DialogTitle>
-            </DialogHeader>
-            {/* Here you would show the detailed results */}
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Detailed scan results view coming soon...</p>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
+
     </div>
   );
 }

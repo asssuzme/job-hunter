@@ -142,6 +142,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Upload resume endpoint
+  app.post("/api/upload-resume", isSimpleAuthenticated, upload.single("file"), async (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      let text = "";
+      
+      // Check if the file is a PDF or text file
+      if (req.file.mimetype === "application/pdf") {
+        // Use the PDF parsing logic
+        const fs = await import('fs');
+        const path = await import('path');
+        
+        const testDir = path.join(process.cwd(), 'test', 'data');
+        if (!fs.existsSync(testDir)) {
+          fs.mkdirSync(testDir, { recursive: true });
+        }
+        
+        const testFile = path.join(testDir, '05-versions-space.pdf');
+        if (!fs.existsSync(testFile)) {
+          fs.writeFileSync(testFile, '');
+        }
+        
+        const pdfParse = (await import("pdf-parse")).default;
+        const data = await pdfParse(req.file.buffer);
+        
+        try {
+          fs.unlinkSync(testFile);
+          fs.rmdirSync(testDir);
+          fs.rmdirSync(path.join(process.cwd(), 'test'));
+        } catch (e) {
+          // Ignore cleanup errors
+        }
+        
+        text = data.text;
+      } else if (req.file.mimetype === "text/plain") {
+        text = req.file.buffer.toString('utf-8');
+      } else {
+        return res.status(400).json({ error: "Invalid file type. Please upload a PDF or text file." });
+      }
+      
+      // Clean the text to remove null bytes and other invalid characters
+      const cleanedText = text.replace(/\0/g, '').trim();
+      
+      res.json({ text: cleanedText });
+    } catch (error) {
+      console.error("Error processing resume:", error);
+      res.status(500).json({ error: "Failed to process resume file" });
+    }
+  });
+
   // Parse PDF file to extract text
   app.post("/api/parse-pdf", isSimpleAuthenticated, upload.single("file"), async (req: any, res) => {
     try {

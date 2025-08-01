@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import Home from "@/pages/home";
 import Landing from "@/pages/landing";
+import Results from "@/pages/results";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -27,6 +28,7 @@ function Router() {
       {isAuthenticated ? (
         <>
           <Route path="/" component={Home} />
+          <Route path="/results/:requestId" component={Results} />
         </>
       ) : (
         <>

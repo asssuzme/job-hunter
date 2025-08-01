@@ -1,10 +1,11 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { linkedinUrlSchema } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 import {
   Link,
   Search,
@@ -32,12 +33,17 @@ interface JobScrapingResponse {
   enrichedResults?: any;
 }
 
-export function JobScraper() {
+interface JobScraperProps {
+  onComplete?: (requestId: string) => void;
+}
+
+export function JobScraper({ onComplete }: JobScraperProps = {}) {
   const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
   const [resumeText, setResumeText] = useState<string>("");
   const [resumeFileName, setResumeFileName] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   const form = useForm({
     resolver: zodResolver(linkedinUrlSchema),
@@ -81,6 +87,29 @@ export function JobScraper() {
       return status === 'pending' || status === 'processing' || status === 'filtering' || status === 'enriching' ? 2000 : false;
     },
   });
+
+  // Handle completion
+  useEffect(() => {
+    if (scrapingResult?.status === 'completed' && scrapingResult.enrichedResults) {
+      const results = scrapingResult.enrichedResults as any;
+      
+      // Show completion message
+      toast({
+        title: "SCAN COMPLETE",
+        description: `${results.totalCount || 0} jobs found, ${results.canApplyCount || 0} with contact information`,
+        className: "tech-glass border-primary/50"
+      });
+
+      // Invalidate dashboard stats to refresh
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats'] });
+
+      // Call onComplete callback if provided
+      if (onComplete) {
+        onComplete(scrapingResult.id);
+      }
+
+    }
+  }, [scrapingResult, onComplete, toast]);
 
   // Handle file upload
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
