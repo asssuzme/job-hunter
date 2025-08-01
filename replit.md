@@ -18,6 +18,7 @@ Preferred communication style: Simple, everyday language.
   - Work Type: Dropdown with On-site, Remote, and Hybrid options
 - **LinkedIn URL Generation**: New `/api/generate-linkedin-url` endpoint uses OpenAI to:
   - Normalize location names to LinkedIn geoIds (supports major Indian cities)
+  - Always map to exact location geoId, never substitute with nearby locations
   - Map work types to LinkedIn format (1=On-site, 2=Remote, 3=Hybrid)
   - Generate proper LinkedIn search URLs automatically
 - **Seamless Integration**: Generated URLs pass directly to existing scraping pipeline

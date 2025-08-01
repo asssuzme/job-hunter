@@ -362,6 +362,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Use OpenAI to normalize the location
       const locationPrompt = `Given the location "${location}", identify the closest matching Indian city from this list: ${Object.keys(cityGeoIds).filter((city, index, arr) => arr.indexOf(city) === index).join(", ")}. 
       
+      Always map the user's location input to the correct LinkedIn geoId for that exact country or city. Never substitute with a nearby or similar location.
+      
       Return only the exact city name in lowercase, no explanation. If the location doesn't match any city in the list, return the closest major city.`;
 
       const completion = await openai.chat.completions.create({
