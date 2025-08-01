@@ -30,16 +30,11 @@ export default function Landing() {
             intelligent filtering, and personalized application emails.
           </p>
           <div className="flex gap-4 justify-center">
-            <Link href="/register">
+            <a href="/api/login">
               <Button size="lg" className="btn-gradient px-10 py-6 text-lg rounded-xl hover:-translate-y-0.5 transition-all duration-200">
-                Get Started Free
+                Get Started
               </Button>
-            </Link>
-            <Link href="/login">
-              <Button variant="outline" size="lg" className="px-10 py-6 text-lg rounded-xl border-2 hover:border-primary hover:bg-primary/5 transition-all duration-200">
-                Sign In
-              </Button>
-            </Link>
+            </a>
           </div>
         </div>
 

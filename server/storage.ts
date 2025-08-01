@@ -2,8 +2,7 @@ import {
   type JobScrapingRequest, 
   type InsertJobScrapingRequest, 
   type User,
-  type InsertUser,
-  type GoogleUser,
+  type UpsertUser,
   jobScrapingRequests,
   users 
 } from "@shared/schema";
@@ -20,11 +19,10 @@ export interface IStorage {
   getJobScrapingRequestsByUser(userId: string): Promise<JobScrapingRequest[]>;
   cancelJobScrapingRequest(id: string): Promise<void>;
   
-  // User methods for Google OAuth
+  // User operations
+  // (IMPORTANT) these user operations are mandatory for Replit Auth.
   getUser(id: string): Promise<User | undefined>;
-  getUserByGoogleId(googleId: string): Promise<User | undefined>;
-  getUserByEmail(email: string): Promise<User | undefined>;
-  upsertGoogleUser(googleUser: GoogleUser): Promise<User>;
+  upsertUser(user: UpsertUser): Promise<User>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -65,60 +63,27 @@ export class DatabaseStorage implements IStorage {
       .where(eq(jobScrapingRequests.id, id));
   }
 
-  // User methods
+  // User operations
+  // (IMPORTANT) these user operations are mandatory for Replit Auth.
+
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user || undefined;
+    return user;
   }
 
-  async getUserByGoogleId(googleId: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.googleId, googleId));
-    return user || undefined;
-  }
-
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user || undefined;
-  }
-
-  async upsertGoogleUser(googleUser: GoogleUser): Promise<User> {
-    // Check if user exists by googleId
-    const existingUser = await this.getUserByGoogleId(googleUser.googleId);
-    
-    if (existingUser) {
-      // Update existing user with new tokens and info
-      const [updated] = await db
-        .update(users)
-        .set({
-          email: googleUser.email,
-          firstName: googleUser.firstName,
-          lastName: googleUser.lastName,
-          profilePicture: googleUser.profilePicture,
-          accessToken: googleUser.accessToken,
-          refreshToken: googleUser.refreshToken,
-          tokenExpiresAt: googleUser.tokenExpiresAt,
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
           updatedAt: new Date(),
-        })
-        .where(eq(users.id, existingUser.id))
-        .returning();
-      return updated;
-    } else {
-      // Create new user
-      const [newUser] = await db
-        .insert(users)
-        .values({
-          googleId: googleUser.googleId,
-          email: googleUser.email,
-          firstName: googleUser.firstName,
-          lastName: googleUser.lastName,
-          profilePicture: googleUser.profilePicture,
-          accessToken: googleUser.accessToken,
-          refreshToken: googleUser.refreshToken,
-          tokenExpiresAt: googleUser.tokenExpiresAt,
-        })
-        .returning();
-      return newUser;
-    }
+        },
+      })
+      .returning();
+    return user;
   }
 }
 

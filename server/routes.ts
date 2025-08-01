@@ -1,8 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupSession, requireAuth } from "./auth";
-import { setupGoogleAuth } from "./googleAuth";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import { 
   insertJobScrapingRequestSchema, 
   linkedinUrlSchema,
@@ -13,62 +12,28 @@ import {
 import { z } from "zod";
 import OpenAI from "openai";
 import multer from "multer";
-import passport from "passport";
 
 // Configure multer for memory storage
 const upload = multer({ storage: multer.memoryStorage() });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup authentication
-  setupSession(app);
-  app.use(passport.initialize());
-  app.use(passport.session());
-  const googleAuthEnabled = setupGoogleAuth();
+  // Auth middleware
+  await setupAuth(app);
 
-  // Google OAuth routes (only if credentials are configured)
-  if (googleAuthEnabled) {
-    app.get("/api/auth/google", passport.authenticate("google", {
-      scope: [
-        'profile',
-        'email',
-        'https://www.googleapis.com/auth/gmail.send',
-        'https://www.googleapis.com/auth/gmail.compose',
-        'https://www.googleapis.com/auth/gmail.modify'
-      ]
-    }));
-
-    app.get("/api/auth/google/callback", 
-      passport.authenticate("google", { failureRedirect: "/login" }),
-      (req, res) => {
-        // Successful authentication, redirect to home
-        res.redirect("/");
-      }
-    );
-  } else {
-    // Return configuration status endpoint
-    app.get("/api/auth/status", (req, res) => {
-      res.json({ googleAuthEnabled: false });
-    });
-  }
-
-  app.post("/api/logout", (req, res) => {
-    req.logout((err) => {
-      if (err) {
-        return res.status(500).json({ message: "Error logging out" });
-      }
-      res.json({ success: true });
-    });
-  });
-
-
-
-  app.get("/api/user", requireAuth, async (req, res) => {
-    const user = req.user as User;
-    res.json(user);
+  // Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
   });
 
   // Create a new job scraping request (now requires authentication)
-  app.post("/api/scrape-job", requireAuth, async (req, res) => {
+  app.post("/api/scrape-job", isAuthenticated, async (req: any, res) => {
     try {
       // Validate the request body
       const validation = linkedinUrlSchema.safeParse(req.body);
@@ -86,11 +51,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const cleanedResumeText = resumeText ? resumeText.replace(/\0/g, '').trim() : null;
 
       // Create the scraping request with optional resume
-      const user = req.user as User;
+      const userId = req.user.claims.sub;
       const request = await storage.createJobScrapingRequest({ 
         linkedinUrl,
         resumeText: cleanedResumeText,
-        userId: user.id
+        userId: userId
       });
       
       // Start the scraping process asynchronously
@@ -104,10 +69,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user's scraping requests
-  app.get("/api/scrape-jobs", requireAuth, async (req, res) => {
+  app.get("/api/scrape-jobs", isAuthenticated, async (req: any, res) => {
     try {
-      const user = req.user as User;
-      const requests = await storage.getJobScrapingRequestsByUser(user.id);
+      const userId = req.user.claims.sub;
+      const requests = await storage.getJobScrapingRequestsByUser(userId);
       res.json(requests);
     } catch (error) {
       console.error("Error fetching user's scraping requests:", error);
@@ -116,7 +81,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get scraping request status and results
-  app.get("/api/scrape-job/:id", requireAuth, async (req, res) => {
+  app.get("/api/scrape-job/:id", isAuthenticated, async (req: any, res) => {
     try {
       const { id } = req.params;
       const request = await storage.getJobScrapingRequest(id);
@@ -133,7 +98,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Cancel a scraping request
-  app.post("/api/scrape-job/:id/cancel", requireAuth, async (req, res) => {
+  app.post("/api/scrape-job/:id/cancel", isAuthenticated, async (req: any, res) => {
     try {
       const { id } = req.params;
       const request = await storage.getJobScrapingRequest(id);

@@ -14,19 +14,16 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// User table for Google OAuth authentication
+// User storage table.
+// (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  googleId: varchar("google_id").unique().notNull(),
-  email: varchar("email").unique().notNull(),
+  email: varchar("email").unique(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
-  profilePicture: text("profile_picture"),
-  accessToken: text("access_token"),
-  refreshToken: text("refresh_token"),
-  tokenExpiresAt: timestamp("token_expires_at"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  profileImageUrl: varchar("profile_image_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const jobScrapingRequests = pgTable("job_scraping_requests", {
@@ -44,27 +41,8 @@ export const jobScrapingRequests = pgTable("job_scraping_requests", {
 });
 
 // User schemas
-export const insertUserSchema = createInsertSchema(users).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-// Remove username/password schemas as we're using Google OAuth only
-
-export type InsertUser = z.infer<typeof insertUserSchema>;
+export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
-// Google OAuth types
-export type GoogleUser = {
-  googleId: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  profilePicture?: string;
-  accessToken?: string;
-  refreshToken?: string;
-  tokenExpiresAt?: Date;
-};
 
 export const insertJobScrapingRequestSchema = createInsertSchema(jobScrapingRequests).pick({
   linkedinUrl: true,

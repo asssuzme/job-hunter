@@ -1,42 +1,12 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { apiRequest } from "@/lib/queryClient";
 import { LogOut, User } from "lucide-react";
 
 export function Navbar() {
   const { user } = useAuth();
-  const [, setLocation] = useLocation();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-  const logoutMutation = useMutation({
-    mutationFn: async () => {
-      return await apiRequest("/api/logout", {
-        method: "POST",
-      });
-    },
-    onSuccess: () => {
-      queryClient.setQueryData(["/api/user"], null);
-      toast({
-        title: "Logged out",
-        description: "You have been successfully logged out.",
-      });
-      setLocation("/");
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Logout failed",
-        description: error.message || "Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
 
   const handleLogout = () => {
-    logoutMutation.mutate();
+    window.location.href = "/api/logout";
   };
 
   if (!user) return null;
@@ -62,9 +32,9 @@ export function Navbar() {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3 px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-full">
               <div className="flex items-center gap-2">
-                {user.profilePicture ? (
+                {user.profileImageUrl ? (
                   <img 
-                    src={user.profilePicture} 
+                    src={user.profileImageUrl} 
                     alt={user.firstName || 'User'} 
                     className="h-8 w-8 rounded-full object-cover ring-2 ring-white shadow-sm"
                   />
@@ -88,11 +58,10 @@ export function Navbar() {
               variant="ghost" 
               size="sm"
               onClick={handleLogout}
-              disabled={logoutMutation.isPending}
               className="hover:bg-red-50 hover:text-red-600 transition-all duration-300"
             >
               <LogOut className="h-4 w-4 mr-2" />
-              {logoutMutation.isPending ? "Signing out..." : "Sign Out"}
+              Sign Out
             </Button>
           </div>
         </div>
