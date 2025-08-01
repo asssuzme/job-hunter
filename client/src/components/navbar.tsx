@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { LogOut, User } from "lucide-react";
+import type { User as UserType } from "@shared/schema";
 
 export function Navbar() {
-  const { user } = useAuth();
+  const { user } = useAuth() as { user: UserType | null };
 
   const handleLogout = () => {
     window.location.href = "/api/logout";
