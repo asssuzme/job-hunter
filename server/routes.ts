@@ -507,10 +507,19 @@ Format the email with proper structure including greeting, body paragraphs, and 
       });
 
       // If token expired, try to refresh it
-      if (response.status === 401 && googleRefreshToken) {
+      if (response.status === 401) {
+        console.log('Gmail API returned 401, checking refresh token...');
+        console.log('Has refresh token:', !!googleRefreshToken);
+        
+        if (!googleRefreshToken) {
+          console.error('No refresh token available');
+          return res.status(401).json({ error: "No refresh token available. Please sign in again." });
+        }
+        
         console.log('Access token expired, attempting to refresh...');
         
         const newTokens = await refreshGoogleToken(googleRefreshToken);
+        console.log('Refresh response:', newTokens ? 'Success' : 'Failed');
         
         if (newTokens && newTokens.access_token) {
           // Update session with new access token

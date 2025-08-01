@@ -94,7 +94,7 @@ export default function Home() {
 
   // Logout mutation
   const logoutMutation = useMutation({
-    mutationFn: () => apiRequest("/api/logout", { method: "GET" }),
+    mutationFn: () => apiRequest("/api/auth/logout", { method: "GET" }),
     onSuccess: () => {
       window.location.href = "/";
     }
