@@ -43,6 +43,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Dashboard stats endpoint
+  app.get('/api/dashboard/stats', isSimpleAuthenticated, async (req: any, res) => {
+    try {
+      const user = req.user;
+      const stats = await storage.getDashboardStats(user.id);
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching dashboard stats:", error);
+      res.status(500).json({ message: "Failed to fetch dashboard stats" });
+    }
+  });
+
   // Create a new job scraping request (now requires authentication)
   app.post("/api/scrape-job", isSimpleAuthenticated, async (req: any, res) => {
     try {

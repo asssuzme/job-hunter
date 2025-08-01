@@ -7,7 +7,7 @@ import {
   users 
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -23,6 +23,13 @@ export interface IStorage {
   // (IMPORTANT) these user operations are mandatory for Replit Auth.
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  
+  // Dashboard operations
+  getDashboardStats(userId: string): Promise<{
+    totalJobsScraped: number;
+    totalApplicationsSent: number;
+    recentSearches: JobScrapingRequest[];
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -84,6 +91,48 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return user;
+  }
+
+  async getDashboardStats(userId: string): Promise<{
+    totalJobsScraped: number;
+    totalApplicationsSent: number;
+    recentSearches: JobScrapingRequest[];
+  }> {
+    // Get recent searches
+    const recentSearches = await db
+      .select()
+      .from(jobScrapingRequests)
+      .where(eq(jobScrapingRequests.userId, userId))
+      .orderBy(desc(jobScrapingRequests.createdAt))
+      .limit(10);
+
+    // Calculate total jobs scraped
+    let totalJobsScraped = 0;
+    let totalApplicationsSent = 0;
+
+    for (const search of recentSearches) {
+      if (search.status === 'completed' && search.enrichedResults) {
+        const results = search.enrichedResults as any;
+        totalJobsScraped += results.totalCount || 0;
+        totalApplicationsSent += results.canApplyCount || 0;
+      }
+    }
+
+    // Update user stats
+    await db
+      .update(users)
+      .set({
+        totalJobsScraped,
+        totalApplicationsSent,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
+
+    return {
+      totalJobsScraped,
+      totalApplicationsSent,
+      recentSearches
+    };
   }
 }
 
