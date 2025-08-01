@@ -16,6 +16,8 @@ interface EmailComposerModalProps {
   recipientEmail: string;
   jobTitle: string;
   companyName: string;
+  jobUrl?: string;
+  companyWebsite?: string;
   generatedEmail: string;
   isGeneratingEmail: boolean;
   onRegenerateEmail: () => void;
@@ -27,6 +29,8 @@ export function EmailComposerModal({
   recipientEmail,
   jobTitle,
   companyName,
+  jobUrl,
+  companyWebsite,
   generatedEmail,
   isGeneratingEmail,
   onRegenerateEmail
@@ -50,7 +54,11 @@ export function EmailComposerModal({
         body: JSON.stringify({
           to: recipientEmail,
           subject: subject,
-          body: emailContent.replace(/\n/g, '<br/>')
+          body: emailContent.replace(/\n/g, '<br/>'),
+          jobTitle: jobTitle,
+          companyName: companyName,
+          jobUrl: jobUrl,
+          companyWebsite: companyWebsite
         })
       });
     },

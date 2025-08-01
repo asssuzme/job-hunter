@@ -367,6 +367,8 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
         recipientEmail={job.jobPosterEmail || ""}
         jobTitle={job.title}
         companyName={job.companyName}
+        jobUrl={job.link}
+        companyWebsite={job.companyWebsite}
         generatedEmail={generatedEmail}
         isGeneratingEmail={isGeneratingEmail}
         onRegenerateEmail={handleRegenerateEmail}

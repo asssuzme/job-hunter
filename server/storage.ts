@@ -3,8 +3,11 @@ import {
   type InsertJobScrapingRequest, 
   type User,
   type UpsertUser,
+  type EmailApplication,
+  type InsertEmailApplication,
   jobScrapingRequests,
-  users 
+  users,
+  emailApplications 
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
@@ -34,6 +37,10 @@ export interface IStorage {
     totalApplicationsSent: number;
     recentSearches: JobScrapingRequest[];
   }>;
+  
+  // Email application methods
+  createEmailApplication(application: InsertEmailApplication): Promise<EmailApplication>;
+  getEmailApplicationsByUser(userId: string): Promise<EmailApplication[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -163,6 +170,19 @@ export class DatabaseStorage implements IStorage {
       totalApplicationsSent,
       recentSearches
     };
+  }
+  
+  async createEmailApplication(application: InsertEmailApplication): Promise<EmailApplication> {
+    const [created] = await db.insert(emailApplications).values(application).returning();
+    return created;
+  }
+  
+  async getEmailApplicationsByUser(userId: string): Promise<EmailApplication[]> {
+    return await db
+      .select()
+      .from(emailApplications)
+      .where(eq(emailApplications.userId, userId))
+      .orderBy(desc(emailApplications.sentAt));
   }
 }
 

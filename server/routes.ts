@@ -82,6 +82,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch dashboard stats" });
     }
   });
+  
+  // Get email applications endpoint
+  app.get('/api/email-applications', isSimpleAuthenticated, async (req: any, res) => {
+    try {
+      const user = req.user;
+      const applications = await storage.getEmailApplicationsByUser(user.id);
+      res.json(applications);
+    } catch (error) {
+      console.error("Error fetching email applications:", error);
+      res.status(500).json({ message: "Failed to fetch email applications" });
+    }
+  });
 
   // Create a new job scraping request (now requires authentication)
   app.post("/api/scrape-job", isSimpleAuthenticated, async (req: any, res) => {
@@ -471,7 +483,11 @@ Format the email with proper structure including greeting, body paragraphs, and 
         to, 
         subject, 
         body,
-        attachments 
+        attachments,
+        jobTitle,
+        companyName,
+        jobUrl,
+        companyWebsite
       } = req.body;
 
       let googleAccessToken = req.session?.googleAccessToken;
@@ -563,6 +579,26 @@ Format the email with proper structure including greeting, body paragraphs, and 
       }
 
       const result = await response.json();
+      
+      // Save email application record
+      if (req.user && jobTitle && companyName) {
+        try {
+          await storage.createEmailApplication({
+            userId: req.user.id,
+            jobTitle,
+            companyName,
+            companyEmail: to,
+            emailSubject: subject,
+            emailBody: body,
+            jobUrl,
+            companyWebsite,
+            gmailMessageId: result.id
+          });
+        } catch (error) {
+          console.error("Error saving email application:", error);
+          // Don't fail the whole request if saving fails
+        }
+      }
       
       res.json({
         success: true,

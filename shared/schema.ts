@@ -45,6 +45,21 @@ export const jobScrapingRequests = pgTable("job_scraping_requests", {
   completedAt: timestamp("completed_at"),
 });
 
+// Email applications sent table
+export const emailApplications = pgTable("email_applications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id),
+  jobTitle: text("job_title").notNull(),
+  companyName: text("company_name").notNull(),
+  companyEmail: text("company_email").notNull(),
+  emailSubject: text("email_subject"),
+  emailBody: text("email_body"),
+  jobUrl: text("job_url"),
+  companyWebsite: text("company_website"),
+  gmailMessageId: varchar("gmail_message_id"),
+  sentAt: timestamp("sent_at").defaultNow().notNull(),
+});
+
 // User schemas
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -56,6 +71,15 @@ export const insertJobScrapingRequestSchema = createInsertSchema(jobScrapingRequ
 
 export type InsertJobScrapingRequest = z.infer<typeof insertJobScrapingRequestSchema>;
 export type JobScrapingRequest = typeof jobScrapingRequests.$inferSelect;
+
+// Email application schemas
+export const insertEmailApplicationSchema = createInsertSchema(emailApplications).omit({
+  id: true,
+  sentAt: true,
+});
+
+export type InsertEmailApplication = z.infer<typeof insertEmailApplicationSchema>;
+export type EmailApplication = typeof emailApplications.$inferSelect;
 
 // Validation schema for LinkedIn URL
 export const linkedinUrlSchema = z.object({
