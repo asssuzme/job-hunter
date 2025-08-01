@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { FilteredJobData } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, ExternalLink, User, Briefcase, DollarSign, Mail, CheckCircle, XCircle, Send } from "lucide-react";
+import { MapPin, ExternalLink, User, Briefcase, DollarSign, Mail, CheckCircle, XCircle, Send, Loader2 } from "lucide-react";
 import { CompanyProfileModal } from "./company-profile-modal";
 import { EmailComposerModal } from "./email-composer-modal";
 import { useMutation } from "@tanstack/react-query";
@@ -19,6 +19,7 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
   const [companyProfile, setCompanyProfile] = useState<any>(null);
   const [generatedEmail, setGeneratedEmail] = useState<string>("");
   const [isGeneratingEmail, setIsGeneratingEmail] = useState(false);
+  const regenerateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const companyMutation = useMutation({
     mutationFn: async (companyLinkedinUrl: string) => {
@@ -86,7 +87,7 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
   const handleApplyClick = () => {
     setShowEmailComposer(true);
     // Generate email if not already generated
-    if (!generatedEmail) {
+    if (!generatedEmail && !isGeneratingEmail) {
       if (job.companyLinkedinUrl) {
         setShowCompanyModal(true);
         companyMutation.mutate(job.companyLinkedinUrl);
@@ -103,11 +104,25 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
   };
 
   const handleRegenerateEmail = () => {
-    if (job.companyLinkedinUrl) {
-      companyMutation.mutate(job.companyLinkedinUrl);
-    } else {
-      generateApplicationEmail(null);
+    // Clear any existing timeout
+    if (regenerateTimeoutRef.current) {
+      clearTimeout(regenerateTimeoutRef.current);
     }
+    
+    // Prevent multiple concurrent requests
+    if (isGeneratingEmail) {
+      console.log("Email generation already in progress");
+      return;
+    }
+    
+    // Add a small debounce to prevent accidental double clicks
+    regenerateTimeoutRef.current = setTimeout(() => {
+      if (job.companyLinkedinUrl && !companyProfile) {
+        companyMutation.mutate(job.companyLinkedinUrl);
+      } else {
+        generateApplicationEmail(companyProfile);
+      }
+    }, 300);
   };
   const handleViewJob = () => {
     window.open(job.link, "_blank", "noopener,noreferrer");

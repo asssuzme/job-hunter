@@ -122,9 +122,14 @@ export function EmailComposerModal({
             <div className="flex items-center justify-between">
               <Label htmlFor="email-content">Email Content</Label>
               {isGeneratingEmail ? (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Generating personalized email...
+                <div className="flex flex-col items-end gap-1">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Generating personalized email...
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    This may take 10-15 seconds
+                  </div>
                 </div>
               ) : (
                 <Button
