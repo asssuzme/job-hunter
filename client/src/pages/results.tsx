@@ -8,13 +8,21 @@ import {
   CheckCircle, 
   XCircle,
   Loader2,
-  Binary,
   ArrowLeft,
-  Network,
-  Terminal
+  Search,
+  Users,
+  Briefcase,
+  Mail,
+  Target,
+  Sparkles,
+  Filter
 } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { motion } from "framer-motion";
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { useAuth } from "@/hooks/useAuth";
 
 interface EnrichedJob {
   canApply: boolean;
@@ -34,56 +42,93 @@ interface ScrapingResult {
 
 export default function Results() {
   const { requestId } = useParams();
+  const { user } = useAuth();
   
   const { data: scrapingResult, isLoading } = useQuery<ScrapingResult>({
     queryKey: ['/api/scrape-job', requestId],
     enabled: !!requestId,
   });
 
+  if (!user) {
+    return null;
+  }
+
+  // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <Loader2 className="h-32 w-32 text-primary animate-spin mx-auto" />
-          <p className="mt-4 text-lg text-muted-foreground">Loading job data...</p>
+      <DashboardLayout user={user} onLogout={() => {}} title="Job Results">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+            className="text-center"
+          >
+            <Loader2 className="h-16 w-16 text-primary animate-spin mx-auto mb-4" />
+            <p className="text-lg text-muted-foreground">Loading job results...</p>
+          </motion.div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
+  // Error state
   if (!scrapingResult || scrapingResult.status === 'failed') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <XCircle className="h-32 w-32 text-destructive mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-destructive mb-2">Scan Failed</h1>
-          <p className="text-muted-foreground">{scrapingResult?.errorMessage || 'Unknown error occurred'}</p>
-          <Link href="/">
-            <Button className="mt-6">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Return to Dashboard
-            </Button>
-          </Link>
-        </div>
-      </div>
+      <DashboardLayout user={user} onLogout={() => {}} title="Job Results">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex items-center justify-center min-h-[60vh]"
+        >
+          <div className="text-center glass-card p-8 max-w-md">
+            <div className="inline-flex p-4 rounded-full bg-red-500/10 mb-4">
+              <XCircle className="h-12 w-12 text-red-600" />
+            </div>
+            <h1 className="text-2xl font-bold mb-2">Search Failed</h1>
+            <p className="text-muted-foreground mb-6">
+              {scrapingResult?.errorMessage || 'An error occurred while searching for jobs'}
+            </p>
+            <Link href="/">
+              <Button className="btn-primary">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Dashboard
+              </Button>
+            </Link>
+          </div>
+        </motion.div>
+      </DashboardLayout>
     );
   }
 
+  // Processing state
   if (scrapingResult.status !== 'completed' || !scrapingResult.enrichedResults) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <Activity className="h-32 w-32 text-primary animate-pulse mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-primary mb-2">Scan in Progress</h1>
-          <p className="text-muted-foreground">Status: {scrapingResult.status}</p>
-          <Link href="/">
-            <Button className="mt-6">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Return to Dashboard
-            </Button>
-          </Link>
-        </div>
-      </div>
+      <DashboardLayout user={user} onLogout={() => {}} title="Job Results">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex items-center justify-center min-h-[60vh]"
+        >
+          <div className="text-center glass-card p-8 max-w-md">
+            <div className="inline-flex p-4 rounded-full bg-primary/10 mb-4">
+              <Activity className="h-12 w-12 text-primary animate-pulse" />
+            </div>
+            <h1 className="text-2xl font-bold mb-2">Search in Progress</h1>
+            <p className="text-muted-foreground mb-6">
+              Status: <span className="font-medium">{scrapingResult.status}</span>
+            </p>
+            <Link href="/">
+              <Button variant="outline">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Dashboard
+              </Button>
+            </Link>
+          </div>
+        </motion.div>
+      </DashboardLayout>
     );
   }
 
@@ -92,91 +137,216 @@ export default function Results() {
   const cannotApplyJobs = enrichedJobs.filter((job: any) => !job.canApply);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-card/50 backdrop-blur-lg border-b mb-8">
-        <div className="container mx-auto py-6 px-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link href="/">
-                <Button variant="outline">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Dashboard
-                </Button>
-              </Link>
-              <div>
-                <h1 className="text-3xl font-bold flex items-center space-x-2">
-                  <Network className="h-8 w-8 text-primary" />
-                  <span>Job Scraping Results</span>
-                </h1>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Request ID: {requestId?.slice(0, 8).toUpperCase()}
-                </p>
-              </div>
+    <DashboardLayout user={user} onLogout={() => {}} title="Job Results">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="space-y-8"
+      >
+        {/* Header with stats */}
+        <div className="glass-card p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-2xl font-bold mb-2">Search Results</h1>
+              <p className="text-sm text-muted-foreground">
+                Request ID: {requestId?.slice(0, 8).toUpperCase()}
+              </p>
             </div>
-            <div className="flex items-center space-x-6">
-              <div className="text-center px-4 py-2 rounded-lg bg-primary/10">
-                <div className="text-3xl font-bold text-primary">{enrichedJobs.length}</div>
-                <div className="text-xs text-muted-foreground uppercase tracking-wider">Total Jobs</div>
+            <Link href="/">
+              <Button variant="outline">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Dashboard
+              </Button>
+            </Link>
+          </div>
+
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1 }}
+              className="glass-card p-4"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-2xl font-bold text-primary">{enrichedJobs.length}</p>
+                  <p className="text-sm text-muted-foreground">Total Jobs</p>
+                </div>
+                <Briefcase className="h-8 w-8 text-primary/20" />
               </div>
-              <div className="text-center px-4 py-2 rounded-lg bg-primary/10">
-                <div className="text-3xl font-bold text-primary">{canApplyJobs.length}</div>
-                <div className="text-xs text-muted-foreground uppercase tracking-wider">With Contacts</div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="glass-card p-4"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-2xl font-bold text-accent">{canApplyJobs.length}</p>
+                  <p className="text-sm text-muted-foreground">With Contacts</p>
+                </div>
+                <Users className="h-8 w-8 text-accent/20" />
               </div>
-              <div className="text-center px-4 py-2 rounded-lg bg-primary/10">
-                <div className="text-3xl font-bold text-primary">{cannotApplyJobs.length}</div>
-                <div className="text-xs text-muted-foreground uppercase tracking-wider">No Contacts</div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3 }}
+              className="glass-card p-4"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-2xl font-bold text-green-600">
+                    {Math.round((canApplyJobs.length / Math.max(enrichedJobs.length, 1)) * 100)}%
+                  </p>
+                  <p className="text-sm text-muted-foreground">Success Rate</p>
+                </div>
+                <Target className="h-8 w-8 text-green-600/20" />
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
-      </header>
 
-      {/* Results */}
-      <main className="container mx-auto px-4 pb-12">
-        <Tabs defaultValue="can-apply" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="can-apply" className="data-[state=active]:bg-primary/20">
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Can Apply ({canApplyJobs.length})
+        {/* Tabs for different job categories */}
+        <Tabs defaultValue="with-contacts" className="space-y-6">
+          <TabsList className="glass-card p-1 w-full">
+            <TabsTrigger value="with-contacts" className="flex-1 flex items-center gap-2">
+              <Sparkles className="h-4 w-4" />
+              <span>With Contacts ({canApplyJobs.length})</span>
             </TabsTrigger>
-            <TabsTrigger value="cannot-apply" className="data-[state=active]:bg-primary/20">
-              <XCircle className="h-4 w-4 mr-2" />
-              No Contact Info ({cannotApplyJobs.length})
+            <TabsTrigger value="without-contacts" className="flex-1 flex items-center gap-2">
+              <Filter className="h-4 w-4" />
+              <span>Without Contacts ({cannotApplyJobs.length})</span>
+            </TabsTrigger>
+            <TabsTrigger value="all" className="flex-1 flex items-center gap-2">
+              <Briefcase className="h-4 w-4" />
+              <span>All Jobs ({enrichedJobs.length})</span>
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="can-apply" className="mt-6">
-            {canApplyJobs.length > 0 ? (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {canApplyJobs.map((job: any, index: number) => (
-                  <FilteredJobCard key={index} job={job} />
-                ))}
-              </div>
+          {/* Jobs with contacts */}
+          <TabsContent value="with-contacts" className="space-y-4">
+            {canApplyJobs.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="glass-card p-12 text-center"
+              >
+                <Mail className="h-16 w-16 text-muted-foreground/20 mx-auto mb-4" />
+                <h3 className="text-lg font-medium mb-2">No Jobs with Contacts</h3>
+                <p className="text-muted-foreground">
+                  No contact information was found for the scraped jobs.
+                </p>
+              </motion.div>
             ) : (
-              <div className="text-center py-12 bg-card rounded-lg border">
-                <Binary className="h-16 w-16 text-muted-foreground/20 mx-auto mb-4" />
-                <p className="text-lg text-muted-foreground">No jobs with contact information found</p>
+              canApplyJobs.map((job: any, index: number) => (
+                <motion.div
+                  key={job.jobUrl || index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <FilteredJobCard job={job} />
+                </motion.div>
+              ))
+            )}
+          </TabsContent>
+
+          {/* Jobs without contacts */}
+          <TabsContent value="without-contacts" className="space-y-4">
+            {cannotApplyJobs.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="glass-card p-12 text-center"
+              >
+                <CheckCircle className="h-16 w-16 text-green-600/20 mx-auto mb-4" />
+                <h3 className="text-lg font-medium mb-2">All Jobs Have Contacts!</h3>
+                <p className="text-muted-foreground">
+                  Great news! Contact information was found for all jobs.
+                </p>
+              </motion.div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {cannotApplyJobs.map((job: any, index: number) => (
+                  <motion.div
+                    key={job.jobUrl || index}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="glass-card p-4 hover:shadow-lg transition-shadow"
+                  >
+                    <h3 className="font-medium mb-2 line-clamp-1">
+                      {job.jobTitle || "Unknown Position"}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      {job.companyName || "Unknown Company"} • {job.location || "Unknown Location"}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <Badge variant="secondary" className="text-xs">
+                        No contacts found
+                      </Badge>
+                      <a
+                        href={job.jobUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-primary hover:underline"
+                      >
+                        View on LinkedIn →
+                      </a>
+                    </div>
+                  </motion.div>
+                ))}
               </div>
             )}
           </TabsContent>
 
-          <TabsContent value="cannot-apply" className="mt-6">
-            {cannotApplyJobs.length > 0 ? (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {cannotApplyJobs.map((job: any, index: number) => (
-                  <FilteredJobCard key={index} job={job} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12 bg-card rounded-lg border">
-                <Terminal className="h-16 w-16 text-muted-foreground/20 mx-auto mb-4" />
-                <p className="text-lg text-muted-foreground">All jobs have contact information</p>
-              </div>
-            )}
+          {/* All jobs */}
+          <TabsContent value="all" className="space-y-4">
+            {enrichedJobs.map((job: any, index: number) => (
+              <motion.div
+                key={job.jobUrl || index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+              >
+                {job.canApply ? (
+                  <FilteredJobCard job={job} />
+                ) : (
+                  <div className="glass-card p-4 hover:shadow-lg transition-shadow">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <h3 className="font-medium mb-2">
+                          {job.jobTitle || "Unknown Position"}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {job.companyName || "Unknown Company"} • {job.location || "Unknown Location"}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <Badge variant="secondary">No contacts</Badge>
+                        <a
+                          href={job.jobUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-primary hover:underline"
+                        >
+                          View →
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            ))}
           </TabsContent>
         </Tabs>
-      </main>
-    </div>
+      </motion.div>
+    </DashboardLayout>
   );
 }

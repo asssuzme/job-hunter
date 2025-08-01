@@ -6,6 +6,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { motion } from "framer-motion";
 import {
   Link,
   Search,
@@ -14,15 +15,16 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle,
-  Terminal,
-  Cpu,
   Activity,
-  Network
+  Sparkles,
+  Globe,
+  Zap
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
 
 interface JobScrapingResponse {
   id: string;
@@ -153,23 +155,37 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
 
   const isProcessing = scrapeMutation.isPending || (scrapingResult && ['pending', 'processing', 'filtering', 'enriching'].includes(scrapingResult.status));
 
+
+
+  const getProgressPercentage = () => {
+    if (!scrapingResult) return 0;
+    switch (scrapingResult.status) {
+      case 'pending': return 20;
+      case 'processing': return 40;
+      case 'filtering': return 60;
+      case 'enriching': return 80;
+      case 'completed': return 100;
+      default: return 0;
+    }
+  };
+
   const getStatusMessage = () => {
     if (!scrapingResult) return "";
     switch (scrapingResult.status) {
       case 'pending':
-        return 'INITIALIZING SCAN PROTOCOL...';
+        return 'Initializing search...';
       case 'processing':
-        return 'EXTRACTING DATA FROM LINKEDIN MATRIX...';
+        return 'Scraping LinkedIn jobs...';
       case 'filtering':
-        return 'APPLYING NEURAL FILTERS...';
+        return 'Filtering results...';
       case 'enriching':
-        return 'ENHANCING DATA WITH AI ALGORITHMS...';
+        return 'Finding contact information...';
       case 'completed':
-        return 'SCAN COMPLETE - DATA ACQUIRED';
+        return 'Search complete!';
       case 'failed':
-        return 'SCAN FAILED - SYSTEM ERROR';
+        return 'Search failed';
       default:
-        return (scrapingResult.status as string).toUpperCase();
+        return scrapingResult.status;
     }
   };
 
@@ -183,26 +199,24 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
             name="linkedinUrl"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm font-mono text-primary uppercase">
-                  <Network className="h-4 w-4 inline-block mr-2" />
-                  Target URL
+                <FormLabel className="text-sm font-medium flex items-center gap-2">
+                  <Globe className="h-4 w-4 text-primary" />
+                  LinkedIn Job Search URL
                 </FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Link className="h-4 w-4 text-primary/60" />
-                    </div>
-                    <input
+                    <Input
                       {...field}
                       type="url"
                       placeholder="https://www.linkedin.com/jobs/search/..."
-                      className="tech-input w-full pl-10"
+                      className="pl-10 glass-input"
                       disabled={isProcessing}
                     />
+                    <Link className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   </div>
                 </FormControl>
-                <p className="text-xs text-muted-foreground font-mono mt-1">
-                  PASTE LINKEDIN JOB SEARCH URL
+                <p className="text-xs text-muted-foreground">
+                  Paste the URL from your LinkedIn job search
                 </p>
                 <FormMessage />
               </FormItem>
@@ -210,12 +224,17 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
           />
 
           {/* Resume Upload */}
-          <div className="space-y-2">
-            <label className="text-sm font-mono text-primary uppercase">
-              <FileText className="h-4 w-4 inline-block mr-2" />
-              Resume Data (Optional)
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="space-y-2"
+          >
+            <label className="text-sm font-medium flex items-center gap-2">
+              <FileText className="h-4 w-4 text-primary" />
+              Resume (Optional)
             </label>
-            <div className="tech-glass p-4 border-dashed border-2 border-primary/20 hover:border-primary/40 transition-colors">
+            <div className="glass-card p-6 border-dashed border-2 border-primary/20 hover:border-primary/40 transition-all cursor-pointer group">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -227,98 +246,194 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full flex items-center justify-center space-x-2 py-3 text-primary hover:text-primary/80 transition-colors"
+                className="w-full flex flex-col items-center justify-center gap-3"
                 disabled={isProcessing}
               >
-                <Upload className="h-5 w-5" />
-                <span className="font-mono text-sm">
-                  {resumeFileName ? `LOADED: ${resumeFileName}` : 'UPLOAD RESUME (.TXT OR .PDF)'}
-                </span>
+                <div className="p-3 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                  <Upload className="h-6 w-6 text-primary" />
+                </div>
+                <div className="text-center">
+                  <p className="font-medium">
+                    {resumeFileName ? resumeFileName : 'Drop your resume here'}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {resumeFileName ? 'Click to replace' : 'Supports .txt and .pdf files'}
+                  </p>
+                </div>
               </button>
             </div>
-            <p className="text-xs text-muted-foreground font-mono">
-              ENHANCES EMAIL GENERATION WITH PERSONAL DATA
-            </p>
-          </div>
+            {resumeFileName && (
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex items-center gap-2 text-sm text-green-600"
+              >
+                <CheckCircle className="h-4 w-4" />
+                <span>Resume uploaded successfully</span>
+              </motion.div>
+            )}
+          </motion.div>
 
           {/* Submit Button */}
-          <button
+          <Button
             type="submit"
             disabled={isProcessing}
-            className={`tech-btn w-full text-lg group ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className="btn-primary w-full"
+            size="lg"
           >
             {isProcessing ? (
               <>
-                <Cpu className="h-5 w-5 mr-2 animate-spin" />
-                PROCESSING...
+                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                Processing...
               </>
             ) : (
               <>
                 <Search className="h-5 w-5 mr-2" />
-                INITIATE SCAN
+                Start Job Search
               </>
             )}
-          </button>
+          </Button>
         </form>
       </Form>
 
       {/* Status Display */}
       {scrapingResult && (
-        <div className="tech-card p-6 space-y-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-card p-6 space-y-4"
+        >
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Activity className={`h-6 w-6 ${scrapingResult.status === 'completed' ? 'text-primary' : scrapingResult.status === 'failed' ? 'text-destructive' : 'text-primary animate-pulse'}`} />
-              <span className="font-mono text-sm text-primary">
-                {getStatusMessage()}
-              </span>
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-full ${
+                scrapingResult.status === 'completed' ? 'bg-green-500/10' : 
+                scrapingResult.status === 'failed' ? 'bg-red-500/10' : 
+                'bg-primary/10'
+              }`}>
+                <Activity className={`h-5 w-5 ${
+                  scrapingResult.status === 'completed' ? 'text-green-600' : 
+                  scrapingResult.status === 'failed' ? 'text-red-600' : 
+                  'text-primary animate-pulse'
+                }`} />
+              </div>
+              <div>
+                <p className="font-medium">{getStatusMessage()}</p>
+                <p className="text-xs text-muted-foreground">
+                  ID: {scrapingResult.id.slice(0, 8).toUpperCase()}
+                </p>
+              </div>
             </div>
-            <span className="text-xs font-mono text-primary/60">
-              ID: {scrapingResult.id.slice(0, 8).toUpperCase()}
-            </span>
+            {scrapingResult.status === 'completed' && (
+              <Sparkles className="h-5 w-5 text-accent" />
+            )}
           </div>
 
           {/* Progress Bar */}
           {['pending', 'processing', 'filtering', 'enriching'].includes(scrapingResult.status) && (
-            <div className="h-2 bg-primary/20 rounded-full overflow-hidden">
-              <div className="h-full bg-primary processing-bar"></div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Progress</span>
+                <span>{getProgressPercentage()}%</span>
+              </div>
+              <Progress value={getProgressPercentage()} className="h-2" />
             </div>
           )}
 
           {/* Results Summary */}
           {scrapingResult.status === 'completed' && scrapingResult.enrichedResults && (
-            <Alert className="tech-glass border-primary/50">
-              <CheckCircle className="h-4 w-4 text-primary" />
-              <AlertDescription className="font-mono text-sm">
-                SCAN COMPLETE: {(scrapingResult.enrichedResults as any).totalCount || 0} TARGETS IDENTIFIED, {(scrapingResult.enrichedResults as any).canApplyCount || 0} WITH CONTACT DATA
-              </AlertDescription>
-            </Alert>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="grid grid-cols-2 gap-4"
+            >
+              <div className="glass-card p-4 text-center">
+                <p className="text-2xl font-bold text-primary">
+                  {(scrapingResult.enrichedResults as any).totalCount || 0}
+                </p>
+                <p className="text-xs text-muted-foreground">Jobs Found</p>
+              </div>
+              <div className="glass-card p-4 text-center">
+                <p className="text-2xl font-bold text-accent">
+                  {(scrapingResult.enrichedResults as any).canApplyCount || 0}
+                </p>
+                <p className="text-xs text-muted-foreground">With Contacts</p>
+              </div>
+            </motion.div>
           )}
 
           {/* Error Display */}
           {scrapingResult.status === 'failed' && (
-            <Alert className="tech-glass border-destructive/50">
-              <AlertCircle className="h-4 w-4 text-destructive" />
-              <AlertDescription className="font-mono text-sm">
-                ERROR: {scrapingResult.errorMessage || 'UNKNOWN SYSTEM FAILURE'}
+            <Alert variant="destructive" className="glass-card">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                {scrapingResult.errorMessage || 'An error occurred during the search'}
               </AlertDescription>
             </Alert>
           )}
 
-          {/* Terminal Output */}
-          <div className="bg-black/50 p-4 rounded font-mono text-xs text-primary/80 space-y-1">
-            <div className="flex items-center space-x-2">
-              <Terminal className="h-3 w-3" />
-              <span>SYSTEM LOG:</span>
-            </div>
-            <div className="pl-5 space-y-0.5 text-primary/60">
-              <div>&gt; Connection established...</div>
-              <div>&gt; Authentication verified...</div>
-              <div>&gt; Scan protocol activated...</div>
-              {scrapingResult.status === 'completed' && <div className="text-primary">&gt; Data transfer complete.</div>}
-              {scrapingResult.status === 'failed' && <div className="text-destructive">&gt; Critical error detected.</div>}
+          {/* Status Timeline */}
+          <div className="space-y-2 pt-2">
+            <p className="text-xs text-muted-foreground flex items-center gap-2">
+              <Zap className="h-3 w-3" />
+              Status Timeline
+            </p>
+            <div className="space-y-1 text-xs text-muted-foreground">
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                className="flex items-center gap-2"
+              >
+                <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                <span>Search initiated</span>
+              </motion.div>
+              {['processing', 'filtering', 'enriching', 'completed'].includes(scrapingResult.status) && (
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="flex items-center gap-2"
+                >
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                  <span>Scraping LinkedIn data</span>
+                </motion.div>
+              )}
+              {['filtering', 'enriching', 'completed'].includes(scrapingResult.status) && (
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="flex items-center gap-2"
+                >
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                  <span>Filtering results</span>
+                </motion.div>
+              )}
+              {['enriching', 'completed'].includes(scrapingResult.status) && (
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="flex items-center gap-2"
+                >
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                  <span>Finding contact information</span>
+                </motion.div>
+              )}
+              {scrapingResult.status === 'completed' && (
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="flex items-center gap-2 text-green-600"
+                >
+                  <CheckCircle className="h-3 w-3" />
+                  <span>Search completed successfully</span>
+                </motion.div>
+              )}
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
     </div>
   );

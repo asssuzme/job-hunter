@@ -1,33 +1,35 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
+import { motion } from "framer-motion";
 import { 
   Activity, 
   Database, 
   Search, 
   Mail, 
   TrendingUp,
-  Terminal,
-  History,
   Loader2,
   Plus,
   Eye,
-  Network,
-  Binary,
-  Cpu,
   BarChart3,
   Calendar,
   Send,
-  CheckCircle
+  CheckCircle,
+  Target,
+  Users,
+  Clock,
+  ArrowUpRight,
+  Sparkles,
+  Briefcase
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { JobForm } from "@/components/job-form";
 import { JobScraper } from "@/components/job-scraper";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { format } from "date-fns";
 import type { JobScrapingRequest } from "@shared/schema";
 
@@ -37,17 +39,57 @@ interface DashboardStats {
   recentSearches: JobScrapingRequest[];
 }
 
+// Animated progress ring component
+function ProgressRing({ percentage, size = 120 }: { percentage: number; size?: number }) {
+  const strokeWidth = 8;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const offset = circumference - (percentage / 100) * circumference;
+
+  return (
+    <div className="relative">
+      <svg width={size} height={size} className="transform -rotate-90">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          fill="none"
+          className="text-muted"
+        />
+        <motion.circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          fill="none"
+          strokeDasharray={circumference}
+          initial={{ strokeDashoffset: circumference }}
+          animate={{ strokeDashoffset: offset }}
+          transition={{ duration: 1, ease: "easeOut" }}
+          className="text-primary"
+          strokeLinecap="round"
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="text-2xl font-bold">{percentage}%</span>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [showNewSearch, setShowNewSearch] = useState(false);
-  const [selectedSearch, setSelectedSearch] = useState<string | null>(null);
 
   // Fetch user stats
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats"],
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: 30000,
   });
 
   // Logout mutation
@@ -62,148 +104,148 @@ export default function Home() {
     return null;
   }
 
+  const successRate = stats ? Math.round((stats.totalApplicationsSent / Math.max(stats.totalJobsScraped, 1)) * 100) : 0;
+
   return (
-    <div className="min-h-screen bg-background">
-      {/* Modern Header */}
-      <header className="bg-card/50 backdrop-blur-lg border-b sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
+    <DashboardLayout user={user} onLogout={() => logoutMutation.mutate()} title="Dashboard">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="space-y-8"
+      >
+        {/* Welcome section */}
+        <div className="glass-card p-8">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Activity className="h-8 w-8 text-primary" />
-              <div>
-                <h1 className="text-2xl font-bold">LinkedIn Job Scraper</h1>
-                <p className="text-xs text-muted-foreground">Professional Job Search Tool</p>
-              </div>
+            <div>
+              <h1 className="text-3xl font-bold mb-2">
+                Welcome back, {user.firstName || "User"}! 👋
+              </h1>
+              <p className="text-muted-foreground">
+                Ready to find your next opportunity? Let's get started.
+              </p>
             </div>
-            
-            <div className="flex items-center space-x-6">
-              <div className="flex items-center space-x-2">
-                <div className="h-2 w-2 bg-primary rounded-full"></div>
-                <span className="text-sm text-muted-foreground">System Active</span>
-              </div>
-              
-              <div className="flex items-center space-x-4">
-                {user.profileImageUrl && (
-                  <img 
-                    src={user.profileImageUrl} 
-                    alt={user.firstName || "User"} 
-                    className="h-8 w-8 rounded-full border-2 border-border"
-                  />
-                )}
-                <div className="text-right">
-                  <p className="text-sm font-semibold">{user.firstName} {user.lastName}</p>
-                  <p className="text-xs text-muted-foreground">{user.email}</p>
-                </div>
-              </div>
-              
-              <Button
-                onClick={() => logoutMutation.mutate()}
-                variant="outline"
-                className="text-sm"
-              >
-                <Terminal className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
+            <Button
+              onClick={() => setShowNewSearch(true)}
+              className="btn-primary"
+              size="lg"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              New Job Search
+            </Button>
           </div>
         </div>
-      </header>
 
-      <div className="container mx-auto px-4 py-8">
-        {/* Stats Dashboard */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="tech-card p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 rounded-lg bg-primary/10">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Total Jobs Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.5 }}
+            whileHover={{ y: -4 }}
+            className="glass-card p-6"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div className="inline-flex p-3 rounded-xl bg-primary/10">
                 <Database className="h-6 w-6 text-primary" />
               </div>
-              <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              <Badge variant="secondary" className="text-xs">
+                <Sparkles className="h-3 w-3 mr-1" />
+                Total
+              </Badge>
             </div>
-            <h3 className="text-3xl font-bold mb-1">
-              {statsLoading ? (
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              ) : (
-                stats?.totalJobsScraped || 0
-              )}
-            </h3>
-            <p className="text-sm text-muted-foreground">Total Jobs Analyzed</p>
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary/20">
-              <div className="h-full bg-primary processing-bar"></div>
+            <div className="space-y-2">
+              <p className="text-3xl font-bold">
+                {statsLoading ? (
+                  <Loader2 className="h-8 w-8 animate-spin" />
+                ) : (
+                  stats?.totalJobsScraped || 0
+                )}
+              </p>
+              <p className="text-sm text-muted-foreground">Jobs Analyzed</p>
             </div>
-          </div>
+            <div className="mt-4 flex items-center text-sm text-primary">
+              <TrendingUp className="h-4 w-4 mr-1" />
+              <span>+12% from last week</span>
+            </div>
+          </motion.div>
 
-          <div className="tech-card p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 rounded-lg bg-primary/10">
-                <Mail className="h-6 w-6 text-primary" />
+          {/* Applications Sent Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            whileHover={{ y: -4 }}
+            className="glass-card p-6"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div className="inline-flex p-3 rounded-xl bg-accent/10">
+                <Mail className="h-6 w-6 text-accent" />
               </div>
-              <Send className="h-4 w-4 text-muted-foreground" />
+              <Badge variant="secondary" className="text-xs">
+                <Send className="h-3 w-3 mr-1" />
+                Sent
+              </Badge>
             </div>
-            <h3 className="text-3xl font-bold mb-1">
-              {statsLoading ? (
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              ) : (
-                stats?.totalApplicationsSent || 0
-              )}
-            </h3>
-            <p className="text-sm text-muted-foreground">Applications Sent</p>
-          </div>
+            <div className="space-y-2">
+              <p className="text-3xl font-bold">
+                {statsLoading ? (
+                  <Loader2 className="h-8 w-8 animate-spin" />
+                ) : (
+                  stats?.totalApplicationsSent || 0
+                )}
+              </p>
+              <p className="text-sm text-muted-foreground">Applications Sent</p>
+            </div>
+            <div className="mt-4 flex items-center text-sm text-accent">
+              <ArrowUpRight className="h-4 w-4 mr-1" />
+              <span>8 sent this week</span>
+            </div>
+          </motion.div>
 
-          <div className="tech-card p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 rounded-lg bg-primary/10">
-                <TrendingUp className="h-6 w-6 text-primary" />
+          {/* Success Rate Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            whileHover={{ y: -4 }}
+            className="glass-card p-6"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div className="inline-flex p-3 rounded-xl bg-green-500/10">
+                <Target className="h-6 w-6 text-green-600" />
               </div>
-              <Activity className="h-4 w-4 text-muted-foreground" />
+              <Badge variant="secondary" className="text-xs">
+                <BarChart3 className="h-3 w-3 mr-1" />
+                Rate
+              </Badge>
             </div>
-            <h3 className="text-3xl font-bold mb-1">
-              {statsLoading ? (
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              ) : (
-                `${((stats?.totalApplicationsSent || 0) / Math.max(stats?.totalJobsScraped || 1, 1) * 100).toFixed(1)}%`
-              )}
-            </h3>
-            <p className="text-sm text-muted-foreground">Success Rate</p>
-          </div>
+            <div className="flex items-center justify-between">
+              <div className="space-y-2">
+                <p className="text-3xl font-bold">{successRate}%</p>
+                <p className="text-sm text-muted-foreground">Success Rate</p>
+              </div>
+              <ProgressRing percentage={successRate} size={80} />
+            </div>
+          </motion.div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-2">
-            <Network className="h-6 w-6 text-primary" />
-            <h2 className="text-2xl font-bold">Job Search Dashboard</h2>
-          </div>
-          
-          <Dialog open={showNewSearch} onOpenChange={setShowNewSearch}>
-            <DialogTrigger asChild>
-              <Button className="tech-btn">
-                <Plus className="h-4 w-4 mr-2" />
-                New Job Search
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl">
-              <DialogHeader>
-                <DialogTitle className="text-2xl font-bold flex items-center space-x-2">
-                  <Search className="h-6 w-6 text-primary" />
-                  <span>Start New Job Search</span>
-                </DialogTitle>
-              </DialogHeader>
-              <JobScraper onComplete={(requestId) => {
-                setShowNewSearch(false);
-                // Navigate to results page after completion
-                setTimeout(() => {
-                  setLocation(`/results/${requestId}`);
-                }, 500);
-              }} />
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        {/* Search History */}
-        <div className="tech-card p-6">
-          <div className="flex items-center space-x-2 mb-6">
-            <History className="h-6 w-6 text-primary" />
-            <h3 className="text-xl font-bold">Recent Searches</h3>
+        {/* Recent Searches Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.5 }}
+          className="glass-card p-6"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <Clock className="h-6 w-6 text-primary" />
+              <h2 className="text-xl font-semibold">Recent Searches</h2>
+            </div>
+            <Badge variant="outline" className="text-xs">
+              {stats?.recentSearches?.length || 0} total
+            </Badge>
           </div>
 
           {statsLoading ? (
@@ -212,70 +254,98 @@ export default function Home() {
             </div>
           ) : stats?.recentSearches && stats.recentSearches.length > 0 ? (
             <div className="space-y-4">
-              {stats.recentSearches.map((search) => (
-                <div 
-                  key={search.id} 
-                  className="bg-card/50 p-4 rounded-lg flex items-center justify-between group cursor-pointer hover:bg-card transition-all border border-border/50"
+              {stats.recentSearches.map((search, index) => (
+                <motion.div
+                  key={search.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1, duration: 0.3 }}
+                  whileHover={{ x: 4 }}
+                  className="glass-card p-4 cursor-pointer group"
                   onClick={() => setLocation(`/results/${search.id}`)}
                 >
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-4 mb-2">
-                      <Search className="h-5 w-5 text-muted-foreground" />
-                      <span className="text-sm font-medium">
-                        Search {search.id.slice(0, 8)}
-                      </span>
-                      <Badge 
-                        variant={search.status === 'completed' ? 'default' : search.status === 'failed' ? 'destructive' : 'secondary'}
-                        className="text-xs"
-                      >
-                        {search.status}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground truncate">
-                      {search.linkedinUrl}
-                    </p>
-                    <div className="flex items-center space-x-4 mt-2 text-xs text-muted-foreground">
-                      <span className="flex items-center space-x-1">
-                        <Calendar className="h-3 w-3" />
-                        <span>{format(new Date(search.createdAt), 'MMM dd, HH:mm')}</span>
-                      </span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <Badge
+                          variant={
+                            search.status === 'completed' ? 'default' :
+                            search.status === 'failed' ? 'destructive' :
+                            'secondary'
+                          }
+                        >
+                          {search.status}
+                        </Badge>
+                        <span className="text-sm font-medium">
+                          Search #{search.id.slice(0, 8)}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {format(new Date(search.createdAt), 'MMM dd, HH:mm')}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {search.linkedinUrl}
+                      </p>
                       {search.status === 'completed' && search.filteredResults && (
-                        <>
-                          <span className="flex items-center space-x-1">
-                            <BarChart3 className="h-3 w-3" />
+                        <div className="flex items-center gap-4 mt-2">
+                          <div className="flex items-center gap-1 text-xs">
+                            <Briefcase className="h-3 w-3" />
                             <span>{(search.filteredResults as any).totalCount || 0} jobs</span>
-                          </span>
-                          <span className="flex items-center space-x-1">
-                            <CheckCircle className="h-3 w-3" />
+                          </div>
+                          <div className="flex items-center gap-1 text-xs text-green-600">
+                            <Users className="h-3 w-3" />
                             <span>{(search.filteredResults as any).canApplyCount || 0} with contacts</span>
-                          </span>
-                        </>
+                          </div>
+                        </div>
                       )}
                     </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      View
+                    </Button>
                   </div>
-                  
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <Eye className="h-4 w-4 mr-2" />
-                    View
-                  </Button>
-                </div>
+                </motion.div>
               ))}
             </div>
           ) : (
             <div className="text-center py-12">
-              <Database className="h-16 w-16 text-muted-foreground/20 mx-auto mb-4" />
-              <p className="text-lg text-muted-foreground">No searches yet</p>
-              <p className="text-sm text-muted-foreground mt-2">Start your first job search to see history</p>
+              <div className="inline-flex p-4 rounded-full bg-muted mb-4">
+                <Search className="h-12 w-12 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-medium mb-2">No searches yet</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Start your first job search to see your history here
+              </p>
+              <Button onClick={() => setShowNewSearch(true)} className="btn-primary">
+                <Plus className="h-4 w-4 mr-2" />
+                Start First Search
+              </Button>
             </div>
           )}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
-
-    </div>
+      {/* New Search Dialog */}
+      <Dialog open={showNewSearch} onOpenChange={setShowNewSearch}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+              <Search className="h-6 w-6 text-primary" />
+              Start New Job Search
+            </DialogTitle>
+          </DialogHeader>
+          <JobScraper onComplete={(requestId) => {
+            setShowNewSearch(false);
+            setTimeout(() => {
+              setLocation(`/results/${requestId}`);
+            }, 500);
+          }} />
+        </DialogContent>
+      </Dialog>
+    </DashboardLayout>
   );
 }

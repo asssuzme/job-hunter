@@ -1,0 +1,184 @@
+import { Link, useLocation } from "wouter";
+import { motion } from "framer-motion";
+import {
+  LayoutDashboard,
+  Search,
+  Briefcase,
+  BarChart3,
+  Settings,
+  Sun,
+  Moon,
+  LogOut,
+  Menu,
+  X
+} from "lucide-react";
+import { useTheme } from "@/providers/theme-provider";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
+
+const sidebarItems = [
+  {
+    icon: LayoutDashboard,
+    label: "Dashboard",
+    href: "/",
+  },
+  {
+    icon: Search,
+    label: "Job Search",
+    href: "/search",
+  },
+  {
+    icon: Briefcase,
+    label: "Applications",
+    href: "/applications",
+  },
+  {
+    icon: BarChart3,
+    label: "Analytics",
+    href: "/analytics",
+  },
+  {
+    icon: Settings,
+    label: "Settings",
+    href: "/settings",
+  },
+];
+
+interface SidebarProps {
+  user?: any;
+  onLogout: () => void;
+}
+
+export function Sidebar({ user, onLogout }: SidebarProps) {
+  const [location] = useLocation();
+  const { theme, toggleTheme } = useTheme();
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <>
+      {/* Mobile menu button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="fixed top-4 left-4 z-50 md:hidden"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+      </Button>
+
+      {/* Overlay for mobile */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <motion.aside
+        initial={{ x: -320 }}
+        animate={{ x: isOpen || window.innerWidth >= 768 ? 0 : -320 }}
+        transition={{ type: "spring", damping: 20 }}
+        className={cn(
+          "fixed left-0 top-0 h-full w-64 bg-card border-r z-50",
+          "flex flex-col",
+          "md:translate-x-0"
+        )}
+      >
+        {/* Logo */}
+        <div className="p-6 border-b">
+          <h1 className="text-2xl font-bold gradient-text">JobHunter</h1>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 p-4">
+          <ul className="space-y-2">
+            {sidebarItems.map((item) => {
+              const isActive = location === item.href;
+              return (
+                <li key={item.href}>
+                  <Link href={item.href}>
+                    <a
+                      className={cn(
+                        "sidebar-item",
+                        isActive && "sidebar-item active"
+                      )}
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <item.icon className="h-5 w-5" />
+                      <span>{item.label}</span>
+                    </a>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+
+        {/* User section */}
+        <div className="p-4 border-t space-y-4">
+          {/* Theme toggle */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start"
+            onClick={toggleTheme}
+          >
+            {theme === "light" ? (
+              <>
+                <Moon className="h-4 w-4 mr-2" />
+                Dark mode
+              </>
+            ) : (
+              <>
+                <Sun className="h-4 w-4 mr-2" />
+                Light mode
+              </>
+            )}
+          </Button>
+
+          {/* User info */}
+          {user && (
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+              {user.profileImageUrl ? (
+                <img
+                  src={user.profileImageUrl}
+                  alt={user.firstName || "User"}
+                  className="h-10 w-10 rounded-full object-cover"
+                />
+              ) : (
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-sm font-medium">
+                    {user.firstName?.[0] || user.email?.[0] || "U"}
+                  </span>
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">
+                  {user.firstName && user.lastName
+                    ? `${user.firstName} ${user.lastName}`
+                    : user.email}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {user.email}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Logout button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start text-destructive hover:text-destructive"
+            onClick={onLogout}
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Logout
+          </Button>
+        </div>
+      </motion.aside>
+    </>
+  );
+}

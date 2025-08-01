@@ -2,11 +2,12 @@ import { useState, useRef } from "react";
 import { FilteredJobData } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, ExternalLink, User, Briefcase, DollarSign, Mail, CheckCircle, XCircle, Send, Loader2 } from "lucide-react";
+import { MapPin, ExternalLink, User, Briefcase, DollarSign, Mail, CheckCircle, XCircle, Send, Loader2, Sparkles, Globe, Building } from "lucide-react";
 import { CompanyProfileModal } from "./company-profile-modal";
 import { EmailComposerModal } from "./email-composer-modal";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { motion } from "framer-motion";
 
 interface FilteredJobCardProps {
   job: FilteredJobData;
@@ -143,36 +144,42 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
   };
 
   return (
-    <div className="tech-card hover:scale-[1.02] transition-all duration-300 p-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -2 }}
+      className="glass-card p-6 hover:shadow-xl transition-all duration-300"
+    >
       <div className="flex items-start justify-between mb-4">
-        <div className="flex items-start space-x-4">
-          {job.companyLogo && (
+        <div className="flex items-start gap-4">
+          {job.companyLogo ? (
             <img 
               src={job.companyLogo} 
               alt={`${job.companyName} logo`} 
-              className="w-12 h-12 rounded-lg object-cover border border-border" 
+              className="w-14 h-14 rounded-xl object-cover ring-2 ring-primary/10" 
             />
-          )}
-          {!job.companyLogo && (
-            <div className="w-12 h-12 rounded-lg bg-gradient-secondary flex items-center justify-center">
-              <Briefcase className="h-6 w-6 text-muted-foreground" />
+          ) : (
+            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+              <Building className="h-7 w-7 text-primary" />
             </div>
           )}
           <div className="flex-1">
             <h3 
-              className="text-lg font-semibold hover:text-primary transition-colors cursor-pointer mb-2"
+              className="text-lg font-semibold hover:text-primary transition-colors cursor-pointer mb-2 flex items-center gap-2"
               onClick={handleViewJob}
             >
               {job.title}
+              <ExternalLink className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
             </h3>
-            <div className="flex items-center space-x-4 text-sm text-muted-foreground mb-3">
+            <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
               <span 
-                className="font-medium hover:text-primary cursor-pointer transition-colors"
+                className="font-medium hover:text-primary cursor-pointer transition-colors flex items-center gap-1"
                 onClick={handleViewCompany}
               >
+                <Building className="h-3 w-3" />
                 {job.companyName}
               </span>
-              <span className="flex items-center">
+              <span className="flex items-center gap-1">
                 <MapPin className="h-3 w-3 mr-1" />
                 {job.location}
               </span>
@@ -364,6 +371,6 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
         isGeneratingEmail={isGeneratingEmail}
         onRegenerateEmail={handleRegenerateEmail}
       />
-    </div>
+    </motion.div>
   );
 }

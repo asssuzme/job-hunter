@@ -2,13 +2,30 @@
 
 ## Overview
 
-A sophisticated web service that leverages Apify API to scrape, filter, and enrich LinkedIn job data with advanced contact information extraction and AI-powered email generation capabilities. Features Google OAuth authentication for seamless user access and a modern, visually appealing interface with glassmorphism effects, gradient designs, and smooth animations. Supports resume upload functionality for both text and PDF files with automatic text extraction.
+A sophisticated web service that leverages Apify API to scrape, filter, and enrich LinkedIn job data with advanced contact information extraction and AI-powered email generation capabilities. Features Google OAuth authentication for seamless user access and a modern SaaS-inspired interface with glassmorphism effects, marble/statue aesthetic, dark mode support, and Framer Motion animations. Supports resume upload functionality for both text and PDF files with automatic text extraction.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (August 1, 2025)
+
+### Complete UI/UX Redesign - SaaS-Style Interface
+- **Design System**: Implemented modern SaaS-inspired UI similar to Linear.app/Framer/Vercel
+- **Color Scheme**: Deep navy blue (#0a0f1c), marble white (#fafafa), and muted gold accent (#d4af37)
+- **Theme Support**: Added dark/light mode toggle with proper theme provider implementation
+- **Layout**: Implemented DashboardLayout component with animated sidebar navigation
+- **Glassmorphism**: Applied glass-card effects throughout all components with backdrop blur
+- **Marble Aesthetic**: Landing page features statue/marble theme with gradient backgrounds
+- **Animations**: Integrated Framer Motion for smooth page transitions and interactive elements
+- **Components Updated**:
+  - Landing page: Centered auth card with marble aesthetic and animated elements
+  - Home page: Dashboard layout with sidebar, stats cards, and animated progress rings
+  - Job Scraper: Modern form design with glassmorphism and progress indicators
+  - Results page: Dashboard layout with categorized tabs and modern job cards
+  - FilteredJobCard: Glassmorphic design with hover effects and smooth transitions
+
+## Previous Changes (August 1, 2025)
 
 ### Authentication Update
 - **Replaced Replit Auth with Google OAuth 2.0**: Full migration to Google OAuth authentication
