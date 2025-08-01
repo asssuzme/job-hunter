@@ -44,7 +44,8 @@ export function ResumeUpload({ onResumeTextChange }: ResumeUploadProps) {
         
         const response = await fetch('/api/parse-pdf', {
           method: 'POST',
-          body: formData
+          body: formData,
+          credentials: 'include'
         });
         
         if (!response.ok) {
