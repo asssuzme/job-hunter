@@ -112,7 +112,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
       });
 
       if (!urlResponse.linkedinUrl) {
-        throw new Error("Failed to generate LinkedIn URL");
+        throw new Error(urlResponse.error || "Failed to generate LinkedIn URL");
       }
 
       // Show location normalization info if available

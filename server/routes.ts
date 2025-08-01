@@ -360,11 +360,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
       
       // Use OpenAI to normalize the location
-      const locationPrompt = `Given the location "${location}", identify the closest matching Indian city from this list: ${Object.keys(cityGeoIds).filter((city, index, arr) => arr.indexOf(city) === index).join(", ")}. 
+      const locationPrompt = `Given a user's location input "${location}", find and return the correct LinkedIn geoId for that exact city or country by searching LinkedIn's location taxonomy from this list: ${Object.keys(cityGeoIds).filter((city, index, arr) => arr.indexOf(city) === index).join(", ")}. 
       
-      Always map the user's location input to the correct LinkedIn geoId for that exact country or city. Never substitute with a nearby or similar location.
+      CRITICAL REQUIREMENTS:
+      - Never substitute with a nearby or similar location
+      - Only return the exact match for the user's requested location
+      - If uncertain or no exact match exists, return "NO_MATCH" instead of guessing
       
-      Return only the exact city name in lowercase, no explanation. If the location doesn't match any city in the list, return the closest major city.`;
+      Return only the exact city name in lowercase if found, or "NO_MATCH" if not found. No explanations.`;
 
       const completion = await openai.chat.completions.create({
         model: "gpt-4o",
@@ -376,18 +379,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const normalizedLocation = completion.choices[0].message.content?.trim().toLowerCase() || "";
+      
+      // Check if AI returned NO_MATCH
+      if (normalizedLocation === "no_match") {
+        return res.status(400).json({ 
+          error: `No LinkedIn location found for "${location}". Please try a different city name.`,
+          originalLocation: location
+        });
+      }
+      
       const geoId = cityGeoIds[normalizedLocation];
 
       if (!geoId) {
-        // Default to Bengaluru if no match found
-        const defaultGeoId = "105214831";
-        const linkedinUrl = `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(keyword)}&geoId=${defaultGeoId}&f_WT=${workType}`;
-        
-        return res.json({ 
-          linkedinUrl,
-          normalizedLocation: "bengaluru",
-          originalLocation: location,
-          message: `Location "${location}" not found in our database. Using Bengaluru as default.`
+        // This shouldn't happen if AI follows instructions, but handle it just in case
+        return res.status(400).json({ 
+          error: `No LinkedIn location found for "${location}". Please try a different city name.`,
+          originalLocation: location
         });
       }
 
