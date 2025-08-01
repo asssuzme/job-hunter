@@ -70,7 +70,7 @@ export default function Results() {
     );
   }
 
-  const enrichedJobs = scrapingResult.enrichedResults?.enrichedJobs || [];
+  const enrichedJobs = scrapingResult.enrichedResults?.jobs || [];
   const canApplyJobs = enrichedJobs.filter((job: any) => job.canApply);
   const cannotApplyJobs = enrichedJobs.filter((job: any) => !job.canApply);
 

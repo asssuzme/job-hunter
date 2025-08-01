@@ -197,7 +197,7 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
               Cannot Apply
             </Badge>
           )}
-          {!job.jobPosterEmail && (
+          {job.canApply && (
             <Button 
               size="sm" 
               variant="outline"
