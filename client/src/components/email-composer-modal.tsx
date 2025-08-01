@@ -38,7 +38,6 @@ export function EmailComposerModal({
   const [emailContent, setEmailContent] = useState(generatedEmail);
   const [subject, setSubject] = useState(`Application for ${jobTitle} position at ${companyName}`);
   const [copied, setCopied] = useState(false);
-  const [isRegenerating, setIsRegenerating] = useState(false);
   const { toast } = useToast();
 
   // Update email content when generated email changes
@@ -47,13 +46,6 @@ export function EmailComposerModal({
       setEmailContent(generatedEmail);
     }
   }, [generatedEmail]);
-  
-  // Reset regenerating state when parent's isGeneratingEmail becomes false
-  useEffect(() => {
-    if (!isGeneratingEmail) {
-      setIsRegenerating(false);
-    }
-  }, [isGeneratingEmail]);
 
   const sendEmailMutation = useMutation({
     mutationFn: async () => {
@@ -137,7 +129,7 @@ export function EmailComposerModal({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="email-content">Email Content</Label>
-              {isGeneratingEmail || isRegenerating ? (
+              {isGeneratingEmail ? (
                 <div className="flex flex-col items-end gap-1">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -151,14 +143,8 @@ export function EmailComposerModal({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    setIsRegenerating(true);
-                    onRegenerateEmail();
-                    // Reset after a short delay to handle fast responses
-                    setTimeout(() => setIsRegenerating(false), 500);
-                  }}
-                  className="transition-opacity"
-                  disabled={isRegenerating}
+                  onClick={onRegenerateEmail}
+                  className="opacity-100 hover:opacity-80 transition-opacity"
                 >
                   <Sparkles className="h-3 w-3 mr-1" />
                   Regenerate Email

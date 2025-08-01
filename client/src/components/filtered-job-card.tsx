@@ -20,7 +20,6 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
   const [companyProfile, setCompanyProfile] = useState<any>(null);
   const [generatedEmail, setGeneratedEmail] = useState<string>("");
   const [isGeneratingEmail, setIsGeneratingEmail] = useState(false);
-  const regenerateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const companyMutation = useMutation({
     mutationFn: async (companyLinkedinUrl: string) => {
@@ -105,25 +104,18 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
   };
 
   const handleRegenerateEmail = () => {
-    // Clear any existing timeout
-    if (regenerateTimeoutRef.current) {
-      clearTimeout(regenerateTimeoutRef.current);
-    }
-    
     // Prevent multiple concurrent requests
     if (isGeneratingEmail) {
       console.log("Email generation already in progress");
       return;
     }
     
-    // Add a small debounce to prevent accidental double clicks
-    regenerateTimeoutRef.current = setTimeout(() => {
-      if (job.companyLinkedinUrl && !companyProfile) {
-        companyMutation.mutate(job.companyLinkedinUrl);
-      } else {
-        generateApplicationEmail(companyProfile);
-      }
-    }, 300);
+    // Generate email immediately without delay
+    if (job.companyLinkedinUrl && !companyProfile) {
+      companyMutation.mutate(job.companyLinkedinUrl);
+    } else {
+      generateApplicationEmail(companyProfile);
+    }
   };
   const handleViewJob = () => {
     window.open(job.link, "_blank", "noopener,noreferrer");
