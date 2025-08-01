@@ -1,7 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./googleAuth";
+import { setupSimpleGoogleAuth, isSimpleAuthenticated } from "./simpleGoogleAuth";
+import { setupAuthDiagnostics } from "./authDiagnostics";
 import { 
   insertJobScrapingRequestSchema, 
   linkedinUrlSchema,
@@ -12,27 +13,38 @@ import {
 import { z } from "zod";
 import OpenAI from "openai";
 import multer from "multer";
+import express from "express";
+import session from "express-session";
+import { getSession } from "./googleAuth";
 
 // Configure multer for memory storage
 const upload = multer({ storage: multer.memoryStorage() });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Session middleware
+  app.set("trust proxy", 1);
+  app.use(getSession());
+  
   // Auth middleware
-  await setupAuth(app);
+  setupSimpleGoogleAuth(app);
+  
+  // Setup auth diagnostics
+  setupAuthDiagnostics(app);
 
   // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
-    try {
-      const user = req.user as User & { googleAccessToken?: string };
-      res.json(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
+  app.get('/api/auth/user', (req: any, res) => {
+    if (req.user) {
+      res.json({
+        ...req.user,
+        googleAccessToken: req.session?.googleAccessToken
+      });
+    } else {
+      res.status(401).json({ message: "Unauthorized" });
     }
   });
 
   // Create a new job scraping request (now requires authentication)
-  app.post("/api/scrape-job", isAuthenticated, async (req: any, res) => {
+  app.post("/api/scrape-job", isSimpleAuthenticated, async (req: any, res) => {
     try {
       // Validate the request body
       const validation = linkedinUrlSchema.safeParse(req.body);
@@ -50,7 +62,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const cleanedResumeText = resumeText ? resumeText.replace(/\0/g, '').trim() : null;
 
       // Create the scraping request with optional resume
-      const user = req.user as User;
+      const user = req.user;
       const request = await storage.createJobScrapingRequest({ 
         linkedinUrl,
         resumeText: cleanedResumeText,
@@ -68,9 +80,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user's scraping requests
-  app.get("/api/scrape-jobs", isAuthenticated, async (req: any, res) => {
+  app.get("/api/scrape-jobs", isSimpleAuthenticated, async (req: any, res) => {
     try {
-      const user = req.user as User;
+      const user = req.user;
       const requests = await storage.getJobScrapingRequestsByUser(user.id);
       res.json(requests);
     } catch (error) {
@@ -80,7 +92,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get scraping request status and results
-  app.get("/api/scrape-job/:id", isAuthenticated, async (req: any, res) => {
+  app.get("/api/scrape-job/:id", isSimpleAuthenticated, async (req: any, res) => {
     try {
       const { id } = req.params;
       const request = await storage.getJobScrapingRequest(id);
@@ -97,7 +109,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Cancel a scraping request
-  app.post("/api/scrape-job/:id/cancel", isAuthenticated, async (req: any, res) => {
+  app.post("/api/scrape-job/:id/cancel", isSimpleAuthenticated, async (req: any, res) => {
     try {
       const { id } = req.params;
       const request = await storage.getJobScrapingRequest(id);
@@ -119,7 +131,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Parse PDF file to extract text
-  app.post("/api/parse-pdf", isAuthenticated, upload.single("file"), async (req: any, res) => {
+  app.post("/api/parse-pdf", isSimpleAuthenticated, upload.single("file"), async (req: any, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
