@@ -8,6 +8,9 @@ import { ThemeProvider } from "@/providers/theme-provider";
 import Home from "@/pages/home";
 import Landing from "@/pages/landing";
 import Results from "@/pages/results";
+import Applications from "@/pages/applications";
+import Analytics from "@/pages/analytics";
+import Settings from "@/pages/settings";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -29,6 +32,10 @@ function Router() {
       {isAuthenticated ? (
         <>
           <Route path="/" component={Home} />
+          <Route path="/search" component={Home} />
+          <Route path="/applications" component={Applications} />
+          <Route path="/analytics" component={Analytics} />
+          <Route path="/settings" component={Settings} />
           <Route path="/results/:requestId" component={Results} />
         </>
       ) : (

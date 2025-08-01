@@ -98,17 +98,16 @@ export function Sidebar({ user, onLogout }: SidebarProps) {
               const isActive = location === item.href;
               return (
                 <li key={item.href}>
-                  <Link href={item.href}>
-                    <a
-                      className={cn(
-                        "sidebar-item",
-                        isActive && "sidebar-item active"
-                      )}
-                      onClick={() => setIsOpen(false)}
-                    >
-                      <item.icon className="h-5 w-5" />
-                      <span>{item.label}</span>
-                    </a>
+                  <Link 
+                    href={item.href}
+                    className={cn(
+                      "sidebar-item flex items-center gap-3",
+                      isActive && "sidebar-item-active"
+                    )}
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <item.icon className="h-5 w-5" />
+                    <span>{item.label}</span>
                   </Link>
                 </li>
               );
