@@ -102,16 +102,39 @@ export async function setupAuth(app: Express) {
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
+    const domain = req.hostname;
+    console.log(`Login attempt - hostname: ${domain}, available strategies:`, Object.keys((passport as any)._strategies));
+    
+    passport.authenticate(`replitauth:${domain}`, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
     })(req, res, next);
   });
 
   app.get("/api/callback", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
+    const domain = req.hostname;
+    console.log(`Callback attempt - hostname: ${domain}`);
+    
+    passport.authenticate(`replitauth:${domain}`, {
       successReturnToOrRedirect: "/",
       failureRedirect: "/api/login",
+      failureMessage: true,
+    }, (err: any, user: any, info: any) => {
+      if (err) {
+        console.error("Callback error:", err);
+        return next(err);
+      }
+      if (!user) {
+        console.error("Callback failed - no user:", info);
+        return res.redirect("/api/login");
+      }
+      req.logIn(user, (err) => {
+        if (err) {
+          console.error("Login error:", err);
+          return next(err);
+        }
+        return res.redirect("/");
+      });
     })(req, res, next);
   });
 
@@ -130,8 +153,13 @@ export async function setupAuth(app: Express) {
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
 
-  if (!req.isAuthenticated() || !user.expires_at) {
+  if (!req.isAuthenticated() || !user) {
     return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  // If user doesn't have expires_at, they might be a new session
+  if (!user.expires_at) {
+    return next();
   }
 
   const now = Math.floor(Date.now() / 1000);
