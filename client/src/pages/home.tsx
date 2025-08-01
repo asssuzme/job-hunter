@@ -92,13 +92,10 @@ export default function Home() {
     refetchInterval: 30000,
   });
 
-  // Logout mutation
-  const logoutMutation = useMutation({
-    mutationFn: () => apiRequest("/api/auth/logout", { method: "GET" }),
-    onSuccess: () => {
-      window.location.href = "/";
-    }
-  });
+  // Logout function
+  const handleLogout = () => {
+    window.location.href = "/api/auth/logout";
+  };
 
   if (!user) {
     return null;
@@ -107,7 +104,7 @@ export default function Home() {
   const successRate = stats ? Math.round((stats.totalApplicationsSent / Math.max(stats.totalJobsScraped, 1)) * 100) : 0;
 
   return (
-    <DashboardLayout user={user} onLogout={() => logoutMutation.mutate()} title="Dashboard">
+    <DashboardLayout user={user} onLogout={handleLogout} title="Dashboard">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

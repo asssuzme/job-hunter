@@ -27,7 +27,7 @@ export default function Analytics() {
   return (
     <DashboardLayout 
       user={user} 
-      onLogout={() => window.location.href = "/api/logout"} 
+      onLogout={() => window.location.href = "/api/auth/logout"} 
       title="Analytics"
     >
       <motion.div

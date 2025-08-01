@@ -77,7 +77,7 @@ export default function Results() {
   // Loading state
   if (isLoading) {
     return (
-      <DashboardLayout user={user} onLogout={() => {}} title="Job Results">
+      <DashboardLayout user={user} onLogout={() => window.location.href = "/api/auth/logout"} title="Job Results">
         <div className="flex items-center justify-center min-h-[60vh]">
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
@@ -96,7 +96,7 @@ export default function Results() {
   // Error state
   if (!scrapingResult || scrapingResult.status === 'failed') {
     return (
-      <DashboardLayout user={user} onLogout={() => {}} title="Job Results">
+      <DashboardLayout user={user} onLogout={() => window.location.href = "/api/auth/logout"} title="Job Results">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -126,7 +126,7 @@ export default function Results() {
   // Processing state
   if (scrapingResult.status !== 'completed' || !scrapingResult.enrichedResults) {
     return (
-      <DashboardLayout user={user} onLogout={() => {}} title="Job Results">
+      <DashboardLayout user={user} onLogout={() => window.location.href = "/api/auth/logout"} title="Job Results">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -158,7 +158,7 @@ export default function Results() {
   const cannotApplyJobs = enrichedJobs.filter((job: any) => !job.canApply);
 
   return (
-    <DashboardLayout user={user} onLogout={() => {}} title="Job Results">
+    <DashboardLayout user={user} onLogout={() => window.location.href = "/api/auth/logout"} title="Job Results">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
