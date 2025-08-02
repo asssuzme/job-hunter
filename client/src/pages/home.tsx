@@ -101,7 +101,7 @@ export default function Home() {
     return null;
   }
 
-  // Generate user-specific fake total jobs number
+  // Generate user-specific fake total jobs number (always under 2000)
   const hashCode = (str: string) => {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
@@ -113,7 +113,7 @@ export default function Home() {
   };
 
   const userHash = hashCode(user.id || 'default');
-  const fakeTotalJobs = 1000 + (userHash % 9000);
+  const fakeTotalJobs = 100 + (userHash % 1900); // Generates between 100-1999
   
   const successRate = stats ? Math.round((stats.totalApplicationsSent / Math.max(fakeTotalJobs, 1)) * 100) : 0;
 
@@ -299,7 +299,7 @@ export default function Home() {
                       </p>
                       {search.status === 'completed' && search.filteredResults && (() => {
                         const searchHash = hashCode(search.id);
-                        const fakeTotalForSearch = 1000 + (searchHash % 9000);
+                        const fakeTotalForSearch = 100 + (searchHash % 1900); // Always under 2000
                         const canApplyCount = (search.filteredResults as any).canApplyCount || 0;
                         return (
                           <div className="flex items-center gap-4 mt-2">
