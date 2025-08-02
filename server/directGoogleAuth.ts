@@ -17,19 +17,40 @@ if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
 
 // Get the correct base URL based on environment
 const getBaseUrl = () => {
+  // In Replit development environment
+  if (process.env.REPLIT_DEV_DOMAIN) {
+    return `https://${process.env.REPLIT_DEV_DOMAIN}`;
+  }
+  // In production with Replit domains
   if (process.env.REPLIT_DOMAINS) {
-    // In production, use the first Replit domain
     const domains = process.env.REPLIT_DOMAINS.split(',');
     return `https://${domains[0]}`;
   }
+  // In production with app domain
+  if (process.env.REPLIT_APP_DOMAIN) {
+    return `https://${process.env.REPLIT_APP_DOMAIN}`;
+  }
+  // Local development
   return 'http://localhost:5000';
 };
 
-const oauth2Client = new OAuth2Client(
-  GOOGLE_CLIENT_ID,
-  GOOGLE_CLIENT_SECRET,
-  `${getBaseUrl()}/api/auth/google/callback`
-);
+// Create OAuth2Client dynamically to handle different environments
+const createOAuth2Client = (req?: Request) => {
+  let baseUrl = getBaseUrl();
+  
+  // If request is provided, use the actual host
+  if (req) {
+    const protocol = req.get('x-forwarded-proto') || req.protocol;
+    const host = req.get('host');
+    baseUrl = `${protocol}://${host}`;
+  }
+  
+  return new OAuth2Client(
+    GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET,
+    `${baseUrl}/api/auth/google/callback`
+  );
+};
 
 export function setupDirectGoogleAuth(app: Express) {
   // Middleware to check if user is authenticated
@@ -50,6 +71,7 @@ export function setupDirectGoogleAuth(app: Express) {
 
   // Start Google OAuth flow
   app.get('/api/auth/google', (req: Request, res: Response) => {
+    const oauth2Client = createOAuth2Client(req);
     const scopes = [
       'openid',
       'email',
@@ -77,6 +99,7 @@ export function setupDirectGoogleAuth(app: Express) {
     }
 
     try {
+      const oauth2Client = createOAuth2Client(req);
       // Exchange authorization code for tokens
       const { tokens } = await oauth2Client.getToken(code as string);
       oauth2Client.setCredentials(tokens);
