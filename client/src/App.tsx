@@ -70,18 +70,16 @@ function Router() {
 
 function AppContent() {
   useEffect(() => {
-    // Listen for auth state changes
+    // Simple auth state handler
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event);
       
       if (event === 'SIGNED_IN' && session) {
-        // Sync the new session with backend
+        // Sync with backend
         try {
-          const response = await fetch('/api/auth/supabase/callback', {
+          await fetch('/api/auth/supabase/callback', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
             body: JSON.stringify({
               userId: session.user.id,
@@ -91,32 +89,16 @@ function AppContent() {
               userMetadata: session.user.user_metadata,
             }),
           });
-
-          if (response.ok) {
-            console.log('Backend session synced successfully');
-            // Redirect to home if we're on the callback page
-            if (window.location.pathname === '/auth/callback') {
-              window.location.href = '/';
-            } else {
-              window.location.reload();
-            }
-          }
+          
+          // Always reload to refresh UI
+          window.location.reload();
         } catch (err) {
           console.error('Error syncing session:', err);
         }
-      } else if (event === 'SIGNED_OUT') {
-        // Clear backend session
-        await fetch('/api/auth/logout', { 
-          method: 'POST', 
-          credentials: 'include' 
-        });
-        window.location.reload();
       }
     });
     
-    return () => {
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   return (
