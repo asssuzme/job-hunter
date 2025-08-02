@@ -36,6 +36,14 @@ Preferred communication style: Simple, everyday language.
 - **Flexible Input**: Users can select from dropdown or type custom job titles
 - **User Experience**: Searchable dropdown with helpful prompts for custom roles
 
+### Location Autocomplete
+- **Location Field Update**: Converted to searchable combobox with autocomplete
+- **Predefined Cities**: Added 30 popular locations including:
+  - Indian cities: Bengaluru (Bangalore), Mumbai, Delhi, Chennai, Hyderabad, Kolkata, Pune, etc.
+  - International: Singapore, Dubai, London, New York, San Francisco, Toronto, Sydney, etc.
+- **Smart Filtering**: Shows suggestions as user types (e.g., "bang" shows "Bengaluru (Bangalore)")
+- **Flexible Entry**: Users can select from dropdown or type custom locations
+
 ### User-Specific Job Count
 - **Dynamic Total Jobs Display**: Each user sees unique fake total jobs count (1,000-9,999)
 - **Consistent Per User**: Number generated based on user ID hash algorithm

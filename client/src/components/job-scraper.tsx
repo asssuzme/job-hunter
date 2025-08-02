@@ -78,6 +78,42 @@ const jobRoles = [
   { value: "Cloud Engineer", label: "Cloud Engineer" },
 ];
 
+// Predefined locations (Indian cities + International)
+const locations = [
+  // Major Indian Cities
+  { value: "Bengaluru", label: "Bengaluru (Bangalore)" },
+  { value: "Mumbai", label: "Mumbai" },
+  { value: "Delhi", label: "Delhi" },
+  { value: "Chennai", label: "Chennai" },
+  { value: "Hyderabad", label: "Hyderabad" },
+  { value: "Kolkata", label: "Kolkata" },
+  { value: "Pune", label: "Pune" },
+  { value: "Ahmedabad", label: "Ahmedabad" },
+  { value: "Jaipur", label: "Jaipur" },
+  { value: "Lucknow", label: "Lucknow" },
+  { value: "Noida", label: "Noida" },
+  { value: "Gurugram", label: "Gurugram (Gurgaon)" },
+  { value: "Indore", label: "Indore" },
+  { value: "Kochi", label: "Kochi" },
+  { value: "Chandigarh", label: "Chandigarh" },
+  { value: "Bhopal", label: "Bhopal" },
+  { value: "Nagpur", label: "Nagpur" },
+  { value: "Visakhapatnam", label: "Visakhapatnam" },
+  { value: "Surat", label: "Surat" },
+  { value: "Vadodara", label: "Vadodara" },
+  // International Cities
+  { value: "Singapore", label: "Singapore" },
+  { value: "Dubai", label: "Dubai, UAE" },
+  { value: "London", label: "London, UK" },
+  { value: "New York", label: "New York, USA" },
+  { value: "San Francisco", label: "San Francisco, USA" },
+  { value: "Seattle", label: "Seattle, USA" },
+  { value: "Toronto", label: "Toronto, Canada" },
+  { value: "Sydney", label: "Sydney, Australia" },
+  { value: "Tokyo", label: "Tokyo, Japan" },
+  { value: "Berlin", label: "Berlin, Germany" },
+];
+
 interface JobScraperProps {
   onComplete?: (requestId: string) => void;
 }
@@ -373,7 +409,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
             )}
           />
 
-          {/* Location Input */}
+          {/* Location Combobox */}
           <FormField
             control={form.control}
             name="location"
@@ -383,20 +419,76 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
                   <MapPin className="h-4 w-4 text-primary" />
                   Location
                 </FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Input
-                      {...field}
-                      type="text"
-                      placeholder="e.g., Bengaluru, Mumbai, Delhi"
-                      className="pl-10 glass-input h-12 text-base"
-                      disabled={isProcessing}
-                    />
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  </div>
-                </FormControl>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className={cn(
+                          "w-full justify-between glass-input h-12 text-base font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                        disabled={isProcessing}
+                      >
+                        <div className="flex items-center">
+                          <MapPin className="mr-2 h-5 w-5 text-muted-foreground" />
+                          {field.value || "Select or type a location..."}
+                        </div>
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    <Command>
+                      <CommandInput 
+                        placeholder="Search city..." 
+                        value={field.value}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                        }}
+                      />
+                      <CommandList>
+                        <CommandEmpty>
+                          <div className="py-2 text-center text-sm">
+                            No matching city found.
+                            <br />
+                            <span className="text-muted-foreground">
+                              Type your location and press Enter
+                            </span>
+                          </div>
+                        </CommandEmpty>
+                        <CommandGroup heading="Popular Cities">
+                          {locations
+                            .filter((location) => 
+                              location.label.toLowerCase().includes(field.value?.toLowerCase() || '') ||
+                              location.value.toLowerCase().includes(field.value?.toLowerCase() || '')
+                            )
+                            .slice(0, 10)
+                            .map((location) => (
+                              <CommandItem
+                                key={location.value}
+                                value={location.label}
+                                onSelect={() => {
+                                  field.onChange(location.value);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    field.value === location.value ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {location.label}
+                              </CommandItem>
+                            ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
                 <p className="text-xs text-muted-foreground">
-                  Enter city name (we'll normalize it automatically)
+                  Start typing to see suggestions (e.g., "bang" for Bangalore)
                 </p>
                 <FormMessage />
               </FormItem>
