@@ -28,6 +28,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { z } from "zod";
 
 interface JobScrapingResponse {
@@ -49,6 +53,30 @@ const jobSearchSchema = z.object({
 });
 
 type JobSearchFormData = z.infer<typeof jobSearchSchema>;
+
+// Predefined job roles
+const jobRoles = [
+  { value: "Software Engineer", label: "Software Engineer" },
+  { value: "Product Manager", label: "Product Manager" },
+  { value: "Data Scientist", label: "Data Scientist" },
+  { value: "Data Analyst", label: "Data Analyst" },
+  { value: "Business Analyst", label: "Business Analyst" },
+  { value: "Project Manager", label: "Project Manager" },
+  { value: "DevOps Engineer", label: "DevOps Engineer" },
+  { value: "Full Stack Developer", label: "Full Stack Developer" },
+  { value: "Frontend Developer", label: "Frontend Developer" },
+  { value: "Backend Developer", label: "Backend Developer" },
+  { value: "UI/UX Designer", label: "UI/UX Designer" },
+  { value: "Marketing Manager", label: "Marketing Manager" },
+  { value: "Sales Executive", label: "Sales Executive" },
+  { value: "HR Manager", label: "HR Manager" },
+  { value: "Account Manager", label: "Account Manager" },
+  { value: "Machine Learning Engineer", label: "Machine Learning Engineer" },
+  { value: "Quality Assurance Engineer", label: "Quality Assurance Engineer" },
+  { value: "Technical Writer", label: "Technical Writer" },
+  { value: "Solutions Architect", label: "Solutions Architect" },
+  { value: "Cloud Engineer", label: "Cloud Engineer" },
+];
 
 interface JobScraperProps {
   onComplete?: (requestId: string) => void;
@@ -265,7 +293,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
     <div className="space-y-4 md:space-y-6">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 md:space-y-6">
-          {/* Job Keyword Input */}
+          {/* Job Keyword Combobox */}
           <FormField
             control={form.control}
             name="keyword"
@@ -275,20 +303,70 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
                   <Briefcase className="h-4 w-4 text-primary" />
                   Job Keyword
                 </FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Input
-                      {...field}
-                      type="text"
-                      placeholder="e.g., Software Engineer, Product Manager"
-                      className="pl-10 glass-input h-12 text-base"
-                      disabled={isProcessing}
-                    />
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  </div>
-                </FormControl>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className={cn(
+                          "w-full justify-between glass-input h-12 text-base font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                        disabled={isProcessing}
+                      >
+                        <div className="flex items-center">
+                          <Briefcase className="mr-2 h-5 w-5 text-muted-foreground" />
+                          {field.value || "Select or type a job role..."}
+                        </div>
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    <Command>
+                      <CommandInput 
+                        placeholder="Search or type custom role..." 
+                        value={field.value}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                        }}
+                      />
+                      <CommandList>
+                        <CommandEmpty>
+                          <div className="py-2 text-center text-sm">
+                            No matching role found.
+                            <br />
+                            <span className="text-muted-foreground">
+                              Press Enter to use "{field.value}" as custom role
+                            </span>
+                          </div>
+                        </CommandEmpty>
+                        <CommandGroup heading="Popular Job Roles">
+                          {jobRoles.map((role) => (
+                            <CommandItem
+                              key={role.value}
+                              value={role.value}
+                              onSelect={(currentValue) => {
+                                field.onChange(currentValue);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  field.value === role.value ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {role.label}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
                 <p className="text-xs text-muted-foreground">
-                  Enter the job title or keywords to search for
+                  Choose from popular roles or type your own
                 </p>
                 <FormMessage />
               </FormItem>

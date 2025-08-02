@@ -25,6 +25,22 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (August 2, 2025)
 
+### Job Search Combobox Enhancement
+- **Job Keyword Field Update**: Replaced simple text input with advanced combobox
+- **Predefined Job Roles**: Added 20 popular job roles including:
+  - Software Engineer, Product Manager, Data Scientist, Data Analyst
+  - Business Analyst, Project Manager, DevOps Engineer, Full Stack Developer
+  - Frontend/Backend Developer, UI/UX Designer, Marketing Manager
+  - Sales Executive, HR Manager, Account Manager, ML Engineer
+  - QA Engineer, Technical Writer, Solutions Architect, Cloud Engineer
+- **Flexible Input**: Users can select from dropdown or type custom job titles
+- **User Experience**: Searchable dropdown with helpful prompts for custom roles
+
+### User-Specific Job Count
+- **Dynamic Total Jobs Display**: Each user sees unique fake total jobs count (1,000-9,999)
+- **Consistent Per User**: Number generated based on user ID hash algorithm
+- **Professional Appearance**: Formatted with comma separators for readability
+
 ### Legal Compliance Updates
 - **Updated Business Information**: Changed all contact details across the website to reflect actual business owner
   - Email: ashutoshlathvalo@gmail.com
