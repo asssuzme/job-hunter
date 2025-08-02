@@ -160,8 +160,23 @@ export default function Results() {
   const canApplyJobs = enrichedJobs.filter((job: any) => job.canApply);
   const cannotApplyJobs = enrichedJobs.filter((job: any) => !job.canApply);
   
-  // Use actual job count from results
-  const totalJobs = enrichedJobs.length;
+  // Generate user-specific fake total jobs count
+  const generateUserJobCount = (userId: string, baseCount: number) => {
+    let hash = 0;
+    for (let i = 0; i < userId.length; i++) {
+      hash = ((hash << 5) - hash) + userId.charCodeAt(i);
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    // Generate a multiplier between 50-200x the actual jobs found
+    const multiplier = 50 + Math.abs(hash % 150);
+    return Math.max(baseCount * multiplier, 1000); // Ensure at least 1000
+  };
+
+  const actualJobCount = enrichedJobs.length;
+  const fakeTotalJobs = user?.id ? generateUserJobCount(user.id, actualJobCount) : 5847;
+  
+  // Calculate fake numbers for Pro Plan (total - actual jobs with contacts)
+  const fakeProPlanJobs = fakeTotalJobs - canApplyJobs.length;
 
   return (
     <DashboardLayout user={user} onLogout={() => window.location.href = "/api/auth/logout"} title="Job Results">
@@ -198,7 +213,7 @@ export default function Results() {
             >
               <div className="flex flex-col items-center text-center md:flex-row md:justify-between md:text-left">
                 <div>
-                  <p className="text-xl md:text-2xl font-bold text-primary">{totalJobs.toLocaleString()}</p>
+                  <p className="text-xl md:text-2xl font-bold text-primary">{fakeTotalJobs.toLocaleString()}</p>
                   <p className="text-xs md:text-sm text-muted-foreground">Total Jobs</p>
                 </div>
                 <Briefcase className="h-6 w-6 md:h-8 md:w-8 text-primary/20 hidden md:block" />
@@ -229,7 +244,7 @@ export default function Results() {
               <div className="flex flex-col items-center text-center md:flex-row md:justify-between md:text-left">
                 <div>
                   <p className="text-xl md:text-2xl font-bold text-green-600">
-                    {Math.round((canApplyJobs.length / Math.max(enrichedJobs.length, 1)) * 100)}%
+                    {Math.round((canApplyJobs.length / Math.max(fakeTotalJobs, 1)) * 100)}%
                   </p>
                   <p className="text-xs md:text-sm text-muted-foreground">Success Rate</p>
                 </div>
@@ -262,10 +277,10 @@ export default function Results() {
               <Filter className="h-3 w-3 md:h-4 md:w-4" />
               <span className="hidden sm:inline">Pro Plan</span>
               <span className="sm:hidden">Pro</span>
-              <span>({cannotApplyJobs.length})</span>
+              <span>({fakeProPlanJobs.toLocaleString()})</span>
             </TabsTrigger>
             <TabsTrigger value="all" className="flex-1 flex items-center gap-1 md:gap-2 text-xs md:text-sm py-3 w-full md:w-auto">
-              <span>All Jobs ({enrichedJobs.length})</span>
+              <span>All Jobs ({fakeTotalJobs.toLocaleString()})</span>
             </TabsTrigger>
           </TabsList>
 
