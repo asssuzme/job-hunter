@@ -811,10 +811,6 @@ Format the email with proper structure including greeting, body paragraphs, and 
   
   // Cashfree payment session endpoint
   app.post('/api/create-subscription', isSimpleAuthenticated, async (req: any, res) => {
-    if (!req.isAuthenticated()) {
-      return res.sendStatus(401);
-    }
-
     const user = req.user;
 
     try {
