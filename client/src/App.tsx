@@ -25,45 +25,42 @@ import AuthCallback from "@/pages/auth-callback";
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
-  // Handle Supabase auth callback
+  // Handle Supabase auth state changes
   useEffect(() => {
-    const handleAuthCallback = async () => {
-      try {
-        // Check if we're returning from an OAuth redirect
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const queryParams = new URLSearchParams(window.location.search);
-        
-        if (hashParams.get('access_token') || queryParams.get('code')) {
-          // Get the session from Supabase
-          const { data: { session }, error } = await supabase.auth.getSession();
-          
-          if (session && !error) {
-            // Store the session in our backend
-            await fetch('/api/auth/supabase/callback', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              credentials: 'include',
-              body: JSON.stringify({
-                userId: session.user.id,
-                email: session.user.email,
-                accessToken: session.provider_token,
-                refreshToken: session.provider_refresh_token,
-                userMetadata: session.user.user_metadata,
-              }),
-            });
-            
-            // Clean up the URL
-            window.history.replaceState({}, document.title, window.location.pathname);
-          }
-        }
-      } catch (error) {
-        console.error('Error handling auth callback:', error);
-      }
-    };
+    // Listen for auth state changes (including after popup auth)
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        try {
+          // Store the session in our backend
+          const response = await fetch('/api/auth/supabase/callback', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              userId: session.user.id,
+              email: session.user.email,
+              accessToken: session.provider_token,
+              refreshToken: session.provider_refresh_token,
+              userMetadata: session.user.user_metadata,
+            }),
+          });
 
-    handleAuthCallback();
+          if (response.ok) {
+            // Force a refresh to update the auth state
+            window.location.reload();
+          }
+        } catch (error) {
+          console.error('Error syncing auth with backend:', error);
+        }
+      }
+    });
+
+    // Clean up listener on unmount
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   if (isLoading) {

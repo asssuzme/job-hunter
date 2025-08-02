@@ -16,34 +16,77 @@ export const supabase = createClient(
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
-      flowType: 'pkce',
+      flowType: 'implicit', // Use implicit flow to get tokens immediately
     },
   }
 );
 
-// Helper function to sign in with Google and request Gmail permissions
+// Helper function to sign in with Google using popup to avoid redirect issues
 export async function signInWithGoogle() {
-  // Get the current origin to ensure proper redirect
-  const currentOrigin = window.location.origin;
-  
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      scopes: 'openid email profile https://www.googleapis.com/auth/gmail.send',
-      redirectTo: currentOrigin, // Redirect to the root URL where we'll handle the auth
-      queryParams: {
-        access_type: 'offline',
-        prompt: 'consent',
+  try {
+    // First, sign out any existing session to ensure clean state
+    await supabase.auth.signOut();
+    
+    // Create a popup window for authentication
+    const width = 500;
+    const height = 600;
+    const left = window.screenX + (window.outerWidth - width) / 2;
+    const top = window.screenY + (window.outerHeight - height) / 2;
+    
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        scopes: 'openid email profile https://www.googleapis.com/auth/gmail.send',
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
+        skipBrowserRedirect: true, // This prevents the redirect
       },
-    },
-  });
-  
-  if (error) {
+    });
+    
+    if (error) throw error;
+    
+    // Open the auth URL in a popup
+    const popup = window.open(
+      data.url,
+      'google-auth',
+      `width=${width},height=${height},left=${left},top=${top}`
+    );
+    
+    // Return a promise that resolves when authentication is complete
+    return new Promise((resolve, reject) => {
+      // Check if popup is closed
+      const checkPopup = setInterval(() => {
+        if (!popup || popup.closed) {
+          clearInterval(checkPopup);
+          // Check if we got a session
+          supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+              resolve({ session });
+            } else {
+              reject(new Error('Authentication cancelled'));
+            }
+          });
+        }
+      }, 1000);
+      
+      // Also listen for auth state changes
+      const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          clearInterval(checkPopup);
+          if (popup && !popup.closed) {
+            popup.close();
+          }
+          authListener.subscription.unsubscribe();
+          resolve({ session });
+        }
+      });
+    });
+  } catch (error) {
     console.error('Error signing in with Google:', error);
     throw error;
   }
-  
-  return data;
 }
 
 // Helper function to get current user with Gmail tokens
