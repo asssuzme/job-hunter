@@ -82,6 +82,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch dashboard stats" });
     }
   });
+
+  // Analytics endpoint with real data
+  app.get('/api/analytics/stats', isSimpleAuthenticated, async (req: any, res) => {
+    try {
+      const user = req.user;
+      
+      // Get all email applications for the user
+      const emailApplications = await storage.getEmailApplicationsByUser(user.id);
+      
+      // Get all job scraping requests for the user
+      const scrapingRequests = await storage.getJobScrapingRequestsByUser(user.id);
+      
+      // Calculate total applications sent
+      const totalApplications = emailApplications.length;
+      
+      // These metrics are not tracked yet, so we'll return 0
+      const responseRate = 0;
+      const averageResponseTime = 0;
+      const interviewsScheduled = 0;
+      
+      // Calculate weekly applications for the last 4 weeks
+      const fourWeeksAgo = new Date();
+      fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
+      
+      const weeklyApplications = [];
+      for (let i = 0; i < 4; i++) {
+        const weekStart = new Date(fourWeeksAgo);
+        weekStart.setDate(weekStart.getDate() + (i * 7));
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekEnd.getDate() + 7);
+        
+        const count = emailApplications.filter(app => {
+          const sentDate = new Date(app.sentAt);
+          return sentDate >= weekStart && sentDate < weekEnd;
+        }).length;
+        
+        weeklyApplications.push({
+          week: `Week ${i + 1}`,
+          count: count
+        });
+      }
+      
+      res.json({
+        totalApplications,
+        responseRate,
+        averageResponseTime: parseFloat(averageResponseTime as string),
+        interviewsScheduled,
+        weeklyApplications,
+        totalJobsScraped: scrapingRequests.filter(r => r.status === 'completed').length
+      });
+    } catch (error) {
+      console.error("Error fetching analytics stats:", error);
+      res.status(500).json({ message: "Failed to fetch analytics stats" });
+    }
+  });
   
   // Get email applications endpoint
   app.get('/api/email-applications', isSimpleAuthenticated, async (req: any, res) => {
