@@ -639,7 +639,7 @@ Format the email with proper structure including greeting, body paragraphs, and 
     }
   });
 
-  // Save email draft (Supabase-only solution)
+  // Send email using Supabase (requires SMTP configuration)
   app.post("/api/send-email", isAuthenticated, async (req: any, res) => {
     try {
       const { 
@@ -653,13 +653,21 @@ Format the email with proper structure including greeting, body paragraphs, and 
         companyWebsite
       } = req.body;
 
-      // Since we can't send emails directly through Supabase,
-      // we'll save the draft and provide a mailto link
-      
-      // Generate a unique draft ID
-      const draftId = `draft-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      
-      // Save email draft record
+      // Import Supabase email function
+      const { sendEmailWithSupabase } = await import('./supabaseEmail');
+
+      // Get user email to use as sender
+      const fromEmail = req.user?.email || 'noreply@autoapply.ai';
+
+      // Try to send email using Supabase
+      const emailResult = await sendEmailWithSupabase({
+        to,
+        from: fromEmail,
+        subject,
+        html: body
+      });
+
+      // Save email application record regardless of send status
       if (req.user && jobTitle && companyName) {
         try {
           await storage.createEmailApplication({
@@ -671,50 +679,35 @@ Format the email with proper structure including greeting, body paragraphs, and 
             emailBody: body,
             jobUrl,
             companyWebsite,
-            gmailMessageId: draftId
+            gmailMessageId: emailResult.messageId || `email-${Date.now()}`
           });
         } catch (error) {
-          console.error("Error saving email draft:", error);
-          // Don't fail the whole request if saving fails
+          console.error("Error saving email application:", error);
         }
       }
-      
-      // Convert HTML to plain text for mailto link
-      const plainTextBody = body
-        .replace(/<br\s*\/?>/gi, '\n')
-        .replace(/<\/p>/gi, '\n\n')
-        .replace(/<[^>]*>/g, '')
-        .replace(/&nbsp;/g, ' ')
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'")
-        .trim();
-      
-      // Create mailto link (limited to 2000 chars for compatibility)
-      const mailtoBody = plainTextBody.length > 1900 
-        ? plainTextBody.substring(0, 1900) + '...' 
-        : plainTextBody;
-      
-      const mailtoLink = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(mailtoBody)}`;
+
+      if (!emailResult.success) {
+        // Check if it's an SMTP configuration issue
+        if (emailResult.error?.includes('SMTP')) {
+          return res.status(503).json({ 
+            error: emailResult.error,
+            requiresConfig: true,
+            instructions: "To enable email sending, configure SMTP in your Supabase project: Dashboard → Settings → Auth → SMTP Settings"
+          });
+        }
+        
+        return res.status(400).json({ error: emailResult.error });
+      }
       
       res.json({
         success: true,
-        draftId: draftId,
-        message: "Email draft saved successfully!",
-        mailtoLink: mailtoLink,
-        emailContent: {
-          to,
-          subject,
-          body,
-          plainTextBody
-        }
+        messageId: emailResult.messageId,
+        message: "Email sent successfully!"
       });
 
     } catch (error) {
-      console.error("Error saving email draft:", error);
-      res.status(500).json({ error: "Failed to save email draft" });
+      console.error("Error sending email:", error);
+      res.status(500).json({ error: "Failed to send email" });
     }
   });
 
