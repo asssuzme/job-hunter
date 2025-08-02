@@ -68,4 +68,16 @@ app.use((req, res, next) => {
   }, () => {
     log(`serving on port ${port}`);
   });
+
+  // Create redirect server on port 3000 for Supabase OAuth
+  const redirectApp = express();
+  redirectApp.get('*', (req, res) => {
+    const redirectUrl = `http://localhost:5000${req.originalUrl}`;
+    console.log(`[Redirect] :3000${req.originalUrl} → :5000${req.originalUrl}`);
+    res.redirect(redirectUrl);
+  });
+  
+  redirectApp.listen(3000, '0.0.0.0', () => {
+    log(`redirect server on port 3000 → forwarding to port 5000`);
+  });
 })();
