@@ -1,6 +1,6 @@
 // Cashfree Payment Gateway Service - Direct API Implementation
 
-const CASHFREE_BASE_URL = 'https://sandbox.cashfree.com/pg';
+const CASHFREE_BASE_URL = process.env.CASHFREE_PRODUCTION === 'true' ? 'https://api.cashfree.com/pg' : 'https://sandbox.cashfree.com/pg';
 const CASHFREE_CLIENT_ID = process.env.CASHFREE_APP_ID || "CF256745D26V5Q8DRH1C73B2GCQ0";
 const CASHFREE_CLIENT_SECRET = process.env.CASHFREE_SECRET_KEY || "cfsk_ma_test_91917faa134e12e9b40980b7a2481ac0_b5a59d99";
 
