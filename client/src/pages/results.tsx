@@ -160,11 +160,11 @@ export default function Results() {
   const canApplyJobs = enrichedJobs.filter((job: any) => job.canApply);
   const cannotApplyJobs = enrichedJobs.filter((job: any) => !job.canApply);
   
-  // Generate user-specific fake total jobs count (always under 2000)
-  const generateUserJobCount = (userId: string, baseCount: number) => {
+  // Generate search-specific fake total jobs count (always under 2000)
+  const generateSearchJobCount = (searchId: string) => {
     let hash = 0;
-    for (let i = 0; i < userId.length; i++) {
-      hash = ((hash << 5) - hash) + userId.charCodeAt(i);
+    for (let i = 0; i < searchId.length; i++) {
+      hash = ((hash << 5) - hash) + searchId.charCodeAt(i);
       hash = hash & hash; // Convert to 32-bit integer
     }
     // Generate a number between 100-1999
@@ -172,7 +172,7 @@ export default function Results() {
   };
 
   const actualJobCount = enrichedJobs.length;
-  const fakeTotalJobs = user?.id ? generateUserJobCount(user.id, actualJobCount) : 847;
+  const fakeTotalJobs = requestId ? generateSearchJobCount(requestId) : 847;
   
   // Calculate fake numbers for Pro Plan (total - actual jobs with contacts)
   const fakeProPlanJobs = fakeTotalJobs - canApplyJobs.length;
