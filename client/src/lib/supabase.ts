@@ -17,6 +17,10 @@ export const supabase = createClient(
       persistSession: true,
       detectSessionInUrl: true,
       flowType: 'implicit', // Use implicit flow to get tokens immediately
+      // Force redirect to port 5000 in development
+      redirectTo: window.location.hostname === 'localhost' 
+        ? 'http://localhost:5000/auth/callback'
+        : undefined,
     },
   }
 );

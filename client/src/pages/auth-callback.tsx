@@ -8,6 +8,12 @@ export default function AuthCallback() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Handle redirect from wrong port (3000 to 5000)
+    if (window.location.port === '3000') {
+      window.location.href = window.location.href.replace(':3000', ':5000');
+      return;
+    }
+
     const handleAuthCallback = async () => {
       try {
         // Get the session from Supabase after OAuth redirect
