@@ -15,7 +15,7 @@ export default function Subscribe() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   
   // Check URL parameters for payment status
   useEffect(() => {
@@ -50,6 +50,18 @@ export default function Subscribe() {
   }, [toast]);
 
   const handleSubscribe = async () => {
+    // Check if user is logged in
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to subscribe to the Pro Plan",
+        variant: "destructive",
+      });
+      // Redirect to home page for login
+      setLocation("/");
+      return;
+    }
+    
     setIsProcessing(true);
     
     try {

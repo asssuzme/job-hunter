@@ -4,7 +4,7 @@ const { Cashfree } = require("cashfree-pg");
 // Using hardcoded test credentials temporarily - should be moved to environment variables in production
 Cashfree.XClientId = process.env.CASHFREE_APP_ID || "CF256745D26V5Q8DRH1C73B2GCQ0";
 Cashfree.XClientSecret = process.env.CASHFREE_SECRET_KEY || "cfsk_ma_test_91917faa134e12e9b40980b7a2481ac0_b5a59d99";
-Cashfree.XEnvironment = "sandbox"; // Use "production" for live
+Cashfree.XEnvironment = Cashfree.Environment.SANDBOX; // Use Cashfree.Environment.PRODUCTION for live
 
 export interface CreateOrderData {
   orderId: string;
@@ -41,6 +41,7 @@ export async function createCashfreeOrder(data: CreateOrderData) {
     };
 
     const response = await Cashfree.PGCreateOrder("2023-08-01", request);
+    console.log("Cashfree order response:", response.data);
     return response.data;
   } catch (error: any) {
     console.error("Cashfree order creation error:", error);
