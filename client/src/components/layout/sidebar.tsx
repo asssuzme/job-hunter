@@ -84,7 +84,7 @@ export function Sidebar({ user, onLogout, isOpen = false, onClose }: SidebarProp
       >
         {/* Logo */}
         <div className="p-6 border-b">
-          <h1 className="text-2xl font-bold gradient-text">JobHunter</h1>
+          <h1 className="text-2xl font-bold gradient-text">autoapply.ai</h1>
         </div>
 
         {/* Navigation */}

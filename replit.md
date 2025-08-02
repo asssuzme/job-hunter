@@ -1,4 +1,4 @@
-# LinkedIn Job Scraper
+# autoapply.ai
 
 ## Overview
 

@@ -28,7 +28,7 @@ export function DashboardLayout({ children, user, onLogout, title }: DashboardLa
           >
             <Menu className="h-6 w-6" />
           </Button>
-          <h1 className="text-lg font-semibold gradient-text">JobHunter</h1>
+          <h1 className="text-lg font-semibold gradient-text">autoapply.ai</h1>
           <div className="w-10" /> {/* Spacer for centering */}
         </div>
       </div>

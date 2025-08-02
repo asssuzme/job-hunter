@@ -71,7 +71,7 @@ export default function Home() {
             <div className="flex items-center space-x-4">
               <Activity className="h-8 w-8 text-primary" />
               <div>
-                <h1 className="text-2xl font-bold">LinkedIn Job Scraper</h1>
+                <h1 className="text-2xl font-bold">autoapply.ai</h1>
                 <p className="text-xs text-muted-foreground">Professional Job Search Tool</p>
               </div>
             </div>

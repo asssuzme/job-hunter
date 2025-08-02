@@ -22,7 +22,7 @@ export default function Login() {
               <Briefcase className="h-10 w-10 text-white" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold gradient-text">LinkedIn Job Scraper</h1>
+          <h1 className="text-4xl font-bold gradient-text">autoapply.ai</h1>
           <p className="mt-2 text-gray-600 flex items-center justify-center gap-2">
             <Sparkles className="h-4 w-4 text-yellow-500" />
             AI-powered job search automation

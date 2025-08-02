@@ -90,7 +90,7 @@ export default function Landing() {
             <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
               <Briefcase className="h-6 w-6 text-white" />
             </div>
-            <span className="text-2xl font-bold gradient-text">ServiceGenie</span>
+            <span className="text-2xl font-bold gradient-text">autoapply.ai</span>
           </motion.div>
           <motion.div
             initial={{ opacity: 0, x: 20 }}
