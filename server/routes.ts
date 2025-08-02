@@ -639,7 +639,7 @@ Format the email with proper structure including greeting, body paragraphs, and 
     }
   });
 
-  // Send email via SendGrid
+  // Save email draft (Supabase-only solution)
   app.post("/api/send-email", isAuthenticated, async (req: any, res) => {
     try {
       const { 
@@ -653,38 +653,13 @@ Format the email with proper structure including greeting, body paragraphs, and 
         companyWebsite
       } = req.body;
 
-      // Import SendGrid function
-      const { sendEmailWithSendGrid } = await import('./sendgrid');
-
-      // Get user email to use as sender
-      const fromEmail = req.user?.email;
-      if (!fromEmail) {
-        return res.status(400).json({ error: "User email not found" });
-      }
-
-      // Send email using SendGrid
-      const emailResult = await sendEmailWithSendGrid({
-        to,
-        from: fromEmail,
-        subject,
-        html: body
-      });
-
-      if (!emailResult.success) {
-        console.error('SendGrid error:', emailResult.error);
-        
-        // Check if it's an API key issue
-        if (emailResult.error === 'SendGrid API key not configured') {
-          return res.status(503).json({ 
-            error: "Email service not configured. Please contact support.",
-            details: "SendGrid API key missing"
-          });
-        }
-        
-        return res.status(400).json({ error: emailResult.error });
-      }
+      // Since we can't send emails directly through Supabase,
+      // we'll save the draft and provide a mailto link
       
-      // Save email application record
+      // Generate a unique draft ID
+      const draftId = `draft-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Save email draft record
       if (req.user && jobTitle && companyName) {
         try {
           await storage.createEmailApplication({
@@ -696,23 +671,50 @@ Format the email with proper structure including greeting, body paragraphs, and 
             emailBody: body,
             jobUrl,
             companyWebsite,
-            gmailMessageId: emailResult.messageId || 'sendgrid-sent'
+            gmailMessageId: draftId
           });
         } catch (error) {
-          console.error("Error saving email application:", error);
+          console.error("Error saving email draft:", error);
           // Don't fail the whole request if saving fails
         }
       }
       
+      // Convert HTML to plain text for mailto link
+      const plainTextBody = body
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/p>/gi, '\n\n')
+        .replace(/<[^>]*>/g, '')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .trim();
+      
+      // Create mailto link (limited to 2000 chars for compatibility)
+      const mailtoBody = plainTextBody.length > 1900 
+        ? plainTextBody.substring(0, 1900) + '...' 
+        : plainTextBody;
+      
+      const mailtoLink = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(mailtoBody)}`;
+      
       res.json({
         success: true,
-        messageId: emailResult.messageId,
-        message: "Email sent successfully!"
+        draftId: draftId,
+        message: "Email draft saved successfully!",
+        mailtoLink: mailtoLink,
+        emailContent: {
+          to,
+          subject,
+          body,
+          plainTextBody
+        }
       });
 
     } catch (error) {
-      console.error("Error sending email:", error);
-      res.status(500).json({ error: "Failed to send email" });
+      console.error("Error saving email draft:", error);
+      res.status(500).json({ error: "Failed to save email draft" });
     }
   });
 
