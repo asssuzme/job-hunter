@@ -78,7 +78,7 @@ export function setupDirectGoogleAuth(app: Express) {
 
     try {
       // Exchange authorization code for tokens
-      const { tokens } = await oauth2Client.getTokens(code as string);
+      const { tokens } = await oauth2Client.getToken(code as string);
       oauth2Client.setCredentials(tokens);
 
       // Get user info from Google
