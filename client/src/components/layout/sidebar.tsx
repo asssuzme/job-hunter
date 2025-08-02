@@ -85,46 +85,47 @@ export function Sidebar({ user, onLogout, isOpen = false, onClose }: SidebarProp
         {/* Logo */}
         <div className="p-6 border-b">
           <div className="flex items-center gap-3">
-            {/* Modern Logo */}
-            <svg width="36" height="36" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
+            {/* SaaS Neon Logo */}
+            <svg width="40" height="40" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
               <defs>
-                <linearGradient id="sidebarLogoMain" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#6366F1" />
-                  <stop offset="100%" stopColor="#8B5CF6" />
-                </linearGradient>
-                <linearGradient id="sidebarLogoAccent" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#8B5CF6" />
+                <linearGradient id="sidebarSaasMain" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#7C3AED" />
+                  <stop offset="50%" stopColor="#A855F7" />
                   <stop offset="100%" stopColor="#EC4899" />
                 </linearGradient>
+                
+                <linearGradient id="sidebarSaasBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#0EA5E9" />
+                  <stop offset="100%" stopColor="#06B6D4" />
+                </linearGradient>
+                
+                <filter id="sidebarNeon" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                  <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
               </defs>
               
-              <rect x="3" y="3" width="36" height="36" rx="10" fill="url(#sidebarLogoMain)" opacity="0.1" />
+              <rect x="6" y="6" width="36" height="36" rx="10" fill="white" fillOpacity="0.05" />
+              <rect x="6" y="6" width="36" height="36" rx="10" stroke="url(#sidebarSaasMain)" strokeWidth="1" fillOpacity="0" strokeOpacity="0.3" />
               
-              <g>
-                <path d="M12 10 L12 32 L30 32 L30 16 L24 10 Z" 
-                      fill="white" 
-                      opacity="0.95" />
-                <path d="M12 10 L12 32 L30 32 L30 16 L24 10 L12 10 Z M24 10 L24 16 L30 16" 
-                      stroke="url(#sidebarLogoMain)" 
-                      strokeWidth="2" 
-                      strokeLinejoin="round"
-                      fill="none" />
+              <g filter="url(#sidebarNeon)">
+                <path d="M24 12 L16 32 L19 32 L21 27 L27 27 L29 32 L32 32 L24 12 Z M22.5 23 L25.5 23 L24 18 L22.5 23 Z" 
+                      fill="url(#sidebarSaasMain)" />
                 
-                <g transform="translate(21, 21)">
-                  <circle cx="0" cy="0" r="7" fill="url(#sidebarLogoAccent)" />
-                  <path d="M-3 0 A3 3 0 0 1 3 0 L2 -1 L3 0 L2 1 M3 0 A3 3 0 0 1 -3 0 L-2 1 L-3 0 L-2 -1" 
-                        stroke="white" 
-                        strokeWidth="1.5" 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round"
-                        fill="none" />
-                </g>
+                <line x1="21" y1="12" x2="27" y2="12" stroke="url(#sidebarSaasBlue)" strokeWidth="1.5" strokeLinecap="round" />
+                
+                <circle cx="24" cy="12" r="1.5" fill="url(#sidebarSaasBlue)" />
+                <circle cx="16" cy="32" r="1" fill="url(#sidebarSaasBlue)" opacity="0.8" />
+                <circle cx="32" cy="32" r="1" fill="url(#sidebarSaasBlue)" opacity="0.8" />
               </g>
             </svg>
             <div className="flex flex-col">
-              <h1 className="text-xl font-bold tracking-tight">
-                <span className="gradient-text">autoapply</span>
-                <span className="text-muted-foreground">.ai</span>
+              <h1 className="text-xl font-black tracking-tight">
+                <span className="bg-gradient-to-r from-purple-600 via-purple-500 to-pink-500 bg-clip-text text-transparent">AUTOAPPLY</span>
+                <span className="text-cyan-400">.AI</span>
               </h1>
             </div>
           </div>

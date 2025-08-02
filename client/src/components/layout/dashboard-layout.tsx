@@ -29,42 +29,32 @@ export function DashboardLayout({ children, user, onLogout, title }: DashboardLa
             <Menu className="h-6 w-6" />
           </Button>
           <div className="flex items-center gap-2">
-            <svg width="28" height="28" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg width="32" height="32" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
               <defs>
-                <linearGradient id="mobileLogo1" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#6366F1" />
-                  <stop offset="100%" stopColor="#8B5CF6" />
-                </linearGradient>
-                <linearGradient id="mobileLogo2" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#8B5CF6" />
+                <linearGradient id="mobileTech1" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#4F46E5" />
+                  <stop offset="50%" stopColor="#7C3AED" />
                   <stop offset="100%" stopColor="#EC4899" />
+                </linearGradient>
+                <linearGradient id="mobileTech2" x1="100%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#06B6D4" />
+                  <stop offset="100%" stopColor="#8B5CF6" />
                 </linearGradient>
               </defs>
               
-              <rect x="5" y="5" width="32" height="32" rx="8" fill="url(#mobileLogo1)" opacity="0.1" />
+              <rect x="6" y="6" width="36" height="36" rx="6" fill="#0A0E1B" />
+              <rect x="6" y="6" width="36" height="36" rx="6" stroke="url(#mobileTech1)" strokeWidth="1.5" fill="none" opacity="0.8" />
               
               <g>
-                <path d="M12 10 L12 32 L30 32 L30 16 L24 10 Z" 
-                      fill="white" 
-                      opacity="0.9" />
-                <path d="M12 10 L12 32 L30 32 L30 16 L24 10 L12 10 Z M24 10 L24 16 L30 16" 
-                      stroke="url(#mobileLogo1)" 
-                      strokeWidth="2" 
-                      strokeLinejoin="round"
-                      fill="none" />
+                <path d="M24 14 L18 34 L21 34 L22.5 28 L25.5 28 L27 34 L30 34 L24 14 Z" 
+                      fill="url(#mobileTech1)" />
                 
-                <g transform="translate(21, 21)">
-                  <circle cx="0" cy="0" r="6" fill="url(#mobileLogo2)" />
-                  <path d="M-2.5 0 A2.5 2.5 0 0 1 2.5 0 L1.5 -1 L2.5 0 L1.5 1 M2.5 0 A2.5 2.5 0 0 1 -2.5 0 L-1.5 1 L-2.5 0 L-1.5 -1" 
-                        stroke="white" 
-                        strokeWidth="1.3" 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round"
-                        fill="none" />
-                </g>
+                <circle cx="24" cy="14" r="2" fill="url(#mobileTech2)" />
+                <circle cx="18" cy="34" r="2" fill="url(#mobileTech2)" />
+                <circle cx="30" cy="34" r="2" fill="url(#mobileTech2)" />
               </g>
             </svg>
-            <h1 className="text-lg font-semibold gradient-text">autoapply.ai</h1>
+            <h1 className="text-lg font-black tracking-wider uppercase gradient-text">AUTOAPPLY.AI</h1>
           </div>
           <div className="w-10" /> {/* Spacer for centering */}
         </div>

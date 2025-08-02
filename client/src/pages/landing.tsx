@@ -87,62 +87,80 @@ export default function Landing() {
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-3"
           >
-            {/* Modern Minimalist Logo */}
+            {/* Modern SaaS Logo with Neon Glow */}
             <div className="relative group">
-              <svg width="42" height="42" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg" className="transition-all duration-300 group-hover:scale-105">
+              {/* Holographic glow effect */}
+              <div className="absolute -inset-2 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 rounded-lg blur-2xl opacity-60 group-hover:opacity-80 transition-all duration-500"></div>
+              
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="relative transition-all duration-300 group-hover:scale-105">
                 <defs>
-                  <linearGradient id="logoGradientMain" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#6366F1" />
-                    <stop offset="100%" stopColor="#8B5CF6" />
-                  </linearGradient>
-                  <linearGradient id="logoGradientAccent" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#8B5CF6" />
+                  {/* Main gradient - purple to pink */}
+                  <linearGradient id="saasGradMain" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#7C3AED" />
+                    <stop offset="50%" stopColor="#A855F7" />
                     <stop offset="100%" stopColor="#EC4899" />
                   </linearGradient>
-                  <filter id="logoShadow">
-                    <feDropShadow dx="0" dy="2" stdDeviation="4" floodOpacity="0.1"/>
+                  
+                  {/* Electric blue accent */}
+                  <linearGradient id="saasGradBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#0EA5E9" />
+                    <stop offset="100%" stopColor="#06B6D4" />
+                  </linearGradient>
+                  
+                  {/* Neon glow filter */}
+                  <filter id="neonGlow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                    <feMerge>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                  
+                  {/* Glassmorphism backdrop */}
+                  <filter id="glass">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="1"/>
                   </filter>
                 </defs>
                 
-                {/* Background circle */}
-                <rect x="2" y="2" width="38" height="38" rx="12" fill="url(#logoGradientMain)" opacity="0.1" />
+                {/* Glassmorphism background */}
+                <rect x="4" y="4" width="40" height="40" rx="12" fill="white" fillOpacity="0.05" filter="url(#glass)" />
+                <rect x="4" y="4" width="40" height="40" rx="12" stroke="url(#saasGradMain)" strokeWidth="1" fillOpacity="0" strokeOpacity="0.3" />
                 
-                {/* Main icon - Document with AI sparkle */}
-                <g filter="url(#logoShadow)">
-                  {/* Document shape */}
-                  <path d="M12 10 L12 32 L30 32 L30 16 L24 10 Z" 
-                        fill="white" 
-                        opacity="0.95" />
-                  <path d="M12 10 L12 32 L30 32 L30 16 L24 10 L12 10 Z M24 10 L24 16 L30 16" 
-                        stroke="url(#logoGradientMain)" 
-                        strokeWidth="2" 
-                        strokeLinejoin="round"
-                        fill="none" />
+                {/* Futuristic Letter A with 3D depth */}
+                <g filter="url(#neonGlow)">
+                  {/* Shadow layer for 3D effect */}
+                  <path d="M24 10 L15 34 L19 34 L21 28 L27 28 L29 34 L33 34 L24 10 Z M22.5 24 L25.5 24 L24 18 L22.5 24 Z" 
+                        fill="#000000" 
+                        opacity="0.3"
+                        transform="translate(1, 1)" />
                   
-                  {/* Automation symbol - circular arrows */}
-                  <g transform="translate(21, 21)">
-                    <circle cx="0" cy="0" r="7" fill="url(#logoGradientAccent)" />
-                    <path d="M-3 0 A3 3 0 0 1 3 0 L2 -1 L3 0 L2 1 M3 0 A3 3 0 0 1 -3 0 L-2 1 L-3 0 L-2 -1" 
-                          stroke="white" 
-                          strokeWidth="1.5" 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round"
-                          fill="none" />
-                  </g>
+                  {/* Main A shape */}
+                  <path d="M24 10 L15 34 L19 34 L21 28 L27 28 L29 34 L33 34 L24 10 Z M22.5 24 L25.5 24 L24 18 L22.5 24 Z" 
+                        fill="url(#saasGradMain)" />
                   
-                  {/* AI sparkles */}
-                  <circle cx="15" cy="15" r="1" fill="url(#logoGradientAccent)" className="animate-pulse" />
-                  <circle cx="27" cy="13" r="1" fill="url(#logoGradientAccent)" className="animate-pulse" style={{ animationDelay: "0.3s" }} />
-                  <circle cx="25" cy="27" r="1" fill="url(#logoGradientAccent)" className="animate-pulse" style={{ animationDelay: "0.6s" }} />
+                  {/* Top accent line */}
+                  <line x1="20" y1="10" x2="28" y2="10" stroke="url(#saasGradBlue)" strokeWidth="2" strokeLinecap="round" />
+                  
+                  {/* Corner accents */}
+                  <circle cx="24" cy="10" r="2" fill="url(#saasGradBlue)" />
+                  <circle cx="15" cy="34" r="1.5" fill="url(#saasGradBlue)" opacity="0.8" />
+                  <circle cx="33" cy="34" r="1.5" fill="url(#saasGradBlue)" opacity="0.8" />
                 </g>
+                
+                {/* Holographic shimmer effect */}
+                <rect x="4" y="4" width="40" height="40" rx="12" 
+                      fill="url(#saasGradMain)" 
+                      fillOpacity="0.1" 
+                      className="animate-pulse" />
               </svg>
             </div>
-            <div className="flex flex-col">
-              <span className="text-2xl font-bold tracking-tight">
-                <span className="gradient-text">autoapply</span>
-                <span className="text-muted-foreground">.ai</span>
+            
+            <div className="flex items-center">
+              <span className="text-2xl font-black tracking-tight">
+                <span className="bg-gradient-to-r from-purple-600 via-purple-500 to-pink-500 bg-clip-text text-transparent">AUTOAPPLY</span>
+                <span className="text-cyan-400 font-black">.AI</span>
               </span>
-              <span className="text-xs text-muted-foreground -mt-1">Automated job applications</span>
             </div>
           </motion.div>
           <motion.div
