@@ -85,31 +85,14 @@ export default function Subscribe() {
       }
       
       // Check if we have the required data
-      if (!data.paymentSessionId) {
-        throw new Error("No payment session ID received from server");
+      if (!data.paymentLink) {
+        throw new Error("No payment link received from server");
       }
       
-      // Initialize Cashfree SDK correctly
-      if (!(window as any).Cashfree) {
-        throw new Error("Cashfree SDK not loaded. Please refresh the page and try again.");
-      }
+      console.log("Redirecting to Cashfree payment page:", data.paymentLink);
       
-      console.log("Initializing Cashfree SDK...");
-      
-      // Initialize Cashfree with sandbox mode
-      const cashfree = (window as any).Cashfree({
-        mode: "sandbox" // Change to "production" for live payments
-      });
-      
-      console.log("Opening Cashfree checkout with session ID:", data.paymentSessionId);
-      
-      // Open Cashfree checkout
-      const checkoutOptions = {
-        paymentSessionId: data.paymentSessionId,
-        redirectTarget: "_self" // Redirect in the same tab
-      };
-      
-      cashfree.checkout(checkoutOptions);
+      // Redirect directly to Cashfree's hosted checkout page
+      window.location.href = data.paymentLink;
       
     } catch (error: any) {
       console.error("Payment error:", error);

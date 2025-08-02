@@ -839,9 +839,13 @@ Format the email with proper structure including greeting, body paragraphs, and 
         pending_payment_order_id: orderId
       });
       
+      // Generate payment link for hosted checkout
+      const paymentLink = `https://sandbox.cashfree.com/pg/orders/pay?session_id=${cashfreeOrder.payment_session_id}`;
+      
       res.json({
         orderId: cashfreeOrder.order_id,
         paymentSessionId: cashfreeOrder.payment_session_id,
+        paymentLink: paymentLink,
         orderAmount: cashfreeOrder.order_amount,
         orderCurrency: cashfreeOrder.order_currency
       });
