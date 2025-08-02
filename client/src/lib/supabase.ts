@@ -15,12 +15,8 @@ export const supabase = createClient(
     auth: {
       autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUrl: true,
+      detectSessionInUrl: false, // Disable automatic detection - we'll handle it manually
       flowType: 'implicit', // Use implicit flow to get tokens immediately
-      // Force redirect to port 5000 in development
-      redirectTo: window.location.hostname === 'localhost' 
-        ? 'http://localhost:5000/auth/callback'
-        : undefined,
     },
   }
 );
