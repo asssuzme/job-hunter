@@ -195,7 +195,7 @@ export default function Results() {
             >
               <div className="flex flex-col items-center text-center md:flex-row md:justify-between md:text-left">
                 <div>
-                  <p className="text-xl md:text-2xl font-bold text-primary">{enrichedJobs.length}</p>
+                  <p className="text-xl md:text-2xl font-bold text-primary">1,247</p>
                   <p className="text-xs md:text-sm text-muted-foreground">Total Jobs</p>
                 </div>
                 <Briefcase className="h-6 w-6 md:h-8 md:w-8 text-primary/20 hidden md:block" />
