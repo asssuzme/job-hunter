@@ -56,9 +56,15 @@ export function setupSimpleGoogleAuth(app: Express) {
     authStates.set(state, { timestamp: Date.now() });
     cleanupAuthStates();
 
-    const baseUrl = process.env.REPLIT_DEV_DOMAIN 
-      ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-      : `${req.protocol}://${req.get('host')}`;
+    // Handle production URL properly
+    let baseUrl;
+    if (process.env.NODE_ENV === 'production' || req.get('host')?.includes('replit.app')) {
+      baseUrl = 'https://service-genie-ashutoshlathrep.replit.app';
+    } else if (process.env.REPLIT_DEV_DOMAIN) {
+      baseUrl = `https://${process.env.REPLIT_DEV_DOMAIN}`;
+    } else {
+      baseUrl = `${req.protocol}://${req.get('host')}`;
+    }
     
     const params = new URLSearchParams({
       client_id: process.env.GOOGLE_CLIENT_ID || '',
@@ -99,9 +105,15 @@ export function setupSimpleGoogleAuth(app: Express) {
     authStates.delete(state);
 
     try {
-      const baseUrl = process.env.REPLIT_DEV_DOMAIN 
-        ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-        : `${req.protocol}://${req.get('host')}`;
+      // Handle production URL properly
+      let baseUrl;
+      if (process.env.NODE_ENV === 'production' || req.get('host')?.includes('replit.app')) {
+        baseUrl = 'https://service-genie-ashutoshlathrep.replit.app';
+      } else if (process.env.REPLIT_DEV_DOMAIN) {
+        baseUrl = `https://${process.env.REPLIT_DEV_DOMAIN}`;
+      } else {
+        baseUrl = `${req.protocol}://${req.get('host')}`;
+      }
 
       // Exchange code for tokens
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {

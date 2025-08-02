@@ -65,9 +65,15 @@ export async function setupAuth(app: Express) {
   app.use(passport.session());
 
   // Configure Google OAuth strategy
-  const baseUrl = process.env.REPLIT_DEV_DOMAIN 
-    ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-    : 'http://localhost:5000';
+  // Handle production URL properly
+  let baseUrl;
+  if (process.env.NODE_ENV === 'production') {
+    baseUrl = 'https://service-genie-ashutoshlathrep.replit.app';
+  } else if (process.env.REPLIT_DEV_DOMAIN) {
+    baseUrl = `https://${process.env.REPLIT_DEV_DOMAIN}`;
+  } else {
+    baseUrl = 'http://localhost:5000';
+  }
     
   console.log("Configuring Google OAuth with base URL:", baseUrl);
   console.log("Client ID:", process.env.GOOGLE_CLIENT_ID);

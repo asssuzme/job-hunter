@@ -8,6 +8,15 @@ A sophisticated web service that leverages Apify API to scrape, filter, and enri
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes (January 3, 2025)
+
+### Google OAuth Production URL Fix
+- **Fixed OAuth Issue**: Updated authentication configuration to properly handle production URL
+- **Base URL Logic**: Modified `simpleGoogleAuth.ts`, `googleAuth.ts`, and `authDiagnostics.ts` to use fixed production URL
+- **Production Detection**: Added logic to detect when running on production (replit.app domain)
+- **Redirect URI Consistency**: Ensures redirect URIs match what's configured in Google Console
+- **Resolution**: OAuth now works properly on both dev and production URLs
+
 ## Recent Changes (August 2, 2025)
 
 ### Job Search Form Update
