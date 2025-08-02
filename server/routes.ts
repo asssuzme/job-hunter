@@ -3,7 +3,6 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupDirectGoogleAuth, isAuthenticated } from "./directGoogleAuth";
 import { setupAuthDiagnostics } from "./authDiagnostics";
-import { setupAuthDebug } from "./authDebug";
 import { 
   insertJobScrapingRequestSchema, 
   linkedinUrlSchema,
@@ -58,9 +57,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Setup auth diagnostics
   setupAuthDiagnostics(app);
-  
-  // Setup auth debug
-  setupAuthDebug(app);
 
   // Auth routes are handled in supabaseAuth.ts
 

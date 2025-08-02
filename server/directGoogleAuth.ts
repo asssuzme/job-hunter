@@ -17,6 +17,11 @@ if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
 
 // Get the correct base URL based on environment
 const getBaseUrl = () => {
+  // Check for production deployment
+  if (process.env.NODE_ENV === 'production') {
+    // Hardcode the production URL
+    return 'https://service-genie-ashutoshlathrep.replit.app';
+  }
   // In Replit development environment
   if (process.env.REPLIT_DEV_DOMAIN) {
     return `https://${process.env.REPLIT_DEV_DOMAIN}`;
@@ -38,17 +43,23 @@ const getBaseUrl = () => {
 const createOAuth2Client = (req?: Request) => {
   let baseUrl = getBaseUrl();
   
-  // If request is provided, use the actual host
-  if (req) {
+  // In production, always use the hardcoded URL
+  if (process.env.NODE_ENV === 'production') {
+    baseUrl = 'https://service-genie-ashutoshlathrep.replit.app';
+  } else if (req) {
+    // Only use dynamic detection in development
     const protocol = req.get('x-forwarded-proto') || req.protocol;
     const host = req.get('host');
     baseUrl = `${protocol}://${host}`;
   }
   
+  const redirectUri = `${baseUrl}/api/auth/google/callback`;
+  console.log('Creating OAuth2Client with redirect URI:', redirectUri);
+  
   return new OAuth2Client(
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
-    `${baseUrl}/api/auth/google/callback`
+    redirectUri
   );
 };
 
@@ -156,9 +167,25 @@ export function setupDirectGoogleAuth(app: Express) {
         // Redirect to home page
         res.redirect('/');
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in Google OAuth callback:', error);
-      res.status(500).json({ error: 'Authentication failed' });
+      console.error('Error details:', error.message);
+      console.error('Error stack:', error.stack);
+      
+      // More specific error handling
+      if (error.message?.includes('invalid_grant')) {
+        return res.redirect('/?error=invalid_grant');
+      }
+      if (error.message?.includes('redirect_uri_mismatch')) {
+        return res.redirect('/?error=redirect_uri_mismatch');
+      }
+      
+      // For debugging in production
+      const errorMessage = process.env.NODE_ENV === 'production' 
+        ? 'Authentication failed' 
+        : error.message || 'Authentication failed';
+      
+      res.status(500).json({ error: errorMessage, details: error.message });
     }
   });
 
