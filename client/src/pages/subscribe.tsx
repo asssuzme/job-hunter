@@ -53,30 +53,54 @@ export default function Subscribe() {
     setIsProcessing(true);
     
     try {
+      console.log("Starting payment process...");
+      
       // Create Cashfree payment session
       const response = await fetch("/api/create-subscription", {
         method: "POST",
-        credentials: "include"
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json"
+        }
       });
+      
+      console.log("API Response status:", response.status);
       const data = await response.json();
+      console.log("API Response data:", data);
       
       if (!response.ok) {
-        throw new Error(data.error || "Failed to create payment session");
+        throw new Error(data.error || data.message || "Failed to create payment session");
       }
       
-      // Redirect to Cashfree payment page
+      // Check if we have the required data
+      if (!data.paymentSessionId) {
+        throw new Error("No payment session ID received from server");
+      }
+      
+      // Initialize Cashfree SDK correctly
+      if (!(window as any).Cashfree) {
+        throw new Error("Cashfree SDK not loaded. Please refresh the page and try again.");
+      }
+      
+      console.log("Initializing Cashfree SDK...");
+      
+      // Initialize Cashfree with sandbox mode
       const cashfree = (window as any).Cashfree({
         mode: "sandbox" // Change to "production" for live payments
       });
       
+      console.log("Opening Cashfree checkout with session ID:", data.paymentSessionId);
+      
+      // Open Cashfree checkout
       const checkoutOptions = {
         paymentSessionId: data.paymentSessionId,
-        redirectTarget: "_self"
+        redirectTarget: "_self" // Redirect in the same tab
       };
       
       cashfree.checkout(checkoutOptions);
       
     } catch (error: any) {
+      console.error("Payment error:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to process subscription",
