@@ -11,6 +11,7 @@ import Results from "@/pages/results";
 import Applications from "@/pages/applications";
 import Analytics from "@/pages/analytics";
 import Settings from "@/pages/settings";
+import Subscribe from "@/pages/subscribe";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -36,6 +37,7 @@ function Router() {
           <Route path="/applications" component={Applications} />
           <Route path="/analytics" component={Analytics} />
           <Route path="/settings" component={Settings} />
+          <Route path="/subscribe" component={Subscribe} />
           <Route path="/results/:requestId" component={Results} />
         </>
       ) : (

@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { FilteredJobCard } from "@/components/filtered-job-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   Activity, 
   CheckCircle, 
@@ -45,6 +46,8 @@ export default function Results() {
   const { requestId } = useParams();
   const { user } = useAuth();
   const [userResume, setUserResume] = useState<string | null>(null);
+  const [showProPlanModal, setShowProPlanModal] = useState(false);
+  const [activeTab, setActiveTab] = useState("with-contacts");
   
   const { data: scrapingResult, isLoading } = useQuery<ScrapingResult>({
     queryKey: ['/api/scrape-job', requestId],
@@ -234,18 +237,28 @@ export default function Results() {
         </div>
 
         {/* Tabs for different job categories */}
-        <Tabs defaultValue="with-contacts" className="space-y-4 md:space-y-6">
+        <Tabs 
+          defaultValue="with-contacts" 
+          value={activeTab}
+          onValueChange={(value) => {
+            setActiveTab(value);
+            if (value === "without-contacts") {
+              setShowProPlanModal(true);
+            }
+          }}
+          className="space-y-4 md:space-y-6"
+        >
           <TabsList className="glass-card p-1 w-full flex-col md:flex-row h-auto">
             <TabsTrigger value="with-contacts" className="flex-1 flex items-center gap-1 md:gap-2 text-xs md:text-sm py-3 w-full md:w-auto">
               <Sparkles className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">With Contacts</span>
-              <span className="sm:hidden">Contacts</span>
+              <span className="hidden sm:inline">Free Plan</span>
+              <span className="sm:hidden">Free</span>
               <span>({canApplyJobs.length})</span>
             </TabsTrigger>
             <TabsTrigger value="without-contacts" className="flex-1 flex items-center gap-1 md:gap-2 text-xs md:text-sm py-3 w-full md:w-auto">
               <Filter className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">Without Contacts</span>
-              <span className="sm:hidden">No Contacts</span>
+              <span className="hidden sm:inline">Pro Plan</span>
+              <span className="sm:hidden">Pro</span>
               <span>({cannotApplyJobs.length})</span>
             </TabsTrigger>
             <TabsTrigger value="all" className="flex-1 flex items-center gap-1 md:gap-2 text-xs md:text-sm py-3 w-full md:w-auto">
@@ -282,8 +295,11 @@ export default function Results() {
             )}
           </TabsContent>
 
-          {/* Jobs without contacts */}
-          <TabsContent value="without-contacts" className="space-y-4">
+          {/* Jobs without contacts - Pro Plan */}
+          <TabsContent value="without-contacts" className="space-y-4 relative">
+            {/* Blur overlay */}
+            <div className="absolute inset-0 bg-background/50 backdrop-blur-md z-10 rounded-lg" />
+            
             {cannotApplyJobs.length === 0 ? (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -372,6 +388,63 @@ export default function Results() {
           </TabsContent>
         </Tabs>
       </motion.div>
+
+      {/* Pro Plan Purchase Modal */}
+      <Dialog open={showProPlanModal} onOpenChange={setShowProPlanModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">Upgrade to Pro Plan</DialogTitle>
+            <DialogDescription className="space-y-4 pt-4">
+              <div className="text-lg">
+                Unlock access to <span className="font-semibold text-primary">{cannotApplyJobs.length} jobs</span> with hidden contact information
+              </div>
+              
+              <div className="bg-primary/10 p-4 rounded-lg space-y-2">
+                <h4 className="font-semibold text-lg">Pro Plan Benefits:</h4>
+                <ul className="space-y-1 text-sm">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    Access all job postings without visible contacts
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    Advanced AI-powered contact discovery
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    Priority email generation
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    Unlimited job applications
+                  </li>
+                </ul>
+              </div>
+
+              <div className="text-center space-y-4">
+                <div className="text-3xl font-bold">
+                  ₹129<span className="text-lg font-normal text-muted-foreground">/month</span>
+                </div>
+                
+                <Button 
+                  className="w-full" 
+                  size="lg"
+                  onClick={() => {
+                    // TODO: Implement Indian payment gateway
+                    window.location.href = "/subscribe";
+                  }}
+                >
+                  Upgrade Now
+                </Button>
+                
+                <p className="text-xs text-muted-foreground">
+                  Cancel anytime. No questions asked.
+                </p>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

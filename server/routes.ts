@@ -792,6 +792,39 @@ Format the email with proper structure including greeting, body paragraphs, and 
     }
   });
 
+  // Pro plan subscription endpoint placeholder for Indian payment gateway
+  app.post('/api/create-subscription', isSimpleAuthenticated, async (req: any, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    const user = req.user;
+
+    // TODO: Implement Indian payment gateway integration
+    // Options: Razorpay, Paytm, PhonePe, PayU, Cashfree
+    
+    return res.status(400).json({ 
+      error: "Payment gateway integration pending. Please select an Indian payment provider (Razorpay, Paytm, PhonePe, etc.)" 
+    });
+  });
+
+  // Check subscription status
+  app.get('/api/subscription-status', isSimpleAuthenticated, async (req: any, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    const user = req.user;
+    
+    // TODO: Check with payment gateway if user has active subscription
+    // For now, return inactive status
+    res.json({
+      hasActiveSubscription: false,
+      plan: 'free',
+      expiresAt: null
+    });
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

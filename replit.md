@@ -25,6 +25,21 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (August 2, 2025)
 
+### Payment Gateway Migration
+- **Removed Stripe Integration**: Replaced Stripe with placeholder for Indian payment gateways
+- **Schema Update**: Changed from Stripe-specific fields to generic payment fields:
+  - `stripe_customer_id` → `payment_customer_id`
+  - `stripe_subscription_id` → `subscription_id`
+  - Added `subscription_status` and `subscription_expires_at` fields
+- **Subscribe Page**: Updated to display ₹129/month pricing with Indian rupee symbol
+- **Ready for Integration**: System prepared for Indian payment gateways (Razorpay, Paytm, PhonePe, PayU, Cashfree)
+- **UI Updates**: 
+  - Added blur effect on Pro Plan jobs (without contacts)
+  - Pro plan upgrade modal with benefits display
+  - Clean subscription page with pricing and features
+
+## Recent Changes (August 2, 2025)
+
 ### Job Search Form Update
 - **Replaced LinkedIn URL Input**: Changed from single URL input to comprehensive job search form
 - **New Form Fields**:

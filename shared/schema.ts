@@ -27,6 +27,10 @@ export const users = pgTable("users", {
   resumeText: text("resume_text"), // Permanent storage for user's resume
   resumeFileName: varchar("resume_file_name"), // Store the original file name
   resumeUploadedAt: timestamp("resume_uploaded_at"), // Track when resume was uploaded
+  paymentCustomerId: varchar("payment_customer_id"), // Payment gateway customer ID
+  subscriptionId: varchar("subscription_id"), // Subscription ID for pro plan
+  subscriptionStatus: varchar("subscription_status"), // active, inactive, cancelled
+  subscriptionExpiresAt: timestamp("subscription_expires_at"), // When subscription expires
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
