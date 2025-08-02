@@ -112,8 +112,22 @@ export default function Home() {
     return Math.abs(hash);
   };
 
-  const userHash = hashCode(user.id || 'default');
-  const fakeTotalJobs = 100 + (userHash % 1900); // Generates between 100-1999
+  // Calculate fake total jobs by summing up fake totals from all searches
+  let fakeTotalJobs = 0;
+  if (stats?.recentSearches) {
+    stats.recentSearches.forEach((search) => {
+      if (search.status === 'completed') {
+        const searchHash = hashCode(search.id);
+        const fakeJobsForSearch = 100 + (searchHash % 1900); // Each search gets unique fake total
+        fakeTotalJobs += fakeJobsForSearch;
+      }
+    });
+  }
+  
+  // If no searches yet, show a default
+  if (fakeTotalJobs === 0) {
+    fakeTotalJobs = 736; // Default starting value
+  }
   
   const successRate = stats ? Math.round((stats.totalApplicationsSent / Math.max(fakeTotalJobs, 1)) * 100) : 0;
 
@@ -297,23 +311,25 @@ export default function Home() {
                       <p className="text-sm text-muted-foreground truncate">
                         {search.linkedinUrl}
                       </p>
-                      {search.status === 'completed' && search.filteredResults && (() => {
-                        const searchHash = hashCode(search.id);
-                        const fakeTotalForSearch = 100 + (searchHash % 1900); // Always under 2000
-                        const canApplyCount = (search.filteredResults as any).canApplyCount || 0;
-                        return (
-                          <div className="flex items-center gap-4 mt-2">
-                            <div className="flex items-center gap-1 text-xs">
-                              <Briefcase className="h-3 w-3" />
-                              <span>{fakeTotalForSearch.toLocaleString()} jobs</span>
+                      {search.status === 'completed' && search.filteredResults ? (
+                        (() => {
+                          const searchHash = hashCode(search.id);
+                          const fakeTotalForSearch = 100 + (searchHash % 1900); // Always under 2000
+                          const canApplyCount = (search.filteredResults as any).canApplyCount || 0;
+                          return (
+                            <div className="flex items-center gap-4 mt-2">
+                              <div className="flex items-center gap-1 text-xs">
+                                <Briefcase className="h-3 w-3" />
+                                <span>{fakeTotalForSearch.toLocaleString()} jobs</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-xs text-green-600">
+                                <Users className="h-3 w-3" />
+                                <span>{canApplyCount} with contacts</span>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-1 text-xs text-green-600">
-                              <Users className="h-3 w-3" />
-                              <span>{canApplyCount} with contacts</span>
-                            </div>
-                          </div>
-                        );
-                      })()}
+                          );
+                        })()
+                      ) : null}
                     </div>
                     <Button
                       variant="ghost"

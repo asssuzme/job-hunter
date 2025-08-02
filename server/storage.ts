@@ -153,13 +153,15 @@ export class DatabaseStorage implements IStorage {
     totalApplicationsSent: number;
     recentSearches: JobScrapingRequest[];
   }> {
-    // Get recent searches
-    const recentSearches = await db
+    // Get all searches for calculating total
+    const allSearches = await db
       .select()
       .from(jobScrapingRequests)
       .where(eq(jobScrapingRequests.userId, userId))
-      .orderBy(desc(jobScrapingRequests.createdAt))
-      .limit(10);
+      .orderBy(desc(jobScrapingRequests.createdAt));
+    
+    // Get recent searches for display (limit to 10)
+    const recentSearches = allSearches.slice(0, 10);
 
     // Calculate total jobs scraped
     let totalJobsScraped = 0;
