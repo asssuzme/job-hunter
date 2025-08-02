@@ -19,75 +19,43 @@ export default function RefundPolicy() {
           animate={{ opacity: 1, y: 0 }}
           className="glass-card p-8"
         >
-          <h1 className="text-3xl font-bold mb-6">Refund & Cancellation Policy</h1>
-          <p className="text-sm text-muted-foreground mb-8">Last updated: August 2, 2025</p>
+          <h1 className="text-3xl font-bold mb-6">Cancellation & Refund Policy</h1>
+          <p className="text-sm text-muted-foreground mb-8">Last updated on 02-08-2025 16:31:18</p>
 
           <div className="space-y-6 text-muted-foreground">
-            <section>
-              <h2 className="text-xl font-semibold mb-3 text-foreground">1. Subscription Cancellation</h2>
-              <p className="mb-3">You can cancel your Pro Plan subscription at any time:</p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>Cancel through your account settings</li>
-                <li>Access continues until the end of current billing period</li>
-                <li>No partial refunds for unused time in billing period</li>
-                <li>Automatic renewal stops immediately upon cancellation</li>
-              </ul>
-            </section>
+            <p>
+              ASHUTOSH LATH believes in helping its customers as far as possible, and has therefore a liberal
+              cancellation policy. Under this policy:
+            </p>
 
-            <section>
-              <h2 className="text-xl font-semibold mb-3 text-foreground">2. Refund Eligibility</h2>
-              <p className="mb-3">Refunds may be provided in the following cases:</p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>Technical issues preventing service access for extended periods</li>
-                <li>Accidental duplicate charges</li>
-                <li>Service not functioning as described</li>
-                <li>Within 7 days of initial subscription if unsatisfied</li>
-              </ul>
-            </section>
+            <ul className="list-disc pl-6 space-y-4">
+              <li>
+                Cancellations will be considered only if the request is made immediately after placing the order.
+                However, the cancellation request may not be entertained if the orders have been communicated to the
+                vendors/merchants and they have initiated the process of shipping them.
+              </li>
 
-            <section>
-              <h2 className="text-xl font-semibold mb-3 text-foreground">3. Refund Process</h2>
-              <p className="mb-3">To request a refund:</p>
-              <ol className="list-decimal pl-6 space-y-2">
-                <li>Contact support at support@jobhunter.app</li>
-                <li>Include your account email and transaction details</li>
-                <li>Explain the reason for refund request</li>
-                <li>Allow 5-7 business days for review</li>
-                <li>Refunds processed within 7-10 business days after approval</li>
-              </ol>
-            </section>
+              <li>
+                ASHUTOSH LATH does not accept cancellation requests for perishable items like flowers, eatables
+                etc. However, refund/replacement can be made if the customer establishes that the quality of product
+                delivered is not good.
+              </li>
 
-            <section>
-              <h2 className="text-xl font-semibold mb-3 text-foreground">4. Non-Refundable Items</h2>
-              <p className="mb-3">The following are not eligible for refunds:</p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>Services already consumed (emails sent, jobs scraped)</li>
-                <li>Subscription fees after 7-day satisfaction period</li>
-                <li>Account suspension due to terms violation</li>
-              </ul>
-            </section>
+              <li>
+                In case of receipt of damaged or defective items please report the same to our Customer Service team.
+                The request will, however, be entertained once the merchant has checked and determined the same at his
+                own end. This should be reported within Only same day days of receipt of the products. In case you feel
+                that the product received is not as shown on the site or as per your expectations, you must bring it to the
+                notice of our customer service within Only same day days of receiving the product. The Customer
+                Service Team after looking into your complaint will take an appropriate decision.
+              </li>
 
-            <section>
-              <h2 className="text-xl font-semibold mb-3 text-foreground">5. Free Plan</h2>
-              <p>The Free Plan does not involve any payment and therefore no refunds apply. You can upgrade to Pro Plan anytime to access premium features.</p>
-            </section>
-
-            <section>
-              <h2 className="text-xl font-semibold mb-3 text-foreground">6. Payment Disputes</h2>
-              <p>If you have a payment dispute, please contact us before initiating a chargeback. We will work with you to resolve the issue promptly.</p>
-            </section>
-
-            <section>
-              <h2 className="text-xl font-semibold mb-3 text-foreground">7. Price Changes</h2>
-              <p>We reserve the right to change subscription prices. Existing subscribers will be notified 30 days before any price increase takes effect.</p>
-            </section>
-
-            <section>
-              <h2 className="text-xl font-semibold mb-3 text-foreground">8. Contact Us</h2>
-              <p>For refund requests or questions about this policy:</p>
-              <p className="mt-2">Email: support@jobhunter.app</p>
-              <p>Response time: Within 24-48 hours</p>
-            </section>
+              <li>
+                In case of complaints regarding products that come with a warranty from manufacturers, please refer
+                the issue to them. In case of any Refunds approved by the ASHUTOSH LATH, it'll take 1-2 Days days
+                for the refund to be processed to the end customer.
+              </li>
+            </ul>
           </div>
         </motion.div>
       </div>
