@@ -31,9 +31,6 @@ export function Topbar({ title = "Dashboard", className }: TopbarProps) {
           {/* Notifications */}
           <Button variant="ghost" size="icon" className="relative">
             <Bell className="h-5 w-5" />
-            <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center">
-              3
-            </Badge>
           </Button>
         </div>
       </div>
