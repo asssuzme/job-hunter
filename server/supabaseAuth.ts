@@ -43,7 +43,7 @@ export function setupSupabaseAuth(app: Express) {
       }
 
       // Upsert user in our database
-      await storage.upsertUser({
+      const user = await storage.upsertUser({
         id: userId,
         email: email,
         firstName: userMetadata?.first_name || userMetadata?.given_name || null,
@@ -51,8 +51,8 @@ export function setupSupabaseAuth(app: Express) {
         profileImageUrl: userMetadata?.avatar_url || userMetadata?.picture || null,
       });
 
-      // Store session data
-      authReq.session.userId = userId;
+      // Store session data - use the actual user ID from database
+      authReq.session.userId = user.id;
       authReq.session.googleAccessToken = accessToken;
       authReq.session.googleRefreshToken = refreshToken;
 
