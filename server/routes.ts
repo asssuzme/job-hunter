@@ -792,6 +792,23 @@ Format the email with proper structure including greeting, body paragraphs, and 
     }
   });
 
+  // Add CASHFREE_BASE_URL constant for this route
+  const CASHFREE_BASE_URL = 'https://sandbox.cashfree.com/pg';
+  
+  // Test Cashfree endpoint
+  app.get('/api/test-cashfree', async (req, res) => {
+    try {
+      const testData = {
+        clientId: process.env.CASHFREE_APP_ID || "CF256745D26V5Q8DRH1C73B2GCQ0",
+        hasSecret: !!(process.env.CASHFREE_SECRET_KEY || "cfsk_ma_test_91917faa134e12e9b40980b7a2481ac0_b5a59d99"),
+        baseUrl: CASHFREE_BASE_URL
+      };
+      res.json({ status: "ok", config: testData });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
   // Cashfree payment session endpoint
   app.post('/api/create-subscription', isSimpleAuthenticated, async (req: any, res) => {
     if (!req.isAuthenticated()) {
@@ -812,8 +829,8 @@ Format the email with proper structure including greeting, body paragraphs, and 
       // Generate unique order ID
       const orderId = `order_${user.id}_${Date.now()}`;
       
-      // Import Cashfree service
-      const { createCashfreeOrder } = await import("./services/cashfree");
+      // Import Cashfree service V2
+      const { createCashfreeOrderV2 } = await import("./services/cashfreeV2");
       
       // Create Cashfree order
       const orderData = {
@@ -823,7 +840,7 @@ Format the email with proper structure including greeting, body paragraphs, and 
         customerDetails: {
           customerId: user.id,
           customerEmail: user.email,
-          customerPhone: "+91 9999999999", // Default phone - user should update this
+          customerPhone: "9999999999", // Default phone without country code
           customerName: user.username || user.email.split('@')[0]
         },
         orderMeta: {
@@ -832,19 +849,24 @@ Format the email with proper structure including greeting, body paragraphs, and 
         }
       };
 
-      const cashfreeOrder = await createCashfreeOrder(orderData);
+      console.log("Creating Cashfree order for user:", user.email);
+      const cashfreeOrder = await createCashfreeOrderV2(orderData);
       
       // Store order ID in database for later verification
       await storage.updateUser(user.id, {
         pending_payment_order_id: orderId
       });
       
-      // Generate payment link for hosted checkout
-      const paymentLink = `https://sandbox.cashfree.com/pg/orders/pay?session_id=${cashfreeOrder.payment_session_id}`;
+      // The correct payment link format for Cashfree hosted checkout
+      const paymentLink = cashfreeOrder.payment_link || `https://payments-test.cashfree.com/order/${cashfreeOrder.order_token}`;
+      console.log("Generated payment link:", paymentLink);
+      console.log("Full Cashfree response:", JSON.stringify(cashfreeOrder, null, 2));
       
       res.json({
         orderId: cashfreeOrder.order_id,
+        cfOrderId: cashfreeOrder.cf_order_id,
         paymentSessionId: cashfreeOrder.payment_session_id,
+        orderToken: cashfreeOrder.order_token,
         paymentLink: paymentLink,
         orderAmount: cashfreeOrder.order_amount,
         orderCurrency: cashfreeOrder.order_currency
@@ -866,10 +888,10 @@ Format the email with proper structure including greeting, body paragraphs, and 
     
     try {
       // Import Cashfree service
-      const { getOrderStatus } = await import("./services/cashfree");
+      const { getOrderStatusV2 } = await import("./services/cashfreeV2");
       
       // Verify payment status
-      const orderStatus = await getOrderStatus(order_id as string);
+      const orderStatus = await getOrderStatusV2(order_id as string);
       
       if (orderStatus.order_status === 'PAID') {
         // Find user by order ID

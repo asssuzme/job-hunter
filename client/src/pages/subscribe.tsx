@@ -65,24 +65,10 @@ export default function Subscribe() {
     setIsProcessing(true);
     
     try {
-      console.log("Starting payment process...");
+      // Use apiRequest which already handles authentication properly
+      const data = await apiRequest("POST", "/api/create-subscription");
       
-      // Create Cashfree payment session
-      const response = await fetch("/api/create-subscription", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json"
-        }
-      });
-      
-      console.log("API Response status:", response.status);
-      const data = await response.json();
       console.log("API Response data:", data);
-      
-      if (!response.ok) {
-        throw new Error(data.error || data.message || "Failed to create payment session");
-      }
       
       // Check if we have the required data
       if (!data.paymentLink) {
