@@ -74,17 +74,34 @@ app.use((req, res, next) => {
   if (port !== 3000) {
     const http = await import('http');
     const redirectServer = http.createServer((req, res) => {
-      const redirectUrl = `http://localhost:5000${req.url}`;
-      console.log(`[OAuth Redirect] :3000${req.url} → :5000${req.url}`);
-      res.writeHead(302, { 'Location': redirectUrl });
-      res.end();
+      try {
+        // For OAuth callbacks, we need to preserve the full URL including query params
+        const redirectUrl = `http://localhost:5000${req.url}`;
+        
+        // Only log the path to avoid cluttering logs with long OAuth URLs
+        const path = req.url?.split('?')[0] || '/';
+        console.log(`[OAuth Redirect] :3000${path} → :5000${path} (with params)`);
+        
+        // Set appropriate headers for the redirect
+        res.writeHead(302, { 
+          'Location': redirectUrl,
+          'Content-Type': 'text/plain',
+          'Cache-Control': 'no-cache',
+          'Connection': 'close'
+        });
+        res.end('Redirecting...');
+      } catch (err) {
+        console.error('[OAuth Redirect] Error:', err);
+        res.writeHead(500, { 'Content-Type': 'text/plain' });
+        res.end('Internal Server Error');
+      }
     });
     
     redirectServer.listen(3000, '0.0.0.0', () => {
       log('OAuth redirect server listening on port 3000 → redirecting to port 5000');
     });
     
-    // Handle errors
+    // Handle server errors
     redirectServer.on('error', (err: any) => {
       if (err.code === 'EADDRINUSE') {
         console.warn('Port 3000 is already in use - OAuth redirect may not work');
@@ -92,5 +109,16 @@ app.use((req, res, next) => {
         console.error('OAuth redirect server error:', err);
       }
     });
+    
+    // Handle connection errors
+    redirectServer.on('connection', (socket) => {
+      socket.on('error', (err) => {
+        console.error('[OAuth Redirect] Socket error:', err.message);
+      });
+    });
+    
+    // Increase header size limit for OAuth callbacks with long URLs
+    redirectServer.maxHeadersCount = 100;
+    redirectServer.headersTimeout = 10000;
   }
 })();

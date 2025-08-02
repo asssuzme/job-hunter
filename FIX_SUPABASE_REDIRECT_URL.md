@@ -1,44 +1,52 @@
-# Authentication Solution - Popup-Based Login
+# Fix Supabase OAuth Redirect URL
 
-## The Issue Resolved
-Supabase was redirecting to `localhost:3000` causing authentication failures. This has been fixed using a popup-based authentication approach.
+## Issue
+Safari cannot connect to localhost:3000 during OAuth callback, even though we have a redirect server running.
 
-## How It Works Now
+## Solution
+The best solution is to update your Supabase project settings to redirect directly to port 5000 where your app runs.
 
-### New Authentication Flow:
-1. **Click "Sign in with Google"** - Opens authentication in a popup window
-2. **Complete Google login** - In the popup window
-3. **Automatic sync** - App detects successful login and syncs with backend
-4. **No redirects needed** - Bypasses Supabase's redirect configuration entirely
+### Steps to Fix:
 
-## Benefits of This Approach:
-- ✅ No redirect URL configuration needed
-- ✅ Works on any domain (localhost, production, etc.)
-- ✅ Better user experience
-- ✅ Avoids the localhost:3000 redirect issue completely
+1. **Go to your Supabase Dashboard**
+   - Open https://supabase.com/dashboard
+   - Select your project
 
-## Testing the New Flow:
+2. **Navigate to Authentication Settings**
+   - Click on "Authentication" in the left sidebar
+   - Go to "URL Configuration"
 
-1. **Clear your browser cache** (important!)
-2. **Go to your app** (http://localhost:5000 or production URL)
-3. **Click "Sign in with Google"**
-4. **Complete login in the popup**
-5. **App will automatically refresh after successful login**
+3. **Update the Redirect URLs**
+   - Find the field "Redirect URLs"
+   - Change `http://localhost:3000/*` to `http://localhost:5000/*`
+   - Make sure to include the wildcard `/*` at the end
 
-## Troubleshooting:
+4. **Save Changes**
+   - Click "Save" to apply the changes
 
-### If popup is blocked:
-- Allow popups for your domain
-- Check browser popup blocker settings
+5. **Wait for Changes to Propagate**
+   - Changes may take 1-2 minutes to take effect
 
-### If authentication fails:
-- Make sure cookies are enabled
-- Try incognito/private browsing mode
-- Check browser console for errors
+6. **Test Again**
+   - Try signing in with Google again
+   - The OAuth flow should now redirect directly to port 5000
 
-## Technical Details:
-- Uses `skipBrowserRedirect: true` to prevent redirects
-- Opens OAuth in popup window
-- Listens for authentication state changes
-- Syncs with backend after successful auth
-- No manual URL configuration needed in Supabase dashboard
+## Alternative Solution (if you can't change Supabase settings)
+
+If you cannot change the Supabase redirect URL, try using a different browser:
+- Chrome typically handles localhost redirects better than Safari
+- Firefox also works well with localhost redirects
+
+## Why This Happens
+
+Safari has stricter security policies for localhost connections, especially with redirects. The OAuth callback URL contains many parameters, making it very long, which can cause issues with Safari's connection handling.
+
+## Verification
+
+After updating the Supabase settings, the OAuth flow should work as:
+1. Click "Sign in with Google"
+2. Authenticate with Google
+3. Google → Supabase → localhost:5000 (directly)
+4. Authentication completes successfully
+
+No redirect from port 3000 will be needed anymore.
