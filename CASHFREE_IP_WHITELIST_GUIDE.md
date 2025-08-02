@@ -1,9 +1,12 @@
 # Cashfree IP Whitelist Configuration Guide
 
 ## The Error
-You're seeing: "IP address not allowed: 35.232.160.115"
+You're seeing: "IP address not allowed: [Dynamic IP]"
 
 This means Cashfree is blocking requests from your Replit server's IP address.
+
+## Current IP Address to Whitelist
+**34.61.84.228**
 
 ## Solution Steps
 
@@ -12,13 +15,19 @@ This means Cashfree is blocking requests from your Replit server's IP address.
    - Use your Cashfree test account credentials
 
 2. **Navigate to API Settings**
-   - Click on "Developers" or "API Keys" section
-   - Look for "IP Whitelist" or "Security Settings"
+   - Click on "Developers" → "API Keys" section
+   - Look for "Whitelisted IPs" or "IP Whitelist" section
 
-3. **Add Replit's IP Address**
-   - Add this IP address: `35.232.160.115`
-   - You may also want to add: `0.0.0.0/0` for test mode (allows all IPs)
-   - Save the changes
+3. **Add IP Address - Two Options:**
+   
+   **Option A: Add Specific IP (Current)**
+   - Add this IP address: `34.61.84.228`
+   - Click Save/Update
+   
+   **Option B: Allow All IPs for Test Mode (Recommended)**
+   - Add: `0.0.0.0/0` (this allows all IPs)
+   - This is safer for development as Replit IPs change
+   - Click Save/Update
 
 4. **Alternative: Disable IP Restriction**
    - In test mode, you can often disable IP restrictions entirely
