@@ -49,6 +49,7 @@ Preferred communication style: Simple, everyday language.
 - **Total Jobs Count**: Displays actual number of jobs found, not fake numbers
 - **Success Rate**: Correctly calculated as (jobs with contacts / total jobs) * 100
 - **Data Consistency**: All statistics now based on actual scraped data
+- **Tab Removal**: Removed "All Jobs" tab, keeping only "Free Plan" and "Pro Plan" tabs
 
 ### Legal Compliance Updates
 - **Updated Business Information**: Changed all contact details across the website to reflect actual business owner

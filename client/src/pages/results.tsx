@@ -278,9 +278,6 @@ export default function Results() {
               <span className="sm:hidden">Pro</span>
               <span>({fakeProPlanJobs.toLocaleString()})</span>
             </TabsTrigger>
-            <TabsTrigger value="all" className="flex-1 flex items-center gap-1 md:gap-2 text-xs md:text-sm py-3 w-full md:w-auto">
-              <span>All Jobs ({fakeTotalJobs.toLocaleString()})</span>
-            </TabsTrigger>
           </TabsList>
 
           {/* Jobs with contacts */}
@@ -363,45 +360,7 @@ export default function Results() {
             )}
           </TabsContent>
 
-          {/* All jobs */}
-          <TabsContent value="all" className="space-y-4">
-            {enrichedJobs.map((job: any, index: number) => (
-              <motion.div
-                key={job.jobUrl || index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                {job.canApply ? (
-                  <FilteredJobCard job={job} resumeText={userResume} />
-                ) : (
-                  <div className="glass-card p-4 hover:shadow-lg transition-shadow">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <h3 className="font-medium mb-2">
-                          {job.jobTitle || "Unknown Position"}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          {job.companyName || "Unknown Company"} • {job.location || "Unknown Location"}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <Badge variant="secondary">No contacts</Badge>
-                        <a
-                          href={job.jobUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-primary hover:underline"
-                        >
-                          View →
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            ))}
-          </TabsContent>
+
         </Tabs>
       </motion.div>
 
