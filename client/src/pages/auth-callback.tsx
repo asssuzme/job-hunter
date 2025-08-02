@@ -66,8 +66,9 @@ export default function AuthCallback() {
 
           if (response.ok) {
             console.log('Backend sync successful, redirecting...');
-            // Use replace instead of href to avoid adding to history
-            window.location.replace('/');
+            // Force redirect to home page immediately
+            window.location.href = window.location.origin + '/';
+            return; // Stop execution
           } else {
             const errorData = await response.text();
             throw new Error(`Failed to store auth session: ${errorData}`);
