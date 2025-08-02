@@ -18,6 +18,7 @@ const GOOGLE_SCOPES = [
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
+  const isProduction = process.env.NODE_ENV === 'production';
   
   // Temporarily use memory store to fix the connection issue
   return session({
@@ -26,7 +27,7 @@ export function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: true,
+      secure: isProduction, // Only require secure in production
       maxAge: sessionTtl,
       sameSite: "lax"
     },

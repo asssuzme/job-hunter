@@ -86,13 +86,31 @@ export function setupDirectGoogleAuth(app: Express) {
       include_granted_scopes: true,
     });
 
+    // Log the redirect URI being used
+    const protocol = req.get('x-forwarded-proto') || req.protocol;
+    const host = req.get('host');
+    const redirectUri = `${protocol}://${host}/api/auth/google/callback`;
+    console.log('OAuth redirect URI:', redirectUri);
+
     res.redirect(authUrl);
   });
 
   // Handle Google OAuth callback
   app.get('/api/auth/google/callback', async (req: Request, res: Response) => {
     const authReq = req as AuthRequest;
-    const { code } = req.query;
+    const { code, error } = req.query;
+
+    // Log callback details
+    const protocol = req.get('x-forwarded-proto') || req.protocol;
+    const host = req.get('host');
+    console.log('OAuth callback - URL:', `${protocol}://${host}${req.url}`);
+    console.log('OAuth callback - Code present:', !!code);
+    console.log('OAuth callback - Error:', error);
+
+    if (error) {
+      console.error('OAuth error from Google:', error);
+      return res.redirect('/?error=' + encodeURIComponent(error as string));
+    }
 
     if (!code) {
       return res.status(400).json({ error: 'No authorization code provided' });
