@@ -870,7 +870,16 @@ Format the email with proper structure including greeting, body paragraphs, and 
       
     } catch (error: any) {
       console.error("Error creating payment session:", error);
-      res.status(500).json({ error: error.message || "Failed to create payment session" });
+      
+      // Check for IP whitelist error
+      if (error.message && error.message.includes("IP address not allowed")) {
+        res.status(403).json({ 
+          error: "Your server's IP address needs to be whitelisted in Cashfree. Please check CASHFREE_IP_WHITELIST_GUIDE.md for instructions.",
+          details: error.message 
+        });
+      } else {
+        res.status(500).json({ error: error.message || "Failed to create payment session" });
+      }
     }
   });
   
