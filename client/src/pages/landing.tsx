@@ -85,12 +85,65 @@ export default function Landing() {
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-2"
+            className="flex items-center gap-3"
           >
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <Briefcase className="h-6 w-6 text-white" />
+            {/* Modern Minimalist Logo */}
+            <div className="relative group">
+              <svg width="42" height="42" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg" className="transition-all duration-300 group-hover:scale-105">
+                <defs>
+                  <linearGradient id="logoGradientMain" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#6366F1" />
+                    <stop offset="100%" stopColor="#8B5CF6" />
+                  </linearGradient>
+                  <linearGradient id="logoGradientAccent" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#8B5CF6" />
+                    <stop offset="100%" stopColor="#EC4899" />
+                  </linearGradient>
+                  <filter id="logoShadow">
+                    <feDropShadow dx="0" dy="2" stdDeviation="4" floodOpacity="0.1"/>
+                  </filter>
+                </defs>
+                
+                {/* Background circle */}
+                <rect x="2" y="2" width="38" height="38" rx="12" fill="url(#logoGradientMain)" opacity="0.1" />
+                
+                {/* Main icon - Document with AI sparkle */}
+                <g filter="url(#logoShadow)">
+                  {/* Document shape */}
+                  <path d="M12 10 L12 32 L30 32 L30 16 L24 10 Z" 
+                        fill="white" 
+                        opacity="0.95" />
+                  <path d="M12 10 L12 32 L30 32 L30 16 L24 10 L12 10 Z M24 10 L24 16 L30 16" 
+                        stroke="url(#logoGradientMain)" 
+                        strokeWidth="2" 
+                        strokeLinejoin="round"
+                        fill="none" />
+                  
+                  {/* Automation symbol - circular arrows */}
+                  <g transform="translate(21, 21)">
+                    <circle cx="0" cy="0" r="7" fill="url(#logoGradientAccent)" />
+                    <path d="M-3 0 A3 3 0 0 1 3 0 L2 -1 L3 0 L2 1 M3 0 A3 3 0 0 1 -3 0 L-2 1 L-3 0 L-2 -1" 
+                          stroke="white" 
+                          strokeWidth="1.5" 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round"
+                          fill="none" />
+                  </g>
+                  
+                  {/* AI sparkles */}
+                  <circle cx="15" cy="15" r="1" fill="url(#logoGradientAccent)" className="animate-pulse" />
+                  <circle cx="27" cy="13" r="1" fill="url(#logoGradientAccent)" className="animate-pulse" style={{ animationDelay: "0.3s" }} />
+                  <circle cx="25" cy="27" r="1" fill="url(#logoGradientAccent)" className="animate-pulse" style={{ animationDelay: "0.6s" }} />
+                </g>
+              </svg>
             </div>
-            <span className="text-2xl font-bold gradient-text">autoapply.ai</span>
+            <div className="flex flex-col">
+              <span className="text-2xl font-bold tracking-tight">
+                <span className="gradient-text">autoapply</span>
+                <span className="text-muted-foreground">.ai</span>
+              </span>
+              <span className="text-xs text-muted-foreground -mt-1">Automated job applications</span>
+            </div>
           </motion.div>
           <motion.div
             initial={{ opacity: 0, x: 20 }}

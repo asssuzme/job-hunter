@@ -84,7 +84,50 @@ export function Sidebar({ user, onLogout, isOpen = false, onClose }: SidebarProp
       >
         {/* Logo */}
         <div className="p-6 border-b">
-          <h1 className="text-2xl font-bold gradient-text">autoapply.ai</h1>
+          <div className="flex items-center gap-3">
+            {/* Modern Logo */}
+            <svg width="36" height="36" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
+              <defs>
+                <linearGradient id="sidebarLogoMain" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#6366F1" />
+                  <stop offset="100%" stopColor="#8B5CF6" />
+                </linearGradient>
+                <linearGradient id="sidebarLogoAccent" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#8B5CF6" />
+                  <stop offset="100%" stopColor="#EC4899" />
+                </linearGradient>
+              </defs>
+              
+              <rect x="3" y="3" width="36" height="36" rx="10" fill="url(#sidebarLogoMain)" opacity="0.1" />
+              
+              <g>
+                <path d="M12 10 L12 32 L30 32 L30 16 L24 10 Z" 
+                      fill="white" 
+                      opacity="0.95" />
+                <path d="M12 10 L12 32 L30 32 L30 16 L24 10 L12 10 Z M24 10 L24 16 L30 16" 
+                      stroke="url(#sidebarLogoMain)" 
+                      strokeWidth="2" 
+                      strokeLinejoin="round"
+                      fill="none" />
+                
+                <g transform="translate(21, 21)">
+                  <circle cx="0" cy="0" r="7" fill="url(#sidebarLogoAccent)" />
+                  <path d="M-3 0 A3 3 0 0 1 3 0 L2 -1 L3 0 L2 1 M3 0 A3 3 0 0 1 -3 0 L-2 1 L-3 0 L-2 -1" 
+                        stroke="white" 
+                        strokeWidth="1.5" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round"
+                        fill="none" />
+                </g>
+              </g>
+            </svg>
+            <div className="flex flex-col">
+              <h1 className="text-xl font-bold tracking-tight">
+                <span className="gradient-text">autoapply</span>
+                <span className="text-muted-foreground">.ai</span>
+              </h1>
+            </div>
+          </div>
         </div>
 
         {/* Navigation */}
