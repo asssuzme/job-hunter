@@ -10,7 +10,7 @@ import {
   emailApplications 
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, count } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -145,15 +145,21 @@ export class DatabaseStorage implements IStorage {
 
     // Calculate total jobs scraped
     let totalJobsScraped = 0;
-    let totalApplicationsSent = 0;
 
     for (const search of recentSearches) {
       if (search.status === 'completed' && search.enrichedResults) {
         const results = search.enrichedResults as any;
         totalJobsScraped += results.totalCount || 0;
-        totalApplicationsSent += results.canApplyCount || 0;
       }
     }
+
+    // Get actual count of emails sent from emailApplications table
+    const emailApplicationsResult = await db
+      .select({ count: count() })
+      .from(emailApplications)
+      .where(eq(emailApplications.userId, userId));
+    
+    const totalApplicationsSent = emailApplicationsResult[0]?.count || 0;
 
     // Update user stats
     await db

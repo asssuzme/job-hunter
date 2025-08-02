@@ -17,6 +17,12 @@ Preferred communication style: Simple, everyday language.
 - **Redirect URI Consistency**: Ensures redirect URIs match what's configured in Google Console
 - **Resolution**: OAuth now works properly on both dev and production URLs
 
+### Dashboard Application Count Fix
+- **Fixed Count Issue**: Dashboard was showing "can apply" count instead of actual emails sent
+- **Database Query Update**: Modified `getDashboardStats` to count from `emailApplications` table
+- **Accurate Metrics**: Dashboard now shows real count of emails sent by users
+- **Resolution**: Application count now reflects actual user activity
+
 ## Recent Changes (August 2, 2025)
 
 ### Job Search Form Update
