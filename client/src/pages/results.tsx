@@ -396,7 +396,7 @@ export default function Results() {
             <DialogTitle className="text-2xl font-bold">Upgrade to Pro Plan</DialogTitle>
             <DialogDescription className="space-y-4 pt-4">
               <div className="text-lg">
-                Unlock access to <span className="font-semibold text-primary">{cannotApplyJobs.length} jobs</span> with hidden contact information
+                Unlock access to <span className="font-semibold text-primary">1000 jobs</span> with hidden contact information
               </div>
               
               <div className="bg-primary/10 p-4 rounded-lg space-y-2">
