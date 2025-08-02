@@ -25,6 +25,19 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (August 2, 2025)
 
+### Legal Compliance Updates
+- **Updated Business Information**: Changed all contact details across the website to reflect actual business owner
+  - Email: ashutoshlathvalo@gmail.com
+  - Phone: +91 8302961924
+  - Address: T19 TOWERS RANIGANJ, Hyderabad, Telangana, PIN: 500003
+  - Legal Entity: ASHUTOSH LATH
+- **Terms & Conditions Update**: Replaced with official terms dated 02-08-2025 16:30:48
+  - Changed jurisdiction to Hyderabad, Telangana courts
+  - Updated governing law clauses
+- **Privacy Policy**: Updated contact information
+- **Footer**: Updated business name and location
+- **Contact Page**: Comprehensive update with operational and registered addresses
+
 ### Payment Gateway Migration
 - **Removed Stripe Integration**: Replaced Stripe with placeholder for Indian payment gateways
 - **Schema Update**: Changed from Stripe-specific fields to generic payment fields:

@@ -82,7 +82,13 @@ export default function PrivacyPolicy() {
             <section>
               <h2 className="text-xl font-semibold mb-3 text-foreground">7. Contact Us</h2>
               <p>If you have any questions about this Privacy Policy, please contact us at:</p>
-              <p className="mt-2">Email: support@jobhunter.app</p>
+              <div className="mt-2 space-y-1">
+                <p>Email: ashutoshlathvalo@gmail.com</p>
+                <p>Phone: +91 8302961924</p>
+                <p>Address: T19 TOWERS RANIGANJ FLAT NO 1004</p>
+                <p>10H FLOOR NEAR RANIGANJ BUS DEPOT</p>
+                <p>Hyderabad, Telangana, PIN: 500003</p>
+              </div>
             </section>
           </div>
         </motion.div>

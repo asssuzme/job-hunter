@@ -19,90 +19,107 @@ export default function TermsOfService() {
           animate={{ opacity: 1, y: 0 }}
           className="glass-card p-8"
         >
-          <h1 className="text-3xl font-bold mb-6">Terms of Service</h1>
-          <p className="text-sm text-muted-foreground mb-8">Last updated: August 2, 2025</p>
+          <h1 className="text-3xl font-bold mb-6">Terms & Conditions</h1>
+          <p className="text-sm text-muted-foreground mb-8">Last updated on 02-08-2025 16:30:48</p>
 
           <div className="space-y-6 text-muted-foreground">
-            <section>
-              <h2 className="text-xl font-semibold mb-3 text-foreground">1. Acceptance of Terms</h2>
-              <p>By accessing and using JobHunter, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our service.</p>
-            </section>
+            <p>
+              These Terms and Conditions, along with privacy policy or other terms ("Terms") constitute a binding
+              agreement by and between ASHUTOSH LATH, ( "Website Owner" or "we" or "us" or "our") and you
+              ("you" or "your") and relate to your use of our website, goods (as applicable) or services (as applicable)
+              (collectively, "Services").
+            </p>
 
-            <section>
-              <h2 className="text-xl font-semibold mb-3 text-foreground">2. Service Description</h2>
-              <p className="mb-3">JobHunter provides:</p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>LinkedIn job search and scraping services</li>
-                <li>AI-powered email generation for job applications</li>
-                <li>Contact information enrichment</li>
-                <li>Application tracking and analytics</li>
-              </ul>
-            </section>
+            <p>
+              By using our website and availing the Services, you agree that you have read and accepted these Terms
+              (including the Privacy Policy). We reserve the right to modify these Terms at any time and without
+              assigning any reason. It is your responsibility to periodically review these Terms to stay informed of
+              updates.
+            </p>
 
-            <section>
-              <h2 className="text-xl font-semibold mb-3 text-foreground">3. User Accounts</h2>
-              <p className="mb-3">To use our services, you must:</p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>Create an account using Google OAuth</li>
-                <li>Provide accurate and complete information</li>
-                <li>Maintain the security of your account</li>
-                <li>Notify us of any unauthorized use</li>
-              </ul>
-            </section>
+            <p className="mb-4">
+              The use of this website or availing of our Services is subject to the following terms of use:
+            </p>
 
-            <section>
-              <h2 className="text-xl font-semibold mb-3 text-foreground">4. Subscription and Pricing</h2>
-              <p className="mb-3">Pro Plan Subscription:</p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>Price: ₹129 per month</li>
-                <li>Billed monthly in advance</li>
-                <li>Auto-renewal unless cancelled</li>
-                <li>Access to all premium features</li>
-              </ul>
-            </section>
+            <ul className="list-disc pl-6 space-y-4">
+              <li>
+                To access and use the Services, you agree to provide true, accurate and complete information to us
+                during and after registration, and you shall be responsible for all acts done through the use of your
+                registered account.
+              </li>
 
-            <section>
-              <h2 className="text-xl font-semibold mb-3 text-foreground">5. Acceptable Use</h2>
-              <p className="mb-3">You agree not to:</p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>Use the service for illegal purposes</li>
-                <li>Violate any third-party rights</li>
-                <li>Spam or harass recipients</li>
-                <li>Attempt to circumvent service limitations</li>
-                <li>Resell or redistribute our services</li>
-              </ul>
-            </section>
+              <li>
+                Neither we nor any third parties provide any warranty or guarantee as to the accuracy, timeliness,
+                performance, completeness or suitability of the information and materials offered on this website
+                or through the Services, for any specific purpose. You acknowledge that such information and
+                materials may contain inaccuracies or errors and we expressly exclude liability for any such
+                inaccuracies or errors to the fullest extent permitted by law.
+              </li>
 
-            <section>
-              <h2 className="text-xl font-semibold mb-3 text-foreground">6. Intellectual Property</h2>
-              <p>All content, features, and functionality of JobHunter are owned by us and are protected by international copyright, trademark, and other intellectual property laws.</p>
-            </section>
+              <li>
+                Your use of our Services and the website is solely at your own risk and discretion. You are
+                required to independently assess and ensure that the Services meet your requirements.
+              </li>
 
-            <section>
-              <h2 className="text-xl font-semibold mb-3 text-foreground">7. Limitation of Liability</h2>
-              <p>To the maximum extent permitted by law, JobHunter shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of the service.</p>
-            </section>
+              <li>
+                The contents of the Website and the Services are proprietary to Us and you will not have any
+                authority to claim any intellectual property rights, title, or interest in its contents.
+              </li>
 
-            <section>
-              <h2 className="text-xl font-semibold mb-3 text-foreground">8. Indemnification</h2>
-              <p>You agree to indemnify and hold harmless JobHunter from any claims, damages, or expenses arising from your use of the service or violation of these terms.</p>
-            </section>
+              <li>
+                You acknowledge that unauthorized use of the Website or the Services may lead to action against
+                you as per these Terms or applicable laws.
+              </li>
 
-            <section>
-              <h2 className="text-xl font-semibold mb-3 text-foreground">9. Termination</h2>
-              <p>We may terminate or suspend your account at any time for violations of these terms. You may cancel your subscription at any time through your account settings.</p>
-            </section>
+              <li>
+                You agree to pay us the charges associated with availing the Services.
+              </li>
 
-            <section>
-              <h2 className="text-xl font-semibold mb-3 text-foreground">10. Governing Law</h2>
-              <p>These terms shall be governed by the laws of India. Any disputes shall be subject to the exclusive jurisdiction of courts in Bengaluru, Karnataka.</p>
-            </section>
+              <li>
+                You agree not to use the website and/ or Services for any purpose that is unlawful, illegal or
+                forbidden by these Terms, or Indian or local laws that might apply to you.
+              </li>
 
-            <section>
-              <h2 className="text-xl font-semibold mb-3 text-foreground">11. Contact Information</h2>
-              <p>For questions about these Terms of Service, contact us at:</p>
-              <p className="mt-2">Email: support@jobhunter.app</p>
-            </section>
+              <li>
+                You agree and acknowledge that website and the Services may contain links to other third party
+                websites. On accessing these links, you will be governed by the terms of use, privacy policy and
+                such other policies of such third party websites.
+              </li>
+
+              <li>
+                You understand that upon initiating a transaction for availing the Services you are entering into a
+                legally binding and enforceable contract with the us for the Services.
+              </li>
+
+              <li>
+                You shall be entitled to claim a refund of the payment made by you in case we are not able to
+                provide the Service. The timelines for such return and refund will be according to the specific
+                Service you have availed or within the time period provided in our policies (as applicable). In case
+                you do not raise a refund claim within the stipulated time, than this would make you ineligible for
+                a refund.
+              </li>
+
+              <li>
+                Notwithstanding anything contained in these Terms, the parties shall not be liable for any failure to
+                perform an obligation under these Terms if performance is prevented or delayed by a force majeure
+                event.
+              </li>
+
+              <li>
+                These Terms and any dispute or claim relating to it, or its enforceability, shall be governed by and
+                construed in accordance with the laws of India.
+              </li>
+
+              <li>
+                All disputes arising out of or in connection with these Terms shall be subject to the exclusive
+                jurisdiction of the courts in Hyderabad, Telangana.
+              </li>
+
+              <li>
+                All concerns or communications relating to these Terms must be communicated to us using the
+                contact information provided on this website.
+              </li>
+            </ul>
           </div>
         </motion.div>
       </div>

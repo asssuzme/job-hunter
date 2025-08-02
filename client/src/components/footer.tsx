@@ -56,7 +56,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <a href="mailto:support@jobhunter.app" className="hover:text-foreground transition-colors">
+                <a href="mailto:ashutoshlathvalo@gmail.com" className="hover:text-foreground transition-colors">
                   Email Support
                 </a>
               </li>
@@ -71,8 +71,8 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold mb-3">Company</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>JobHunter Technologies</li>
-              <li>Bengaluru, India</li>
+              <li>ASHUTOSH LATH</li>
+              <li>Hyderabad, Telangana</li>
               <li className="text-xs mt-4">© 2025 All rights reserved</li>
             </ul>
           </div>
