@@ -72,9 +72,11 @@ function AppContent() {
   useEffect(() => {
     // Handle Supabase auth callback when tokens are in URL fragment
     const handleAuthCallback = async () => {
+      console.log('Current URL hash:', window.location.hash);
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const accessToken = hashParams.get('access_token');
       const refreshToken = hashParams.get('refresh_token');
+      console.log('Access token found:', !!accessToken);
       
       if (accessToken) {
         console.log('Processing Supabase auth callback...');
