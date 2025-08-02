@@ -980,6 +980,35 @@ Format the email with proper structure including greeting, body paragraphs, and 
       expiresAt: user.subscription_expires_at
     });
   });
+  
+  // Temporary subscription activation endpoint (bypasses payment for testing)
+  app.post("/api/payment/activate-subscription", isSimpleAuthenticated, async (req: any, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+      
+      const userId = req.user.id;
+      
+      // Update user subscription status
+      await db.update(users)
+        .set({
+          subscription_status: 'active',
+          subscription_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        })
+        .where(eq(users.id, userId));
+      
+      console.log(`Subscription activated for user ${userId}`);
+      
+      return res.json({ 
+        success: true, 
+        message: 'Subscription activated successfully' 
+      });
+    } catch (error) {
+      console.error('Error activating subscription:', error);
+      return res.status(500).json({ error: 'Failed to activate subscription' });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

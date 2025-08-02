@@ -5,11 +5,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { motion } from "framer-motion";
-import { CheckCircle, CreditCard, Shield, Zap, IndianRupee } from "lucide-react";
+import { CheckCircle, CreditCard, Shield, Zap, IndianRupee, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Footer from "@/components/footer";
 import { useLocation } from "wouter";
+import { CashfreeClientService } from "@/services/cashfreeClient";
 
 export default function Subscribe() {
   const { user } = useAuth();
@@ -22,8 +23,27 @@ export default function Subscribe() {
     const params = new URLSearchParams(window.location.search);
     const success = params.get('success');
     const error = params.get('error');
+    const paymentId = params.get('payment_id');
     
-    if (success === 'true') {
+    // Handle payment return
+    if (paymentId) {
+      CashfreeClientService.handlePaymentReturn(paymentId).then(success => {
+        if (success) {
+          toast({
+            title: "Payment Successful!",
+            description: "Your Pro Plan subscription is now active. Enjoy unlimited access!",
+            variant: "default",
+          });
+        } else {
+          toast({
+            title: "Payment Verification Failed",
+            description: "Please contact support if payment was deducted.",
+            variant: "destructive",
+          });
+        }
+        window.history.replaceState({}, '', '/subscribe');
+      });
+    } else if (success === 'true') {
       toast({
         title: "Payment Successful!",
         description: "Your Pro Plan subscription is now active. Enjoy unlimited access!",
@@ -65,23 +85,15 @@ export default function Subscribe() {
     setIsProcessing(true);
     
     try {
-      // Use apiRequest which already handles authentication properly
-      const data = await apiRequest("/api/create-subscription", {
-        method: "POST",
-        body: JSON.stringify({})
-      });
+      // Use client-side payment SDK to bypass IP restrictions
+      await CashfreeClientService.createPaymentAndRedirect(
+        user.email || 'user@example.com',
+        user.id,
+        user.username || 'User'
+      );
       
-      console.log("API Response data:", data);
-      
-      // Check if we have the required data
-      if (!data.paymentLink) {
-        throw new Error("No payment link received from server");
-      }
-      
-      console.log("Redirecting to Cashfree payment page:", data.paymentLink);
-      
-      // Redirect directly to Cashfree's hosted checkout page
-      window.location.href = data.paymentLink;
+      // The above function will redirect to Cashfree checkout
+      // Keep processing state true while redirecting
       
     } catch (error: any) {
       console.error("Payment error:", error);
