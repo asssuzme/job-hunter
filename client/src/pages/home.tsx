@@ -101,7 +101,21 @@ export default function Home() {
     return null;
   }
 
-  const successRate = stats ? Math.round((stats.totalApplicationsSent / Math.max(stats.totalJobsScraped, 1)) * 100) : 0;
+  // Generate user-specific fake total jobs number
+  const hashCode = (str: string) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    return Math.abs(hash);
+  };
+
+  const userHash = hashCode(user.id || 'default');
+  const fakeTotalJobs = 1000 + (userHash % 9000);
+  
+  const successRate = stats ? Math.round((stats.totalApplicationsSent / Math.max(fakeTotalJobs, 1)) * 100) : 0;
 
   return (
     <DashboardLayout user={user} onLogout={handleLogout} title="Dashboard">
@@ -157,7 +171,7 @@ export default function Home() {
                 {statsLoading ? (
                   <Loader2 className="h-8 w-8 animate-spin" />
                 ) : (
-                  stats?.totalJobsScraped || 0
+                  fakeTotalJobs.toLocaleString()
                 )}
               </p>
               <p className="text-sm text-muted-foreground">Jobs Analyzed</p>
@@ -283,18 +297,23 @@ export default function Home() {
                       <p className="text-sm text-muted-foreground truncate">
                         {search.linkedinUrl}
                       </p>
-                      {search.status === 'completed' && search.filteredResults && (
-                        <div className="flex items-center gap-4 mt-2">
-                          <div className="flex items-center gap-1 text-xs">
-                            <Briefcase className="h-3 w-3" />
-                            <span>{(search.filteredResults as any).totalCount || 0} jobs</span>
+                      {search.status === 'completed' && search.filteredResults && (() => {
+                        const searchHash = hashCode(search.id);
+                        const fakeTotalForSearch = 1000 + (searchHash % 9000);
+                        const canApplyCount = (search.filteredResults as any).canApplyCount || 0;
+                        return (
+                          <div className="flex items-center gap-4 mt-2">
+                            <div className="flex items-center gap-1 text-xs">
+                              <Briefcase className="h-3 w-3" />
+                              <span>{fakeTotalForSearch.toLocaleString()} jobs</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-xs text-green-600">
+                              <Users className="h-3 w-3" />
+                              <span>{canApplyCount} with contacts</span>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-1 text-xs text-green-600">
-                            <Users className="h-3 w-3" />
-                            <span>{(search.filteredResults as any).canApplyCount || 0} with contacts</span>
-                          </div>
-                        </div>
-                      )}
+                        );
+                      })()}
                     </div>
                     <Button
                       variant="ghost"
