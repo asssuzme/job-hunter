@@ -70,12 +70,22 @@ function Router() {
 
 function AppContent() {
   useEffect(() => {
+    // Log URL immediately
+    console.log('Current URL:', window.location.href);
+    console.log('URL hash:', window.location.hash);
+    
     // Check if we have a Supabase session and sync it with backend
     const syncSupabaseSession = async () => {
       // First check for tokens in URL hash (in case Supabase hasn't processed them yet)
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const accessToken = hashParams.get('access_token');
       const refreshToken = hashParams.get('refresh_token');
+      
+      console.log('Hash params:', {
+        hasAccessToken: !!accessToken,
+        hasRefreshToken: !!refreshToken,
+        accessTokenLength: accessToken?.length || 0
+      });
       
       if (accessToken && refreshToken) {
         console.log('Found tokens in URL, setting Supabase session manually...');
