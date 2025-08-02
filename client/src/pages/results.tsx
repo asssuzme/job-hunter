@@ -229,7 +229,7 @@ export default function Results() {
               <div className="flex flex-col items-center text-center md:flex-row md:justify-between md:text-left">
                 <div>
                   <p className="text-xl md:text-2xl font-bold text-accent">{canApplyJobs.length}</p>
-                  <p className="text-xs md:text-sm text-muted-foreground">With Contacts</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">With Contacts (Free Plan)</p>
                 </div>
                 <Users className="h-6 w-6 md:h-8 md:w-8 text-accent/20 hidden md:block" />
               </div>
