@@ -8,6 +8,10 @@ autoapply.ai is a web service designed to automate job applications. It scrapes 
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+- **2025-08-03**: Fixed Supabase OAuth authentication redirect issue by implementing HTTP redirect server on port 3000 that forwards to port 5000 where the application runs. This solves the issue where Supabase is configured to redirect to localhost:3000 after OAuth.
+
 ## System Architecture
 
 ### Frontend Architecture

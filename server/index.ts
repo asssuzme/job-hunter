@@ -69,15 +69,28 @@ app.use((req, res, next) => {
     log(`serving on port ${port}`);
   });
 
-  // Create redirect server on port 3000 for Supabase OAuth
-  const redirectApp = express();
-  redirectApp.get('*', (req, res) => {
-    const redirectUrl = `http://localhost:5000${req.originalUrl}`;
-    console.log(`[Redirect] :3000${req.originalUrl} → :5000${req.originalUrl}`);
-    res.redirect(redirectUrl);
-  });
-  
-  redirectApp.listen(3000, '0.0.0.0', () => {
-    log(`redirect server on port 3000 → forwarding to port 5000`);
-  });
+  // Create a simple redirect server on port 3000 for Supabase OAuth
+  // This is needed because Supabase redirects to localhost:3000 after Google login
+  if (port !== 3000) {
+    const http = await import('http');
+    const redirectServer = http.createServer((req, res) => {
+      const redirectUrl = `http://localhost:5000${req.url}`;
+      console.log(`[OAuth Redirect] :3000${req.url} → :5000${req.url}`);
+      res.writeHead(302, { 'Location': redirectUrl });
+      res.end();
+    });
+    
+    redirectServer.listen(3000, '0.0.0.0', () => {
+      log('OAuth redirect server listening on port 3000 → redirecting to port 5000');
+    });
+    
+    // Handle errors
+    redirectServer.on('error', (err: any) => {
+      if (err.code === 'EADDRINUSE') {
+        console.warn('Port 3000 is already in use - OAuth redirect may not work');
+      } else {
+        console.error('OAuth redirect server error:', err);
+      }
+    });
+  }
 })();
