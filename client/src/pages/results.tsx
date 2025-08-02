@@ -15,7 +15,6 @@ import {
   Users,
   Briefcase,
   Mail,
-  Target,
   Sparkles,
   Filter
 } from "lucide-react";
@@ -203,7 +202,7 @@ export default function Results() {
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-3 gap-2 md:gap-4">
+          <div className="grid grid-cols-2 gap-2 md:gap-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -231,23 +230,6 @@ export default function Results() {
                   <p className="text-xs md:text-sm text-muted-foreground">With Contacts (Free Plan)</p>
                 </div>
                 <Users className="h-6 w-6 md:h-8 md:w-8 text-accent/20 hidden md:block" />
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3 }}
-              className="glass-card p-3 md:p-4"
-            >
-              <div className="flex flex-col items-center text-center md:flex-row md:justify-between md:text-left">
-                <div>
-                  <p className="text-xl md:text-2xl font-bold text-green-600">
-                    {Math.round((canApplyJobs.length / Math.max(fakeTotalJobs, 1)) * 100)}%
-                  </p>
-                  <p className="text-xs md:text-sm text-muted-foreground">Success Rate</p>
-                </div>
-                <Target className="h-6 w-6 md:h-8 md:w-8 text-green-600/20 hidden md:block" />
               </div>
             </motion.div>
           </div>
