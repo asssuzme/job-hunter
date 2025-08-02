@@ -14,11 +14,9 @@ import {
   Loader2,
   Plus,
   Eye,
-  BarChart3,
   Calendar,
   Send,
   CheckCircle,
-  Target,
   Users,
   Clock,
   ArrowUpRight,
@@ -39,46 +37,7 @@ interface DashboardStats {
   recentSearches: JobScrapingRequest[];
 }
 
-// Animated progress ring component
-function ProgressRing({ percentage, size = 120 }: { percentage: number; size?: number }) {
-  const strokeWidth = 8;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = radius * 2 * Math.PI;
-  const offset = circumference - (percentage / 100) * circumference;
 
-  return (
-    <div className="relative">
-      <svg width={size} height={size} className="transform -rotate-90">
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke="currentColor"
-          strokeWidth={strokeWidth}
-          fill="none"
-          className="text-muted"
-        />
-        <motion.circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke="currentColor"
-          strokeWidth={strokeWidth}
-          fill="none"
-          strokeDasharray={circumference}
-          initial={{ strokeDashoffset: circumference }}
-          animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 1, ease: "easeOut" }}
-          className="text-primary"
-          strokeLinecap="round"
-        />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-2xl font-bold">{percentage}%</span>
-      </div>
-    </div>
-  );
-}
 
 export default function Home() {
   const { user } = useAuth();
@@ -129,7 +88,7 @@ export default function Home() {
     fakeTotalJobs = 736; // Default starting value
   }
   
-  const successRate = stats ? Math.round((stats.totalApplicationsSent / Math.max(fakeTotalJobs, 1)) * 100) : 0;
+
 
   return (
     <DashboardLayout user={user} onLogout={handleLogout} title="Dashboard">
@@ -162,7 +121,7 @@ export default function Home() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           {/* Total Jobs Card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -226,32 +185,6 @@ export default function Home() {
             <div className="mt-4 flex items-center text-sm text-accent">
               <ArrowUpRight className="h-4 w-4 mr-1" />
               <span>8 sent this week</span>
-            </div>
-          </motion.div>
-
-          {/* Success Rate Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-            whileHover={{ y: -4 }}
-            className="glass-card p-4 md:p-6"
-          >
-            <div className="flex items-center justify-between mb-4 md:mb-6">
-              <div className="inline-flex p-3 rounded-xl bg-green-500/10">
-                <Target className="h-6 w-6 text-green-600" />
-              </div>
-              <Badge variant="secondary" className="text-xs">
-                <BarChart3 className="h-3 w-3 mr-1" />
-                Rate
-              </Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="space-y-2">
-                <p className="text-3xl font-bold">{successRate}%</p>
-                <p className="text-sm text-muted-foreground">Success Rate</p>
-              </div>
-              <ProgressRing percentage={successRate} size={80} />
             </div>
           </motion.div>
         </div>
