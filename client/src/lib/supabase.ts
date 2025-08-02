@@ -21,10 +21,24 @@ export const supabase = createClient(
   }
 );
 
-// Simple function to redirect to server-side auth
+// Sign in with Google using Supabase
 export async function signInWithGoogle() {
-  // Redirect to our server-side auth endpoint
-  window.location.href = '/api/auth/google';
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${window.location.origin}/auth/callback`,
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'consent',
+      },
+    },
+  });
+  
+  if (error) {
+    throw error;
+  }
+  
+  return data;
 }
 
 // Helper function to get current user with Gmail tokens

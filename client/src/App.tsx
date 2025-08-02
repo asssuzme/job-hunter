@@ -25,7 +25,7 @@ import AuthCallback from "@/pages/auth-callback";
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
-  // No Supabase auth handling needed anymore - using direct server-side auth
+  // Using Supabase auth handling
 
   if (isLoading) {
     return (

@@ -1,8 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupDirectGoogleAuth, isAuthenticated } from "./directGoogleAuth";
-import { setupAuthDiagnostics } from "./authDiagnostics";
+import { setupSupabaseAuth, isAuthenticated } from "./supabaseAuth";
 import { 
   insertJobScrapingRequestSchema, 
   linkedinUrlSchema,
@@ -53,12 +52,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(getSession());
   
   // Auth middleware
-  setupDirectGoogleAuth(app);
-  
-  // Setup auth diagnostics
-  setupAuthDiagnostics(app);
-
-  // Auth routes are handled in supabaseAuth.ts
+  setupSupabaseAuth(app);
 
   // Dashboard stats endpoint
   app.get('/api/dashboard/stats', isAuthenticated, async (req: any, res) => {
