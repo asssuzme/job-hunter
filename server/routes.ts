@@ -792,7 +792,7 @@ Format the email with proper structure including greeting, body paragraphs, and 
     }
   });
 
-  // Pro plan subscription endpoint placeholder for Indian payment gateway
+  // Cashfree payment session endpoint
   app.post('/api/create-subscription', isSimpleAuthenticated, async (req: any, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
@@ -800,12 +800,134 @@ Format the email with proper structure including greeting, body paragraphs, and 
 
     const user = req.user;
 
-    // TODO: Implement Indian payment gateway integration
-    // Options: Razorpay, Paytm, PhonePe, PayU, Cashfree
+    try {
+      // Check if user already has an active subscription
+      if (user.subscription_status === 'active' && user.subscription_expires_at) {
+        const expiryDate = new Date(user.subscription_expires_at);
+        if (expiryDate > new Date()) {
+          return res.status(400).json({ error: "You already have an active subscription" });
+        }
+      }
+
+      // Generate unique order ID
+      const orderId = `order_${user.id}_${Date.now()}`;
+      
+      // Import Cashfree service
+      const { createCashfreeOrder } = await import("./services/cashfree");
+      
+      // Create Cashfree order
+      const orderData = {
+        orderId: orderId,
+        orderAmount: 129.00, // ₹129 per month
+        orderCurrency: "INR",
+        customerDetails: {
+          customerId: user.id,
+          customerEmail: user.email,
+          customerPhone: "+91 9999999999", // Default phone - user should update this
+          customerName: user.username || user.email.split('@')[0]
+        },
+        orderMeta: {
+          return_url: `${process.env.BASE_URL || 'http://localhost:5000'}/api/payment/return`,
+          notify_url: `${process.env.BASE_URL || 'http://localhost:5000'}/api/payment/webhook`
+        }
+      };
+
+      const cashfreeOrder = await createCashfreeOrder(orderData);
+      
+      // Store order ID in database for later verification
+      await storage.updateUser(user.id, {
+        pending_payment_order_id: orderId
+      });
+      
+      res.json({
+        orderId: cashfreeOrder.order_id,
+        paymentSessionId: cashfreeOrder.payment_session_id,
+        orderAmount: cashfreeOrder.order_amount,
+        orderCurrency: cashfreeOrder.order_currency
+      });
+      
+    } catch (error: any) {
+      console.error("Error creating payment session:", error);
+      res.status(500).json({ error: error.message || "Failed to create payment session" });
+    }
+  });
+  
+  // Payment return URL handler
+  app.get('/api/payment/return', async (req: any, res) => {
+    const { order_id } = req.query;
     
-    return res.status(400).json({ 
-      error: "Payment gateway integration pending. Please select an Indian payment provider (Razorpay, Paytm, PhonePe, etc.)" 
-    });
+    if (!order_id) {
+      return res.redirect('/subscribe?error=invalid_order');
+    }
+    
+    try {
+      // Import Cashfree service
+      const { getOrderStatus } = await import("./services/cashfree");
+      
+      // Verify payment status
+      const orderStatus = await getOrderStatus(order_id as string);
+      
+      if (orderStatus.order_status === 'PAID') {
+        // Find user by order ID
+        const users = await storage.getAllUsers();
+        const user = users.find(u => u.pending_payment_order_id === order_id);
+        
+        if (user) {
+          // Update user subscription status
+          const subscriptionExpiry = new Date();
+          subscriptionExpiry.setMonth(subscriptionExpiry.getMonth() + 1);
+          
+          await storage.updateUser(user.id, {
+            subscription_status: 'active',
+            subscription_expires_at: subscriptionExpiry.toISOString(),
+            payment_customer_id: orderStatus.customer_details?.customer_id || null,
+            payment_subscription_id: order_id,
+            pending_payment_order_id: null
+          });
+        }
+        
+        res.redirect('/subscribe?success=true');
+      } else {
+        res.redirect('/subscribe?error=payment_failed');
+      }
+    } catch (error) {
+      console.error("Error processing payment return:", error);
+      res.redirect('/subscribe?error=processing_failed');
+    }
+  });
+  
+  // Payment webhook handler
+  app.post('/api/payment/webhook', async (req: any, res) => {
+    try {
+      const { data } = req.body;
+      
+      if (data?.order?.order_status === 'PAID') {
+        const orderId = data.order.order_id;
+        
+        // Find user by order ID
+        const users = await storage.getAllUsers();
+        const user = users.find(u => u.pending_payment_order_id === orderId);
+        
+        if (user) {
+          // Update user subscription status
+          const subscriptionExpiry = new Date();
+          subscriptionExpiry.setMonth(subscriptionExpiry.getMonth() + 1);
+          
+          await storage.updateUser(user.id, {
+            subscription_status: 'active',
+            subscription_expires_at: subscriptionExpiry.toISOString(),
+            payment_customer_id: data.order.customer_details?.customer_id || null,
+            payment_subscription_id: orderId,
+            pending_payment_order_id: null
+          });
+        }
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Webhook processing error:", error);
+      res.status(500).json({ error: "Webhook processing failed" });
+    }
   });
 
   // Check subscription status
@@ -816,12 +938,14 @@ Format the email with proper structure including greeting, body paragraphs, and 
 
     const user = req.user;
     
-    // TODO: Check with payment gateway if user has active subscription
-    // For now, return inactive status
+    const hasActiveSubscription = user.subscription_status === 'active' && 
+                                 user.subscription_expires_at && 
+                                 new Date(user.subscription_expires_at) > new Date();
+    
     res.json({
-      hasActiveSubscription: false,
-      plan: 'free',
-      expiresAt: null
+      hasActiveSubscription,
+      plan: hasActiveSubscription ? 'pro' : 'free',
+      expiresAt: user.subscription_expires_at
     });
   });
 

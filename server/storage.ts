@@ -27,6 +27,7 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
+  getAllUsers(): Promise<User[]>;
   
   // Resume operations
   updateUserResume(userId: string, resumeText: string, fileName: string): Promise<User | undefined>;
@@ -115,6 +116,10 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return updated || undefined;
+  }
+  
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users);
   }
 
   async updateUserResume(userId: string, resumeText: string, fileName: string): Promise<User | undefined> {

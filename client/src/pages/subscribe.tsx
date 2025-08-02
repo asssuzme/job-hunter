@@ -1,5 +1,5 @@
-// Subscribe page for Pro Plan with Indian payment gateway
-import { useState } from 'react';
+// Subscribe page for Pro Plan with Cashfree payment gateway
+import { useState, useEffect } from 'react';
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,29 +9,79 @@ import { CheckCircle, CreditCard, Shield, Zap, IndianRupee } from "lucide-react"
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Footer from "@/components/footer";
+import { useLocation } from "wouter";
 
 export default function Subscribe() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [location] = useLocation();
+  
+  // Check URL parameters for payment status
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const success = params.get('success');
+    const error = params.get('error');
+    
+    if (success === 'true') {
+      toast({
+        title: "Payment Successful!",
+        description: "Your Pro Plan subscription is now active. Enjoy unlimited access!",
+        variant: "default",
+      });
+      // Remove URL parameters after showing toast
+      window.history.replaceState({}, '', '/subscribe');
+    } else if (error) {
+      let errorMessage = "Payment failed. Please try again.";
+      if (error === 'payment_failed') {
+        errorMessage = "Payment was not completed. Please try again.";
+      } else if (error === 'processing_failed') {
+        errorMessage = "Error processing payment. Please contact support.";
+      }
+      
+      toast({
+        title: "Payment Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      // Remove URL parameters after showing toast
+      window.history.replaceState({}, '', '/subscribe');
+    }
+  }, [toast]);
 
   const handleSubscribe = async () => {
     setIsProcessing(true);
     
     try {
-      // TODO: Implement payment gateway integration
-      toast({
-        title: "Payment Gateway Integration Needed",
-        description: "Please select an Indian payment gateway (Razorpay, Paytm, PhonePe, etc.) to enable subscriptions.",
-        variant: "default",
+      // Create Cashfree payment session
+      const response = await fetch("/api/create-subscription", {
+        method: "POST",
+        credentials: "include"
       });
-    } catch (error) {
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create payment session");
+      }
+      
+      // Redirect to Cashfree payment page
+      const cashfree = (window as any).Cashfree({
+        mode: "sandbox" // Change to "production" for live payments
+      });
+      
+      const checkoutOptions = {
+        paymentSessionId: data.paymentSessionId,
+        redirectTarget: "_self"
+      };
+      
+      cashfree.checkout(checkoutOptions);
+      
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to process subscription",
+        description: error.message || "Failed to process subscription",
         variant: "destructive",
       });
-    } finally {
       setIsProcessing(false);
     }
   };
@@ -123,7 +173,11 @@ export default function Subscribe() {
           </Button>
           
           <p className="text-xs text-center text-muted-foreground">
-            Secure payment powered by Indian payment gateway
+            Secure payment powered by Cashfree payment gateway
+          </p>
+          
+          <p className="text-xs text-center text-muted-foreground">
+            By subscribing, you agree to our Terms of Service and Privacy Policy
           </p>
         </motion.div>
       </div>

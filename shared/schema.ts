@@ -31,6 +31,7 @@ export const users = pgTable("users", {
   subscriptionId: varchar("subscription_id"), // Subscription ID for pro plan
   subscriptionStatus: varchar("subscription_status"), // active, inactive, cancelled
   subscriptionExpiresAt: timestamp("subscription_expires_at"), // When subscription expires
+  pendingPaymentOrderId: varchar("pending_payment_order_id"), // Cashfree order ID for pending payments
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
