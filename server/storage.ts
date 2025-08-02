@@ -5,9 +5,12 @@ import {
   type UpsertUser,
   type EmailApplication,
   type InsertEmailApplication,
+  type GmailCredentials,
+  type InsertGmailCredentials,
   jobScrapingRequests,
   users,
-  emailApplications 
+  emailApplications,
+  gmailCredentials
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, count } from "drizzle-orm";
@@ -43,6 +46,11 @@ export interface IStorage {
   // Email application methods
   createEmailApplication(application: InsertEmailApplication): Promise<EmailApplication>;
   getEmailApplicationsByUser(userId: string): Promise<EmailApplication[]>;
+  
+  // Gmail credentials methods
+  getGmailCredentials(userId: string): Promise<GmailCredentials | undefined>;
+  upsertGmailCredentials(credentials: InsertGmailCredentials): Promise<GmailCredentials>;
+  deleteGmailCredentials(userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -221,6 +229,37 @@ export class DatabaseStorage implements IStorage {
       .from(emailApplications)
       .where(eq(emailApplications.userId, userId))
       .orderBy(desc(emailApplications.sentAt));
+  }
+  
+  async getGmailCredentials(userId: string): Promise<GmailCredentials | undefined> {
+    const [credentials] = await db
+      .select()
+      .from(gmailCredentials)
+      .where(eq(gmailCredentials.userId, userId));
+    return credentials || undefined;
+  }
+  
+  async upsertGmailCredentials(credentials: InsertGmailCredentials): Promise<GmailCredentials> {
+    const [upserted] = await db
+      .insert(gmailCredentials)
+      .values(credentials)
+      .onConflictDoUpdate({
+        target: gmailCredentials.userId,
+        set: {
+          accessToken: credentials.accessToken,
+          refreshToken: credentials.refreshToken,
+          expiresAt: credentials.expiresAt,
+          updatedAt: new Date()
+        }
+      })
+      .returning();
+    return upserted;
+  }
+  
+  async deleteGmailCredentials(userId: string): Promise<void> {
+    await db
+      .delete(gmailCredentials)
+      .where(eq(gmailCredentials.userId, userId));
   }
 }
 

@@ -50,6 +50,17 @@ export const jobScrapingRequests = pgTable("job_scraping_requests", {
   completedAt: timestamp("completed_at"),
 });
 
+// Gmail OAuth credentials table
+export const gmailCredentials = pgTable("gmail_credentials", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).unique(),
+  accessToken: text("access_token").notNull(),
+  refreshToken: text("refresh_token").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Email applications sent table
 export const emailApplications = pgTable("email_applications", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -76,6 +87,16 @@ export const insertJobScrapingRequestSchema = createInsertSchema(jobScrapingRequ
 
 export type InsertJobScrapingRequest = z.infer<typeof insertJobScrapingRequestSchema>;
 export type JobScrapingRequest = typeof jobScrapingRequests.$inferSelect;
+
+// Gmail credentials schemas
+export const insertGmailCredentialsSchema = createInsertSchema(gmailCredentials).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertGmailCredentials = z.infer<typeof insertGmailCredentialsSchema>;
+export type GmailCredentials = typeof gmailCredentials.$inferSelect;
 
 // Email application schemas
 export const insertEmailApplicationSchema = createInsertSchema(emailApplications).omit({

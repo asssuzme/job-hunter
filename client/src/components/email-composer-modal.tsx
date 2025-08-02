@@ -5,9 +5,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Send, Mail, Copy, CheckCircle, Sparkles } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { Loader2, Send, Mail, Copy, CheckCircle, Sparkles, ShieldCheck } from "lucide-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 interface EmailComposerModalProps {
@@ -39,7 +39,34 @@ export function EmailComposerModal({
   const [subject, setSubject] = useState(`Application for ${jobTitle} position at ${companyName}`);
   const [copied, setCopied] = useState(false);
   const [localGenerating, setLocalGenerating] = useState(false);
+  const [showGmailAuth, setShowGmailAuth] = useState(false);
   const { toast } = useToast();
+  
+  // Check Gmail authorization status
+  const { data: gmailStatus } = useQuery({
+    queryKey: ['/api/auth/gmail/status'],
+    enabled: isOpen
+  });
+  
+  // Handle Gmail authorization
+  const authorizeGmailMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest('/api/auth/gmail/authorize');
+    },
+    onSuccess: (data) => {
+      if (data.authUrl) {
+        // Redirect to Google OAuth
+        window.location.href = data.authUrl;
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Authorization failed",
+        description: error.message || "Failed to start Gmail authorization",
+        variant: "destructive"
+      });
+    }
+  });
 
   // Update email content when generated email changes
   useEffect(() => {
@@ -73,20 +100,30 @@ export function EmailComposerModal({
     },
     onSuccess: (data) => {
       if (data.success) {
-        // Open email in user's email client
-        if (data.gmailComposeUrl) {
-          // Try Gmail compose first (works if user is logged into Gmail)
-          window.open(data.gmailComposeUrl, '_blank');
-        } else if (data.mailtoLink) {
-          // Fallback to mailto link
-          window.location.href = data.mailtoLink;
+        if (data.sentViaGmail) {
+          // Email was sent directly via Gmail
+          toast({
+            title: "Email sent successfully!",
+            description: `Your application has been sent to ${recipientEmail}`,
+          });
+          onClose();
+        } else if (data.needsGmailAuth) {
+          // User needs to authorize Gmail
+          setShowGmailAuth(true);
+        } else {
+          // Fall back to opening in email client
+          if (data.gmailComposeUrl) {
+            window.open(data.gmailComposeUrl, '_blank');
+          } else if (data.mailtoLink) {
+            window.location.href = data.mailtoLink;
+          }
+          
+          toast({
+            title: "Email draft created!",
+            description: "Opening in your email client. Please send the email from there.",
+          });
+          onClose();
         }
-        
-        toast({
-          title: "Email draft created!",
-          description: "Opening in your email client. Please send the email from there.",
-        });
-        onClose();
       }
     },
     onError: (error: any) => {
@@ -251,6 +288,54 @@ export function EmailComposerModal({
             </Button>
           </div>
         </DialogFooter>
+        
+        {/* Gmail Authorization Prompt */}
+        {showGmailAuth && (
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center rounded-lg">
+            <div className="bg-card p-6 rounded-lg shadow-lg max-w-md w-full mx-4 border">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                  <ShieldCheck className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="text-lg font-semibold">Authorize Gmail Access</h3>
+              </div>
+              
+              <p className="text-sm text-muted-foreground mb-4">
+                To send emails directly from your Gmail account, you need to authorize access. 
+                This allows the application to send emails on your behalf.
+              </p>
+              
+              <div className="bg-muted/50 p-3 rounded-md mb-4">
+                <p className="text-xs text-muted-foreground">
+                  <strong>Note:</strong> You'll be redirected to Google to grant permission. 
+                  We'll only request access to send emails - we won't read your messages.
+                </p>
+              </div>
+              
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowGmailAuth(false)}
+                  className="flex-1"
+                >
+                  Skip for now
+                </Button>
+                <Button
+                  onClick={() => authorizeGmailMutation.mutate()}
+                  disabled={authorizeGmailMutation.isPending}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                >
+                  {authorizeGmailMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Mail className="h-4 w-4 mr-2" />
+                  )}
+                  Authorize Gmail
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

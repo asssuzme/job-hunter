@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -44,6 +44,32 @@ export default function Home() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [showNewSearch, setShowNewSearch] = useState(false);
+  
+  // Handle Gmail OAuth callback
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const gmailAuth = urlParams.get('gmail_auth');
+    const error = urlParams.get('error');
+    
+    if (gmailAuth === 'success') {
+      toast({
+        title: "Gmail connected successfully!",
+        description: "You can now send emails directly from your Gmail account.",
+      });
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+      // Invalidate Gmail status query
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/gmail/status'] });
+    } else if (error === 'gmail_auth_failed') {
+      toast({
+        title: "Gmail authorization failed",
+        description: "Please try again or contact support if the issue persists.",
+        variant: "destructive"
+      });
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [toast]);
 
   // Fetch user stats
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({

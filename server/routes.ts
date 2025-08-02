@@ -639,7 +639,61 @@ Format the email with proper structure including greeting, body paragraphs, and 
     }
   });
 
-  // Create email draft that opens in user's email client
+  // Check if user has Gmail credentials
+  app.get("/api/auth/gmail/status", isAuthenticated, async (req: any, res) => {
+    try {
+      const credentials = await storage.getGmailCredentials(req.user.id);
+      res.json({ 
+        hasGmailAccess: !!credentials,
+        expiresAt: credentials?.expiresAt
+      });
+    } catch (error) {
+      console.error("Error checking Gmail status:", error);
+      res.status(500).json({ error: "Failed to check Gmail status" });
+    }
+  });
+
+  // Initiate Gmail OAuth flow
+  app.get("/api/auth/gmail/authorize", isAuthenticated, async (req: any, res) => {
+    try {
+      const { getGmailAuthUrl } = await import('./gmailOAuth');
+      const authUrl = getGmailAuthUrl(req.user.id);
+      res.json({ authUrl });
+    } catch (error) {
+      console.error("Error generating Gmail auth URL:", error);
+      res.status(500).json({ error: "Failed to generate authorization URL" });
+    }
+  });
+
+  // Handle Gmail OAuth callback
+  app.get("/api/auth/gmail/callback", async (req, res) => {
+    try {
+      const { code, state } = req.query;
+      
+      if (!code || !state || typeof code !== 'string' || typeof state !== 'string') {
+        return res.redirect('/?error=gmail_auth_failed');
+      }
+
+      const { handleGmailCallback } = await import('./gmailOAuth');
+      const gmailData = await handleGmailCallback(code, state);
+      
+      // Store Gmail credentials
+      await storage.upsertGmailCredentials({
+        userId: gmailData.userId,
+        accessToken: gmailData.accessToken!,
+        refreshToken: gmailData.refreshToken!,
+        expiresAt: new Date(gmailData.expiresAt!)
+      });
+      
+      // Redirect back to the application with success
+      res.redirect('/?gmail_auth=success');
+    } catch (error) {
+      console.error("Gmail OAuth callback error:", error);
+      res.redirect('/?error=gmail_auth_failed');
+    }
+  });
+
+  // Send email (with Gmail support when available)
   app.post("/api/send-email", isAuthenticated, async (req: any, res) => {
     try {
       const { 
@@ -653,29 +707,116 @@ Format the email with proper structure including greeting, body paragraphs, and 
         companyWebsite
       } = req.body;
 
-      // Since we can't send from user's email via Supabase,
-      // we'll create a draft and open it in their email client
+      // Check if user has Gmail credentials
+      const gmailCredentials = await storage.getGmailCredentials(req.user.id);
       
-      // Generate a unique draft ID
+      if (gmailCredentials && gmailCredentials.expiresAt > new Date()) {
+        // User has valid Gmail credentials, send email directly
+        try {
+          const { refreshGmailToken } = await import('./gmailOAuth');
+          let accessToken = gmailCredentials.accessToken;
+          
+          // Check if token needs refresh (expires in less than 5 minutes)
+          if (gmailCredentials.expiresAt < new Date(Date.now() + 5 * 60 * 1000)) {
+            const newToken = await refreshGmailToken(gmailCredentials.refreshToken);
+            if (newToken) {
+              accessToken = newToken;
+              // Update stored credentials
+              await storage.upsertGmailCredentials({
+                userId: req.user.id,
+                accessToken: newToken,
+                refreshToken: gmailCredentials.refreshToken,
+                expiresAt: new Date(Date.now() + 3600 * 1000) // 1 hour
+              });
+            }
+          }
+          
+          // Create email message in RFC 2822 format
+          const messageParts = [
+            `To: ${to}`,
+            `Subject: ${subject}`,
+            'MIME-Version: 1.0',
+            'Content-Type: text/html; charset=utf-8',
+            '',
+            body
+          ];
+          
+          const message = messageParts.join('\n');
+          const encodedMessage = Buffer.from(message).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+          // Send email via Gmail API
+          const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              raw: encodedMessage
+            })
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            console.error('Gmail API error:', error);
+            
+            if (response.status === 401) {
+              // Token expired, prompt for re-authorization
+              return res.status(401).json({ 
+                error: "Gmail authorization expired",
+                needsGmailAuth: true 
+              });
+            }
+            
+            throw new Error(error.error?.message || "Failed to send email");
+          }
+
+          const result = await response.json();
+          
+          // Save email application record
+          if (req.user && jobTitle && companyName) {
+            await storage.createEmailApplication({
+              userId: req.user.id,
+              jobTitle,
+              companyName,
+              companyEmail: to,
+              emailSubject: subject,
+              emailBody: body,
+              jobUrl,
+              companyWebsite,
+              gmailMessageId: result.id
+            });
+          }
+          
+          res.json({
+            success: true,
+            messageId: result.id,
+            message: "Email sent successfully via Gmail!",
+            sentViaGmail: true
+          });
+          
+        } catch (error) {
+          console.error("Error sending via Gmail:", error);
+          // Fall through to email client method
+        }
+      }
+      
+      // No Gmail credentials or sending failed - fall back to email client
       const draftId = `draft-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
-      // Save email application record
+      // Save email application record as draft
       if (req.user && jobTitle && companyName) {
-        try {
-          await storage.createEmailApplication({
-            userId: req.user.id,
-            jobTitle,
-            companyName,
-            companyEmail: to,
-            emailSubject: subject,
-            emailBody: body,
-            jobUrl,
-            companyWebsite,
-            gmailMessageId: draftId
-          });
-        } catch (error) {
-          console.error("Error saving email application:", error);
-        }
+        await storage.createEmailApplication({
+          userId: req.user.id,
+          jobTitle,
+          companyName,
+          companyEmail: to,
+          emailSubject: subject,
+          emailBody: body,
+          jobUrl,
+          companyWebsite,
+          gmailMessageId: draftId
+        });
       }
       
       // Convert HTML to plain text for email client
@@ -691,10 +832,8 @@ Format the email with proper structure including greeting, body paragraphs, and 
         .replace(/&#39;/g, "'")
         .trim();
       
-      // Create Gmail compose URL (works when user is logged into Gmail)
+      // Create compose URLs
       const gmailComposeUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(plainTextBody)}`;
-      
-      // Also create a generic mailto link as fallback
       const mailtoLink = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(plainTextBody.substring(0, 1900))}`;
       
       res.json({
@@ -703,6 +842,7 @@ Format the email with proper structure including greeting, body paragraphs, and 
         message: "Email draft created! Opening in your email client...",
         gmailComposeUrl: gmailComposeUrl,
         mailtoLink: mailtoLink,
+        needsGmailAuth: !gmailCredentials,
         emailContent: {
           to,
           subject,
@@ -712,8 +852,8 @@ Format the email with proper structure including greeting, body paragraphs, and 
       });
 
     } catch (error) {
-      console.error("Error creating email draft:", error);
-      res.status(500).json({ error: "Failed to create email draft" });
+      console.error("Error processing email:", error);
+      res.status(500).json({ error: "Failed to process email" });
     }
   });
 

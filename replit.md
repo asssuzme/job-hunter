@@ -10,16 +10,17 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-- **2025-08-03**: Fixed critical authentication issues:
+- **2025-08-03**: Fixed critical authentication issues and implemented Gmail OAuth integration:
   - Resolved database foreign key constraint violation by updating user upsert logic to preserve existing user IDs
   - Fixed infinite authentication loop by removing redundant auth state listeners
   - Simplified authentication flow to work properly with Supabase OAuth
   - Authentication now successfully syncs between Supabase and backend sessions
-  - Implemented Supabase-only email solution requiring SMTP configuration
-  - Created SMTP setup guide for enabling email sending through Supabase
-  - Authentication now successfully syncs between Supabase and backend sessions
-  - Implemented Supabase-only email solution requiring SMTP configuration
-  - Created SMTP setup guide for enabling email sending through Supabase
+  - Implemented hybrid authentication solution: Supabase for sign-in + Gmail OAuth for email sending
+  - Added Gmail credentials table and storage methods for managing Gmail tokens
+  - Created complete Gmail OAuth flow with authorization, callback handling, and token refresh
+  - Updated email sending to use Gmail API directly when user has authorized access
+  - Added Gmail authorization UI in email composer modal with clear user prompts
+  - Emails are now sent directly from users' personal Gmail accounts when authorized
 
 ## System Architecture
 
