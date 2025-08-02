@@ -133,6 +133,23 @@
     background-image: var(--gradient-accent);
   }
 
+  /* Grid pattern background */
+  .bg-grid-pattern {
+    background-image: 
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+
+  /* Radial gradient utilities */
+  .bg-gradient-radial {
+    background: radial-gradient(circle at center, var(--tw-gradient-from) 0%, var(--tw-gradient-to) 100%);
+  }
+
+  .bg-gradient-conic {
+    background: conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-from) 0deg, var(--tw-gradient-via) 180deg, var(--tw-gradient-to) 360deg);
+  }
+
   /* Modern button styles */
   .btn-primary {
     @apply relative overflow-hidden font-medium px-6 py-3 text-white rounded-xl;
