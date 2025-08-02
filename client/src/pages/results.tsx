@@ -160,6 +160,19 @@ export default function Results() {
   const canApplyJobs = enrichedJobs.filter((job: any) => job.canApply);
   const cannotApplyJobs = enrichedJobs.filter((job: any) => !job.canApply);
 
+  // Generate user-specific fake total jobs count above 1000
+  const generateUserJobCount = (userId: string) => {
+    let hash = 0;
+    for (let i = 0; i < userId.length; i++) {
+      hash = ((hash << 5) - hash) + userId.charCodeAt(i);
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    // Generate a number between 1000 and 9999
+    return 1000 + Math.abs(hash % 9000);
+  };
+
+  const fakeTotalJobs = user?.id ? generateUserJobCount(user.id) : 1247;
+
   return (
     <DashboardLayout user={user} onLogout={() => window.location.href = "/api/auth/logout"} title="Job Results">
       <motion.div
@@ -195,7 +208,7 @@ export default function Results() {
             >
               <div className="flex flex-col items-center text-center md:flex-row md:justify-between md:text-left">
                 <div>
-                  <p className="text-xl md:text-2xl font-bold text-primary">1,247</p>
+                  <p className="text-xl md:text-2xl font-bold text-primary">{fakeTotalJobs.toLocaleString()}</p>
                   <p className="text-xs md:text-sm text-muted-foreground">Total Jobs</p>
                 </div>
                 <Briefcase className="h-6 w-6 md:h-8 md:w-8 text-primary/20 hidden md:block" />
