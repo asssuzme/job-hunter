@@ -32,7 +32,7 @@ export default function Contact() {
                   <Mail className="h-5 w-5 text-primary" />
                   <div>
                     <h3 className="font-semibold">Email Support</h3>
-                    <p className="text-sm text-muted-foreground">support@jobhunter.app</p>
+                    <p className="text-sm text-muted-foreground">ashutoshlathvalo@gmail.com</p>
                   </div>
                 </div>
               </Card>
@@ -53,8 +53,10 @@ export default function Contact() {
                   <div>
                     <h3 className="font-semibold">Registered Office</h3>
                     <p className="text-sm text-muted-foreground">
-                      Bengaluru, Karnataka<br />
-                      India - 560001
+                      T19 TOWERS RANIGANJ FLAT NO 1004<br />
+                      10H FLOOR NEAR RANIGANJ BUS DEPOT<br />
+                      Hyderabad, Telangana<br />
+                      PIN: 500003
                     </p>
                   </div>
                 </div>
@@ -64,10 +66,10 @@ export default function Contact() {
                 <div className="flex items-center gap-3">
                   <Phone className="h-5 w-5 text-primary" />
                   <div>
-                    <h3 className="font-semibold">Business Hours</h3>
+                    <h3 className="font-semibold">Contact Number</h3>
                     <p className="text-sm text-muted-foreground">
-                      Mon-Fri: 9:00 AM - 6:00 PM IST<br />
-                      Sat: 10:00 AM - 4:00 PM IST
+                      +91 8302961924<br />
+                      Business Hours: Mon-Sat 9AM-6PM IST
                     </p>
                   </div>
                 </div>
@@ -108,10 +110,19 @@ export default function Contact() {
           <div className="glass-card p-8">
             <h2 className="text-2xl font-bold mb-6">Legal Information</h2>
             <div className="space-y-3 text-sm text-muted-foreground">
-              <p><strong>Company Name:</strong> JobHunter Technologies Private Limited</p>
-              <p><strong>Registration:</strong> Registered in Karnataka, India</p>
-              <p><strong>GST Number:</strong> [To be updated]</p>
-              <p><strong>PAN:</strong> [To be updated]</p>
+              <p><strong>Merchant Legal Entity Name:</strong> ASHUTOSH LATH</p>
+              <p><strong>Registered Address:</strong><br />
+                T19 TOWERS RANIGANJ FLAT NO 1004 10H FLOOR<br />
+                NEAR RANIGANJ BUS DEPOT<br />
+                Hyderabad, Telangana, PIN: 500003
+              </p>
+              <p><strong>Operational Address:</strong><br />
+                T19 TOWERS RANIGANJ FLAT NO 1004 10H FLOOR<br />
+                NEAR RANIGANJ BUS DEPOT<br />
+                Hyderabad, Telangana, PIN: 500003
+              </p>
+              <p><strong>Contact Number:</strong> +91 8302961924</p>
+              <p><strong>Email:</strong> ashutoshlathvalo@gmail.com</p>
             </div>
           </div>
         </motion.div>
