@@ -74,40 +74,55 @@ function AppContent() {
     const handleAuthCallback = async () => {
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const accessToken = hashParams.get('access_token');
+      const refreshToken = hashParams.get('refresh_token');
       
       if (accessToken) {
         console.log('Processing Supabase auth callback...');
-        // Get the session from Supabase
-        const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (session && !error) {
-          // Store the session in backend
-          try {
-            const response = await fetch('/api/auth/supabase/callback', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              credentials: 'include',
-              body: JSON.stringify({
-                userId: session.user.id,
-                email: session.user.email,
-                accessToken: session.provider_token,
-                refreshToken: session.provider_refresh_token,
-                userMetadata: session.user.user_metadata,
-              }),
-            });
+        // Set the session in Supabase using the tokens from the URL
+        const { data: { user }, error: userError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken || '',
+        });
+        
+        if (user && !userError) {
+          console.log('Supabase session set, user:', user.email);
+          
+          // Get the full session including provider tokens
+          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+          
+          if (session && !sessionError) {
+            // Store the session in backend
+            try {
+              const response = await fetch('/api/auth/supabase/callback', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                  userId: user.id,
+                  email: user.email,
+                  accessToken: session.provider_token || accessToken,
+                  refreshToken: session.provider_refresh_token || refreshToken,
+                  userMetadata: user.user_metadata,
+                }),
+              });
 
-            if (response.ok) {
-              // Clear the URL hash and reload
-              window.history.replaceState({}, document.title, window.location.pathname);
-              window.location.reload();
-            } else {
-              console.error('Failed to store auth session');
+              if (response.ok) {
+                console.log('Backend session stored successfully');
+                // Clear the URL hash and reload
+                window.history.replaceState({}, document.title, window.location.pathname);
+                window.location.reload();
+              } else {
+                console.error('Failed to store auth session:', await response.text());
+              }
+            } catch (err) {
+              console.error('Error processing auth callback:', err);
             }
-          } catch (err) {
-            console.error('Error processing auth callback:', err);
           }
+        } else {
+          console.error('Failed to set Supabase session:', userError);
         }
       }
     };
