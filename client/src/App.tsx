@@ -69,6 +69,67 @@ function Router() {
 }
 
 function AppContent() {
+  useEffect(() => {
+    // Handle Supabase auth callback when tokens are in URL fragment
+    const handleAuthCallback = async () => {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      
+      if (accessToken) {
+        console.log('Processing Supabase auth callback...');
+        // Get the session from Supabase
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (session && !error) {
+          // Store the session in backend
+          try {
+            const response = await fetch('/api/auth/supabase/callback', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              credentials: 'include',
+              body: JSON.stringify({
+                userId: session.user.id,
+                email: session.user.email,
+                accessToken: session.provider_token,
+                refreshToken: session.provider_refresh_token,
+                userMetadata: session.user.user_metadata,
+              }),
+            });
+
+            if (response.ok) {
+              // Clear the URL hash and reload
+              window.history.replaceState({}, document.title, window.location.pathname);
+              window.location.reload();
+            } else {
+              console.error('Failed to store auth session');
+            }
+          } catch (err) {
+            console.error('Error processing auth callback:', err);
+          }
+        }
+      }
+    };
+
+    handleAuthCallback();
+    
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state changed:', event);
+      if (event === 'SIGNED_IN' && session) {
+        // User signed in, reload to update UI
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
+      }
+    });
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
   return (
     <TooltipProvider>
       <Toaster />
