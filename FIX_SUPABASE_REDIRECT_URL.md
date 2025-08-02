@@ -18,8 +18,10 @@ The best solution is to update your Supabase project settings to redirect direct
 
 3. **Update the Redirect URLs**
    - Find the field "Redirect URLs"
-   - Change `http://localhost:3000/*` to `http://localhost:5000/*`
-   - Make sure to include the wildcard `/*` at the end
+   - Add BOTH of these URLs (one per line):
+     - `http://localhost:5000/*`
+     - `https://c05d4b50-6255-406b-853e-f8eff1ef387c-00-2171d433m1jzt.picard.replit.dev/*`
+   - Make sure to include the wildcard `/*` at the end of each URL
 
 4. **Save Changes**
    - Click "Save" to apply the changes
