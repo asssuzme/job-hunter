@@ -23,11 +23,14 @@ export const supabase = createClient(
 
 // Helper function to sign in with Google and request Gmail permissions
 export async function signInWithGoogle() {
+  // Get the current origin to ensure proper redirect
+  const currentOrigin = window.location.origin;
+  
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
       scopes: 'openid email profile https://www.googleapis.com/auth/gmail.send',
-      redirectTo: `${window.location.origin}/auth/callback`,
+      redirectTo: currentOrigin, // Redirect to the root URL where we'll handle the auth
       queryParams: {
         access_type: 'offline',
         prompt: 'consent',

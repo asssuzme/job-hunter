@@ -1,60 +1,54 @@
-# Fix Supabase Redirect URL
+# Fix Supabase Redirect URL - IMPORTANT UPDATE
 
-The error occurs because Supabase is redirecting to the wrong URL after Google login. Here's how to fix it:
+## The Issue
+Supabase is redirecting to `localhost:3000` instead of `localhost:5000` where your app runs.
 
-## UPDATE: The Code is Fixed!
+## IMMEDIATE FIX REQUIRED
 
-I've updated the app to handle OAuth redirects properly. The app will now:
-1. Detect when Supabase redirects to `localhost:5000/?code=...`
-2. Automatically process the authentication
-3. Save the session and redirect to the home page
+### 1. Update Supabase Dashboard Settings
 
-## Steps to Configure Supabase:
+**Go to Supabase Dashboard:**
+1. Visit https://supabase.com/dashboard
+2. Select your project
+3. Click **"Authentication"** → **"URL Configuration"**
 
-1. **Go to Supabase Dashboard**
-   - Visit https://supabase.com/dashboard
-   - Select your project
+### 2. Update ALL URLs to Port 5000
 
-2. **Navigate to Authentication Settings**
-   - Click "Authentication" in the left sidebar
-   - Click "URL Configuration"
+**Site URL:** (CRITICAL - This is causing the issue!)
+```
+http://localhost:5000
+```
 
-3. **Update Redirect URLs** (Add ALL of these):
-   ```
-   http://localhost:5000
-   http://localhost:5000/
-   http://localhost:5000/auth/callback
-   https://YOUR-APP-NAME.replit.app
-   https://YOUR-APP-NAME.replit.app/
-   https://YOUR-APP-NAME.replit.app/auth/callback
-   ```
-   - Replace YOUR-APP-NAME with your actual Replit app name
+**Redirect URLs:** (Add all of these)
+```
+http://localhost:5000
+http://localhost:5000/
+https://YOUR-REPLIT-USERNAME-YOUR-PROJECT-NAME.replit.app
+https://YOUR-REPLIT-USERNAME-YOUR-PROJECT-NAME.replit.app/
+```
 
-4. **Update Site URL** (Important!)
-   - In the same page, find "Site URL"
-   - Set it to: `http://localhost:5000`
-   - This is where users will be redirected after authentication
+Replace YOUR-REPLIT-USERNAME and YOUR-PROJECT-NAME with your actual values.
 
-5. **Save Changes**
-   - Click "Save" at the bottom of the page
+### 3. REMOVE any URLs with Port 3000
+- Delete any URLs containing `:3000`
+- These are causing the redirect issue
 
-## Test the Fix:
+### 4. Save Changes
+- Click **"Save"** at the bottom
 
-1. **Clear your browser cache** or use an incognito window
-2. Go to http://localhost:5000
-3. Click "Sign in with Google"
-4. Complete the Google login
-5. You should be automatically redirected and logged in
+## After Updating:
 
-## What Changed:
+1. **Clear browser data** for localhost
+2. Close all browser tabs with localhost
+3. Open a new tab and go to `http://localhost:5000`
+4. Try signing in again
 
-- App now detects OAuth callback parameters (`?code=...`) in the URL
-- Automatically processes the authentication when these parameters are present
-- Handles the redirect properly even when Supabase redirects to the root URL
+## Why This Happens:
+- Supabase defaults to port 3000 (common for React apps)
+- Your app runs on port 5000
+- The Site URL setting controls where users are redirected after authentication
 
-## If Still Having Issues:
-
-1. Check the browser console for any errors
-2. Make sure all redirect URLs are added in Supabase
-3. Ensure cookies are enabled in your browser
-4. Try a different browser or incognito mode
+## Code Updates Applied:
+- App now handles authentication directly on the main page
+- No separate callback route needed
+- Automatically processes OAuth tokens when detected

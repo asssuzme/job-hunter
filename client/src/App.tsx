@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/providers/theme-provider";
+import { useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 import Home from "@/pages/home";
 import Landing from "@/pages/landing";
 import Results from "@/pages/results";
@@ -23,14 +25,46 @@ import AuthCallback from "@/pages/auth-callback";
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
-  // Check if we have OAuth callback parameters in the URL
-  const urlParams = new URLSearchParams(window.location.search);
-  const hasAuthCode = urlParams.has('code');
-  
-  // If we have an auth code, render the AuthCallback component
-  if (hasAuthCode) {
-    return <AuthCallback />;
-  }
+  // Handle Supabase auth callback
+  useEffect(() => {
+    const handleAuthCallback = async () => {
+      try {
+        // Check if we're returning from an OAuth redirect
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const queryParams = new URLSearchParams(window.location.search);
+        
+        if (hashParams.get('access_token') || queryParams.get('code')) {
+          // Get the session from Supabase
+          const { data: { session }, error } = await supabase.auth.getSession();
+          
+          if (session && !error) {
+            // Store the session in our backend
+            await fetch('/api/auth/supabase/callback', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              credentials: 'include',
+              body: JSON.stringify({
+                userId: session.user.id,
+                email: session.user.email,
+                accessToken: session.provider_token,
+                refreshToken: session.provider_refresh_token,
+                userMetadata: session.user.user_metadata,
+              }),
+            });
+            
+            // Clean up the URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+        }
+      } catch (error) {
+        console.error('Error handling auth callback:', error);
+      }
+    };
+
+    handleAuthCallback();
+  }, []);
 
   if (isLoading) {
     return (
