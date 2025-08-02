@@ -87,79 +87,11 @@ export default function Landing() {
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-3"
           >
-            {/* Modern SaaS Logo with Neon Glow */}
-            <div className="relative group">
-              {/* Holographic glow effect */}
-              <div className="absolute -inset-2 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 rounded-lg blur-2xl opacity-60 group-hover:opacity-80 transition-all duration-500"></div>
-              
-              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="relative transition-all duration-300 group-hover:scale-105">
-                <defs>
-                  {/* Main gradient - purple to pink */}
-                  <linearGradient id="saasGradMain" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#7C3AED" />
-                    <stop offset="50%" stopColor="#A855F7" />
-                    <stop offset="100%" stopColor="#EC4899" />
-                  </linearGradient>
-                  
-                  {/* Electric blue accent */}
-                  <linearGradient id="saasGradBlue" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#0EA5E9" />
-                    <stop offset="100%" stopColor="#06B6D4" />
-                  </linearGradient>
-                  
-                  {/* Neon glow filter */}
-                  <filter id="neonGlow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
-                    <feMerge>
-                      <feMergeNode in="coloredBlur"/>
-                      <feMergeNode in="coloredBlur"/>
-                      <feMergeNode in="SourceGraphic"/>
-                    </feMerge>
-                  </filter>
-                  
-                  {/* Glassmorphism backdrop */}
-                  <filter id="glass">
-                    <feGaussianBlur in="SourceGraphic" stdDeviation="1"/>
-                  </filter>
-                </defs>
-                
-                {/* Glassmorphism background */}
-                <rect x="4" y="4" width="40" height="40" rx="12" fill="white" fillOpacity="0.05" filter="url(#glass)" />
-                <rect x="4" y="4" width="40" height="40" rx="12" stroke="url(#saasGradMain)" strokeWidth="1" fillOpacity="0" strokeOpacity="0.3" />
-                
-                {/* Futuristic Letter A with 3D depth */}
-                <g filter="url(#neonGlow)">
-                  {/* Shadow layer for 3D effect */}
-                  <path d="M24 10 L15 34 L19 34 L21 28 L27 28 L29 34 L33 34 L24 10 Z M22.5 24 L25.5 24 L24 18 L22.5 24 Z" 
-                        fill="#000000" 
-                        opacity="0.3"
-                        transform="translate(1, 1)" />
-                  
-                  {/* Main A shape */}
-                  <path d="M24 10 L15 34 L19 34 L21 28 L27 28 L29 34 L33 34 L24 10 Z M22.5 24 L25.5 24 L24 18 L22.5 24 Z" 
-                        fill="url(#saasGradMain)" />
-                  
-                  {/* Top accent line */}
-                  <line x1="20" y1="10" x2="28" y2="10" stroke="url(#saasGradBlue)" strokeWidth="2" strokeLinecap="round" />
-                  
-                  {/* Corner accents */}
-                  <circle cx="24" cy="10" r="2" fill="url(#saasGradBlue)" />
-                  <circle cx="15" cy="34" r="1.5" fill="url(#saasGradBlue)" opacity="0.8" />
-                  <circle cx="33" cy="34" r="1.5" fill="url(#saasGradBlue)" opacity="0.8" />
-                </g>
-                
-                {/* Holographic shimmer effect */}
-                <rect x="4" y="4" width="40" height="40" rx="12" 
-                      fill="url(#saasGradMain)" 
-                      fillOpacity="0.1" 
-                      className="animate-pulse" />
-              </svg>
-            </div>
-            
+            {/* Simple Text Logo */}
             <div className="flex items-center">
-              <span className="text-2xl font-black tracking-tight">
-                <span className="bg-gradient-to-r from-purple-600 via-purple-500 to-pink-500 bg-clip-text text-transparent">AUTOAPPLY</span>
-                <span className="text-cyan-400 font-black">.AI</span>
+              <span className="text-3xl font-black tracking-tight">
+                <span className="text-black">AUTOAPPLY</span>
+                <span className="text-blue-600">.AI</span>
               </span>
             </div>
           </motion.div>
