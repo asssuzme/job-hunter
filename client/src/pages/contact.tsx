@@ -68,7 +68,7 @@ export default function Contact() {
                   <div>
                     <h3 className="font-semibold">Contact Number</h3>
                     <p className="text-sm text-muted-foreground">
-                      +91 8302961924<br />
+                      +91 6302961924<br />
                       Business Hours: Mon-Sat 9AM-6PM IST
                     </p>
                   </div>
@@ -121,7 +121,7 @@ export default function Contact() {
                 NEAR RANIGANJ BUS DEPOT<br />
                 Hyderabad, Telangana, PIN: 500003
               </p>
-              <p><strong>Contact Number:</strong> +91 8302961924</p>
+              <p><strong>Contact Number:</strong> +91 6302961924</p>
               <p><strong>Email:</strong> ashutoshlathvalo@gmail.com</p>
             </div>
           </div>

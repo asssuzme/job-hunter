@@ -84,7 +84,7 @@ export default function PrivacyPolicy() {
               <p>If you have any questions about this Privacy Policy, please contact us at:</p>
               <div className="mt-2 space-y-1">
                 <p>Email: ashutoshlathvalo@gmail.com</p>
-                <p>Phone: +91 8302961924</p>
+                <p>Phone: +91 6302961924</p>
                 <p>Address: T19 TOWERS RANIGANJ FLAT NO 1004</p>
                 <p>10H FLOOR NEAR RANIGANJ BUS DEPOT</p>
                 <p>Hyderabad, Telangana, PIN: 500003</p>

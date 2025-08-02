@@ -28,7 +28,7 @@ Preferred communication style: Simple, everyday language.
 ### Legal Compliance Updates
 - **Updated Business Information**: Changed all contact details across the website to reflect actual business owner
   - Email: ashutoshlathvalo@gmail.com
-  - Phone: +91 8302961924
+  - Phone: +91 6302961924
   - Address: T19 TOWERS RANIGANJ, Hyderabad, Telangana, PIN: 500003
   - Legal Entity: ASHUTOSH LATH
 - **Terms & Conditions Update**: Replaced with official terms dated 02-08-2025 16:30:48
