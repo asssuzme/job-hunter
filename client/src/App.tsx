@@ -70,94 +70,40 @@ function Router() {
 
 function AppContent() {
   useEffect(() => {
-    // Log URL immediately
-    console.log('Current URL:', window.location.href);
-    console.log('URL hash:', window.location.hash);
-    
-    // Check if we have a Supabase session and sync it with backend
-    const syncSupabaseSession = async () => {
-      // First check for tokens in URL hash (in case Supabase hasn't processed them yet)
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const accessToken = hashParams.get('access_token');
-      const refreshToken = hashParams.get('refresh_token');
-      
-      console.log('Hash params:', {
-        hasAccessToken: !!accessToken,
-        hasRefreshToken: !!refreshToken,
-        accessTokenLength: accessToken?.length || 0
-      });
-      
-      if (accessToken && refreshToken) {
-        console.log('Found tokens in URL, setting Supabase session manually...');
-        
-        // Manually set the session from URL tokens
-        const { data, error: setError } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        });
-        
-        if (setError) {
-          console.error('Error setting session:', setError);
-          return;
-        }
-      }
-      
-      // Now get the session (either existing or just set)
-      const { data: { session }, error } = await supabase.auth.getSession();
-      console.log('Session check result:', { hasSession: !!session, error });
-      
-      if (session && !error) {
-        console.log('Supabase session found, syncing with backend...');
-        console.log('Session user:', session.user.email);
-        
-        // Check if backend already has this session
-        const authCheck = await fetch('/api/auth/user', { credentials: 'include' });
-        
-        if (!authCheck.ok) {
-          // Backend doesn't have the session, sync it
-          try {
-            const response = await fetch('/api/auth/supabase/callback', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              credentials: 'include',
-              body: JSON.stringify({
-                userId: session.user.id,
-                email: session.user.email,
-                accessToken: session.provider_token || accessToken,
-                refreshToken: session.provider_refresh_token || refreshToken,
-                userMetadata: session.user.user_metadata,
-              }),
-            });
-
-            if (response.ok) {
-              console.log('Backend session synced successfully');
-              // Clear the URL hash before reloading
-              window.history.replaceState({}, document.title, window.location.pathname);
-              window.location.reload();
-            } else {
-              console.error('Failed to sync session:', await response.text());
-            }
-          } catch (err) {
-            console.error('Error syncing session:', err);
-          }
-        }
-      } else {
-        console.log('No Supabase session found');
-      }
-    };
-    
-    // Initial sync check
-    syncSupabaseSession();
-    
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event);
       
-      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
+      if (event === 'SIGNED_IN' && session) {
         // Sync the new session with backend
-        await syncSupabaseSession();
+        try {
+          const response = await fetch('/api/auth/supabase/callback', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              userId: session.user.id,
+              email: session.user.email,
+              accessToken: session.provider_token,
+              refreshToken: session.provider_refresh_token,
+              userMetadata: session.user.user_metadata,
+            }),
+          });
+
+          if (response.ok) {
+            console.log('Backend session synced successfully');
+            // Redirect to home if we're on the callback page
+            if (window.location.pathname === '/auth/callback') {
+              window.location.href = '/';
+            } else {
+              window.location.reload();
+            }
+          }
+        } catch (err) {
+          console.error('Error syncing session:', err);
+        }
       } else if (event === 'SIGNED_OUT') {
         // Clear backend session
         await fetch('/api/auth/logout', { 

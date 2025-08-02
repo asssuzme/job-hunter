@@ -15,7 +15,7 @@ export const supabase = createClient(
     auth: {
       autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUrl: false, // Disable automatic detection - we'll handle it manually
+      detectSessionInUrl: true, // Enable automatic detection
       flowType: 'implicit', // Use implicit flow to get tokens immediately
     },
   }
