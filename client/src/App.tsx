@@ -12,6 +12,11 @@ import Applications from "@/pages/applications";
 import Analytics from "@/pages/analytics";
 import Settings from "@/pages/settings";
 import Subscribe from "@/pages/subscribe";
+import PrivacyPolicy from "@/pages/privacy-policy";
+import TermsOfService from "@/pages/terms-of-service";
+import RefundPolicy from "@/pages/refund-policy";
+import Contact from "@/pages/contact";
+import Sitemap from "@/pages/sitemap";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -45,6 +50,12 @@ function Router() {
           <Route path="/" component={Landing} />
         </>
       )}
+      {/* Policy pages accessible to all */}
+      <Route path="/privacy-policy" component={PrivacyPolicy} />
+      <Route path="/terms-of-service" component={TermsOfService} />
+      <Route path="/refund-policy" component={RefundPolicy} />
+      <Route path="/contact" component={Contact} />
+      <Route path="/sitemap" component={Sitemap} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { CheckCircle, CreditCard, Shield, Zap, IndianRupee } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import Footer from "@/components/footer";
 
 export default function Subscribe() {
   const { user } = useAuth();

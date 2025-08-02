@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles, Search, Mail, Users, BarChart3, Target, Zap } from "lucide-react";
+import Footer from "@/components/footer";
 
 export default function Landing() {
   const { isLoading } = useAuth();
@@ -213,6 +214,9 @@ export default function Landing() {
           </motion.div>
         </motion.div>
       </div>
+      
+      {/* Footer with policy links */}
+      <Footer />
     </div>
   );
 }
