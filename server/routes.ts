@@ -639,7 +639,7 @@ Format the email with proper structure including greeting, body paragraphs, and 
     }
   });
 
-  // Send email via Gmail API
+  // Send email via SendGrid
   app.post("/api/send-email", isAuthenticated, async (req: any, res) => {
     try {
       const { 
@@ -653,95 +653,36 @@ Format the email with proper structure including greeting, body paragraphs, and 
         companyWebsite
       } = req.body;
 
-      let googleAccessToken = req.session?.googleAccessToken;
-      const googleRefreshToken = req.session?.googleRefreshToken;
-      
-      if (!googleAccessToken) {
-        return res.status(401).json({ error: "No Gmail access token found. Please re-authenticate." });
+      // Import SendGrid function
+      const { sendEmailWithSendGrid } = await import('./sendgrid');
+
+      // Get user email to use as sender
+      const fromEmail = req.user?.email;
+      if (!fromEmail) {
+        return res.status(400).json({ error: "User email not found" });
       }
 
-      // Create email message in RFC 2822 format
-      const messageParts = [
-        `To: ${to}`,
-        `Subject: ${subject}`,
-        'MIME-Version: 1.0',
-        'Content-Type: text/html; charset=utf-8',
-        '',
-        body
-      ];
-      
-      const message = messageParts.join('\n');
-      const encodedMessage = Buffer.from(message).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-
-      // Try to send email
-      let response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${googleAccessToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          raw: encodedMessage
-        })
+      // Send email using SendGrid
+      const emailResult = await sendEmailWithSendGrid({
+        to,
+        from: fromEmail,
+        subject,
+        html: body
       });
 
-      // If token expired, try to refresh it
-      if (response.status === 401) {
-        console.log('Gmail API returned 401, checking refresh token...');
-        console.log('Has refresh token:', !!googleRefreshToken);
+      if (!emailResult.success) {
+        console.error('SendGrid error:', emailResult.error);
         
-        if (!googleRefreshToken) {
-          console.error('No refresh token available');
-          return res.status(401).json({ error: "No refresh token available. Please sign in again." });
-        }
-        
-        console.log('Access token expired, attempting to refresh...');
-        
-        const newTokens = await refreshGoogleToken(googleRefreshToken);
-        console.log('Refresh response:', newTokens ? 'Success' : 'Failed');
-        
-        if (newTokens && newTokens.access_token) {
-          // Update session with new access token
-          req.session!.googleAccessToken = newTokens.access_token;
-          if (newTokens.refresh_token) {
-            req.session!.googleRefreshToken = newTokens.refresh_token;
-          }
-          
-          // Save session
-          await new Promise((resolve) => req.session!.save(resolve));
-          
-          googleAccessToken = newTokens.access_token;
-          console.log('Token refreshed successfully, retrying email send...');
-          
-          // Retry with new token
-          response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${googleAccessToken}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              raw: encodedMessage
-            })
+        // Check if it's an API key issue
+        if (emailResult.error === 'SendGrid API key not configured') {
+          return res.status(503).json({ 
+            error: "Email service not configured. Please contact support.",
+            details: "SendGrid API key missing"
           });
-        } else {
-          console.error('Failed to refresh token');
-          return res.status(401).json({ error: "Failed to refresh authentication. Please sign in again." });
-        }
-      }
-
-      if (!response.ok) {
-        const error = await response.json();
-        console.error('Gmail API error:', error);
-        
-        if (response.status === 401) {
-          return res.status(401).json({ error: "Authentication failed. Please sign in again." });
         }
         
-        return res.status(response.status).json({ error: error.error?.message || "Failed to send email" });
+        return res.status(400).json({ error: emailResult.error });
       }
-
-      const result = await response.json();
       
       // Save email application record
       if (req.user && jobTitle && companyName) {
@@ -755,7 +696,7 @@ Format the email with proper structure including greeting, body paragraphs, and 
             emailBody: body,
             jobUrl,
             companyWebsite,
-            gmailMessageId: result.id
+            gmailMessageId: emailResult.messageId || 'sendgrid-sent'
           });
         } catch (error) {
           console.error("Error saving email application:", error);
@@ -765,7 +706,7 @@ Format the email with proper structure including greeting, body paragraphs, and 
       
       res.json({
         success: true,
-        messageId: result.id,
+        messageId: emailResult.messageId,
         message: "Email sent successfully!"
       });
 
