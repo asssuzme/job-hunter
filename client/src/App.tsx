@@ -72,10 +72,33 @@ function AppContent() {
   useEffect(() => {
     // Check if we have a Supabase session and sync it with backend
     const syncSupabaseSession = async () => {
+      // First check for tokens in URL hash (in case Supabase hasn't processed them yet)
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      const refreshToken = hashParams.get('refresh_token');
+      
+      if (accessToken && refreshToken) {
+        console.log('Found tokens in URL, setting Supabase session manually...');
+        
+        // Manually set the session from URL tokens
+        const { data, error: setError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+        
+        if (setError) {
+          console.error('Error setting session:', setError);
+          return;
+        }
+      }
+      
+      // Now get the session (either existing or just set)
       const { data: { session }, error } = await supabase.auth.getSession();
+      console.log('Session check result:', { hasSession: !!session, error });
       
       if (session && !error) {
         console.log('Supabase session found, syncing with backend...');
+        console.log('Session user:', session.user.email);
         
         // Check if backend already has this session
         const authCheck = await fetch('/api/auth/user', { credentials: 'include' });
@@ -92,14 +115,16 @@ function AppContent() {
               body: JSON.stringify({
                 userId: session.user.id,
                 email: session.user.email,
-                accessToken: session.provider_token,
-                refreshToken: session.provider_refresh_token,
+                accessToken: session.provider_token || accessToken,
+                refreshToken: session.provider_refresh_token || refreshToken,
                 userMetadata: session.user.user_metadata,
               }),
             });
 
             if (response.ok) {
               console.log('Backend session synced successfully');
+              // Clear the URL hash before reloading
+              window.history.replaceState({}, document.title, window.location.pathname);
               window.location.reload();
             } else {
               console.error('Failed to sync session:', await response.text());
@@ -108,6 +133,8 @@ function AppContent() {
             console.error('Error syncing session:', err);
           }
         }
+      } else {
+        console.log('No Supabase session found');
       }
     };
     
