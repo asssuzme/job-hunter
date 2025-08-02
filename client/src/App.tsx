@@ -18,6 +18,7 @@ import RefundPolicy from "@/pages/refund-policy";
 import Contact from "@/pages/contact";
 import Sitemap from "@/pages/sitemap";
 import NotFound from "@/pages/not-found";
+import AuthCallback from "@/pages/auth-callback";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -50,6 +51,8 @@ function Router() {
           <Route path="/" component={Landing} />
         </>
       )}
+      {/* Auth callback route */}
+      <Route path="/auth/callback" component={AuthCallback} />
       {/* Policy pages accessible to all */}
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms-of-service" component={TermsOfService} />
@@ -61,14 +64,20 @@ function Router() {
   );
 }
 
+function AppContent() {
+  return (
+    <TooltipProvider>
+      <Toaster />
+      <Router />
+    </TooltipProvider>
+  );
+}
+
 function App() {
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <AppContent />
       </QueryClientProvider>
     </ThemeProvider>
   );

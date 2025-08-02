@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupSimpleGoogleAuth, isSimpleAuthenticated } from "./simpleGoogleAuth";
+import { setupSupabaseAuth, isAuthenticated } from "./supabaseAuth";
 import { setupAuthDiagnostics } from "./authDiagnostics";
 import { 
   insertJobScrapingRequestSchema, 
@@ -53,26 +53,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(getSession());
   
   // Auth middleware
-  setupSimpleGoogleAuth(app);
+  setupSupabaseAuth(app);
   
   // Setup auth diagnostics
   setupAuthDiagnostics(app);
 
-  // Auth routes
-  app.get('/api/auth/user', (req: any, res) => {
-    if (req.user) {
-      res.json({
-        ...req.user,
-        googleAccessToken: req.session?.googleAccessToken,
-        hasRefreshToken: !!req.session?.googleRefreshToken
-      });
-    } else {
-      res.status(401).json({ message: "Unauthorized" });
-    }
-  });
+  // Auth routes are handled in supabaseAuth.ts
 
   // Dashboard stats endpoint
-  app.get('/api/dashboard/stats', isSimpleAuthenticated, async (req: any, res) => {
+  app.get('/api/dashboard/stats', isAuthenticated, async (req: any, res) => {
     try {
       const user = req.user;
       const stats = await storage.getDashboardStats(user.id);
@@ -84,7 +73,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Analytics endpoint with real data
-  app.get('/api/analytics/stats', isSimpleAuthenticated, async (req: any, res) => {
+  app.get('/api/analytics/stats', isAuthenticated, async (req: any, res) => {
     try {
       const user = req.user;
       
@@ -139,7 +128,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get email applications endpoint
-  app.get('/api/email-applications', isSimpleAuthenticated, async (req: any, res) => {
+  app.get('/api/email-applications', isAuthenticated, async (req: any, res) => {
     try {
       const user = req.user;
       const applications = await storage.getEmailApplicationsByUser(user.id);
@@ -151,7 +140,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create a new job scraping request (now requires authentication)
-  app.post("/api/scrape-job", isSimpleAuthenticated, async (req: any, res) => {
+  app.post("/api/scrape-job", isAuthenticated, async (req: any, res) => {
     try {
       // Validate the request body
       const validation = linkedinUrlSchema.safeParse(req.body);
@@ -187,7 +176,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user's scraping requests
-  app.get("/api/scrape-jobs", isSimpleAuthenticated, async (req: any, res) => {
+  app.get("/api/scrape-jobs", isAuthenticated, async (req: any, res) => {
     try {
       const user = req.user;
       const requests = await storage.getJobScrapingRequestsByUser(user.id);
@@ -199,7 +188,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get scraping request status and results
-  app.get("/api/scrape-job/:id", isSimpleAuthenticated, async (req: any, res) => {
+  app.get("/api/scrape-job/:id", isAuthenticated, async (req: any, res) => {
     try {
       const { id } = req.params;
       const request = await storage.getJobScrapingRequest(id);
@@ -216,7 +205,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Cancel a scraping request
-  app.post("/api/scrape-job/:id/cancel", isSimpleAuthenticated, async (req: any, res) => {
+  app.post("/api/scrape-job/:id/cancel", isAuthenticated, async (req: any, res) => {
     try {
       const { id } = req.params;
       const request = await storage.getJobScrapingRequest(id);
@@ -238,7 +227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Check if user has a resume
-  app.get("/api/user/resume", isSimpleAuthenticated, async (req: any, res) => {
+  app.get("/api/user/resume", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.id;
       console.log("Get resume - User ID:", userId);
@@ -264,7 +253,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Upload resume endpoint
-  app.post("/api/upload-resume", isSimpleAuthenticated, upload.single("file"), async (req: any, res) => {
+  app.post("/api/upload-resume", isAuthenticated, upload.single("file"), async (req: any, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
@@ -329,7 +318,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Parse PDF file to extract text
-  app.post("/api/parse-pdf", isSimpleAuthenticated, upload.single("file"), async (req: any, res) => {
+  app.post("/api/parse-pdf", isAuthenticated, upload.single("file"), async (req: any, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
@@ -377,7 +366,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Generate LinkedIn search URL using OpenAI
-  app.post("/api/generate-linkedin-url", isSimpleAuthenticated, async (req: any, res) => {
+  app.post("/api/generate-linkedin-url", isAuthenticated, async (req: any, res) => {
     try {
       const { keyword, location, workType } = req.body;
       
@@ -563,7 +552,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Generate application email using OpenAI
-  app.post("/api/generate-email", isSimpleAuthenticated, async (req, res) => {
+  app.post("/api/generate-email", isAuthenticated, async (req, res) => {
     try {
       const { 
         companyData, 
@@ -657,7 +646,7 @@ Format the email with proper structure including greeting, body paragraphs, and 
   });
 
   // Send email via Gmail API
-  app.post("/api/send-email", isSimpleAuthenticated, async (req: any, res) => {
+  app.post("/api/send-email", isAuthenticated, async (req: any, res) => {
     try {
       const { 
         to, 
@@ -810,7 +799,7 @@ Format the email with proper structure including greeting, body paragraphs, and 
   });
   
   // Cashfree payment session endpoint
-  app.post('/api/create-subscription', isSimpleAuthenticated, async (req: any, res) => {
+  app.post('/api/create-subscription', isAuthenticated, async (req: any, res) => {
     const user = req.user;
 
     try {
@@ -963,7 +952,7 @@ Format the email with proper structure including greeting, body paragraphs, and 
   });
 
   // Check subscription status
-  app.get('/api/subscription-status', isSimpleAuthenticated, async (req: any, res) => {
+  app.get('/api/subscription-status', isAuthenticated, async (req: any, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
@@ -982,7 +971,7 @@ Format the email with proper structure including greeting, body paragraphs, and 
   });
   
   // Temporary subscription activation endpoint (bypasses payment for testing)
-  app.post("/api/payment/activate-subscription", isSimpleAuthenticated, async (req: any, res) => {
+  app.post("/api/payment/activate-subscription", isAuthenticated, async (req: any, res) => {
     try {
       if (!req.user) {
         return res.status(401).json({ error: 'Unauthorized' });

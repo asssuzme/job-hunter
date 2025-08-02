@@ -4,9 +4,25 @@ import { motion } from "framer-motion";
 import { ArrowRight, Sparkles, Search, Mail, Users, BarChart3, Target, Zap, Globe, Shield, CheckCircle, Star, TrendingUp, Briefcase, Brain, Clock, Award } from "lucide-react";
 import Footer from "@/components/footer";
 import { Badge } from "@/components/ui/badge";
+import { signInWithGoogle } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Landing() {
   const { isLoading } = useAuth();
+  const { toast } = useToast();
+
+  const handleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      console.error('Error signing in:', error);
+      toast({
+        title: "Sign in failed",
+        description: "Unable to sign in with Google. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -107,7 +123,7 @@ export default function Landing() {
               Pricing
             </Button>
             <Button
-              onClick={() => window.location.href = '/api/auth/google/simple'}
+              onClick={handleSignIn}
               className="btn-primary"
             >
               Get Started
@@ -165,7 +181,7 @@ export default function Landing() {
               className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12"
             >
               <button
-                onClick={() => window.location.href = '/api/auth/google/simple'}
+                onClick={handleSignIn}
                 className="btn-primary text-lg px-8 py-4 group flex items-center gap-3"
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24">
