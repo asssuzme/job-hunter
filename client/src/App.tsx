@@ -69,37 +69,8 @@ function Router() {
 }
 
 function AppContent() {
-  useEffect(() => {
-    // Simple auth state handler
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event);
-      
-      if (event === 'SIGNED_IN' && session) {
-        // Sync with backend
-        try {
-          await fetch('/api/auth/supabase/callback', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-              userId: session.user.id,
-              email: session.user.email,
-              accessToken: session.provider_token,
-              refreshToken: session.provider_refresh_token,
-              userMetadata: session.user.user_metadata,
-            }),
-          });
-          
-          // Always reload to refresh UI
-          window.location.reload();
-        } catch (err) {
-          console.error('Error syncing session:', err);
-        }
-      }
-    });
-    
-    return () => subscription.unsubscribe();
-  }, []);
+  // No need for auth state listener here - it's causing infinite loops
+  // The auth callback page handles the authentication
 
   return (
     <TooltipProvider>

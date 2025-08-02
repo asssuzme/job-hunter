@@ -8,28 +8,47 @@ export default function AuthCallback() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simple callback handler - Supabase will handle the tokens automatically
-    console.log('Auth callback page loaded');
-    
-    // Give Supabase a moment to process the tokens
-    const timer = setTimeout(() => {
-      // Check if we have a session
-      supabase.auth.getSession().then(({ data: { session }, error }) => {
-        if (error) {
-          console.error('Auth callback error:', error);
-          setError(error.message);
-          setTimeout(() => setLocation('/'), 2000);
-        } else if (session) {
-          console.log('Session found, redirecting to home...');
-          window.location.href = '/';
+    const handleCallback = async () => {
+      try {
+        // Get the session from Supabase
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) throw sessionError;
+        
+        if (session) {
+          // Sync with backend once
+          const response = await fetch('/api/auth/supabase/callback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              userId: session.user.id,
+              email: session.user.email,
+              accessToken: session.provider_token,
+              refreshToken: session.provider_refresh_token,
+              userMetadata: session.user.user_metadata,
+            }),
+          });
+          
+          if (response.ok) {
+            // Success! Redirect to home
+            window.location.href = '/';
+          } else {
+            throw new Error('Failed to sync session with backend');
+          }
         } else {
-          console.log('No session found, redirecting to home...');
+          // No session, redirect to home
           setLocation('/');
         }
-      });
-    }, 1000); // Wait 1 second for Supabase to process
-
-    return () => clearTimeout(timer);
+      } catch (err) {
+        console.error('Auth callback error:', err);
+        setError(err instanceof Error ? err.message : 'Authentication failed');
+        setTimeout(() => setLocation('/'), 2000);
+      }
+    };
+    
+    // Wait a bit for Supabase to process the URL tokens
+    setTimeout(handleCallback, 500);
   }, [setLocation]);
 
   if (error) {
