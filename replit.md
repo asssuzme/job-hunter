@@ -10,7 +10,11 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-- **2025-08-03**: Fixed Supabase OAuth authentication redirect issue by implementing HTTP redirect server on port 3000 that forwards to port 5000 where the application runs. This solves the issue where Supabase is configured to redirect to localhost:3000 after OAuth.
+- **2025-08-03**: Fixed critical authentication issues:
+  - Resolved database foreign key constraint violation by updating user upsert logic to preserve existing user IDs
+  - Fixed infinite authentication loop by removing redundant auth state listeners
+  - Simplified authentication flow to work properly with Supabase OAuth
+  - Authentication now successfully syncs between Supabase and backend sessions
 
 ## System Architecture
 
