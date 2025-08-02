@@ -854,7 +854,8 @@ Format the email with proper structure including greeting, body paragraphs, and 
       });
       
       // The correct payment link format for Cashfree hosted checkout
-      const paymentLink = cashfreeOrder.payment_link || `https://payments-test.cashfree.com/order/${cashfreeOrder.order_token}`;
+      // According to Cashfree docs, we need to create a payment link using the payment_session_id
+      const paymentLink = `https://sandbox.cashfree.com/pg/view/session/${cashfreeOrder.payment_session_id}`;
       console.log("Generated payment link:", paymentLink);
       console.log("Full Cashfree response:", JSON.stringify(cashfreeOrder, null, 2));
       
