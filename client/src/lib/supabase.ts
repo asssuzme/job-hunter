@@ -23,10 +23,15 @@ export const supabase = createClient(
 
 // Sign in with Google using Supabase
 export async function signInWithGoogle() {
+  // For development, ensure we use the correct port
+  const origin = window.location.hostname === 'localhost' 
+    ? 'http://localhost:5000' 
+    : window.location.origin;
+    
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${window.location.origin}/auth/callback`,
+      redirectTo: `${origin}/auth/callback`,
       queryParams: {
         access_type: 'offline',
         prompt: 'consent',

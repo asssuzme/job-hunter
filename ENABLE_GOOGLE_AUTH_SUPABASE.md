@@ -41,10 +41,21 @@ To fix the "Unsupported provider: provider is not enabled" error, you need to en
    - After saving in Supabase, you'll see the exact callback URL
    - Add this URL to your Google OAuth app's authorized redirect URIs
 
+8. **IMPORTANT: Configure Site URL in Supabase**
+   - In Supabase Dashboard, go to "Authentication" → "URL Configuration"
+   - Update the following settings:
+     - **Site URL**: `http://localhost:5000` (for development)
+     - **Redirect URLs** (add all of these):
+       - `http://localhost:5000/auth/callback`
+       - `https://service-genie-ashutoshlathrep.replit.app/auth/callback`
+       - `https://*.replit.dev/auth/callback` (for Replit dev URLs)
+   - Click "Save"
+
 ## Important Notes:
 
 - The callback URL format is: `https://[YOUR-PROJECT-REF].supabase.co/auth/v1/callback`
+- **Critical**: The Site URL must be `http://localhost:5000` for local development (not 3000!)
 - Make sure to save both the Supabase settings and update Google OAuth settings
 - It may take a few minutes for the changes to propagate
 
-Once you've enabled Google authentication in Supabase, the "Continue with Google" button should work properly.
+Once you've enabled Google authentication in Supabase and configured the correct URLs, the "Continue with Google" button should work properly.
