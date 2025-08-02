@@ -639,7 +639,7 @@ Format the email with proper structure including greeting, body paragraphs, and 
     }
   });
 
-  // Send email using Supabase (requires SMTP configuration)
+  // Create email draft that opens in user's email client
   app.post("/api/send-email", isAuthenticated, async (req: any, res) => {
     try {
       const { 
@@ -653,21 +653,13 @@ Format the email with proper structure including greeting, body paragraphs, and 
         companyWebsite
       } = req.body;
 
-      // Import Supabase email function
-      const { sendEmailWithSupabase } = await import('./supabaseEmail');
-
-      // Get user email to use as sender
-      const fromEmail = req.user?.email || 'noreply@autoapply.ai';
-
-      // Try to send email using Supabase
-      const emailResult = await sendEmailWithSupabase({
-        to,
-        from: fromEmail,
-        subject,
-        html: body
-      });
-
-      // Save email application record regardless of send status
+      // Since we can't send from user's email via Supabase,
+      // we'll create a draft and open it in their email client
+      
+      // Generate a unique draft ID
+      const draftId = `draft-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Save email application record
       if (req.user && jobTitle && companyName) {
         try {
           await storage.createEmailApplication({
@@ -679,35 +671,49 @@ Format the email with proper structure including greeting, body paragraphs, and 
             emailBody: body,
             jobUrl,
             companyWebsite,
-            gmailMessageId: emailResult.messageId || `email-${Date.now()}`
+            gmailMessageId: draftId
           });
         } catch (error) {
           console.error("Error saving email application:", error);
         }
       }
-
-      if (!emailResult.success) {
-        // Check if it's an SMTP configuration issue
-        if (emailResult.error?.includes('SMTP')) {
-          return res.status(503).json({ 
-            error: emailResult.error,
-            requiresConfig: true,
-            instructions: "To enable email sending, configure SMTP in your Supabase project: Dashboard → Settings → Auth → SMTP Settings"
-          });
-        }
-        
-        return res.status(400).json({ error: emailResult.error });
-      }
+      
+      // Convert HTML to plain text for email client
+      const plainTextBody = body
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/p>/gi, '\n\n')
+        .replace(/<[^>]*>/g, '')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .trim();
+      
+      // Create Gmail compose URL (works when user is logged into Gmail)
+      const gmailComposeUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(plainTextBody)}`;
+      
+      // Also create a generic mailto link as fallback
+      const mailtoLink = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(plainTextBody.substring(0, 1900))}`;
       
       res.json({
         success: true,
-        messageId: emailResult.messageId,
-        message: "Email sent successfully!"
+        draftId: draftId,
+        message: "Email draft created! Opening in your email client...",
+        gmailComposeUrl: gmailComposeUrl,
+        mailtoLink: mailtoLink,
+        emailContent: {
+          to,
+          subject,
+          body,
+          plainTextBody
+        }
       });
 
     } catch (error) {
-      console.error("Error sending email:", error);
-      res.status(500).json({ error: "Failed to send email" });
+      console.error("Error creating email draft:", error);
+      res.status(500).json({ error: "Failed to create email draft" });
     }
   });
 

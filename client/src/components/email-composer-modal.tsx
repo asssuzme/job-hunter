@@ -73,9 +73,18 @@ export function EmailComposerModal({
     },
     onSuccess: (data) => {
       if (data.success) {
+        // Open email in user's email client
+        if (data.gmailComposeUrl) {
+          // Try Gmail compose first (works if user is logged into Gmail)
+          window.open(data.gmailComposeUrl, '_blank');
+        } else if (data.mailtoLink) {
+          // Fallback to mailto link
+          window.location.href = data.mailtoLink;
+        }
+        
         toast({
-          title: "Email sent successfully!",
-          description: `Your application has been sent to ${recipientEmail}`,
+          title: "Email draft created!",
+          description: "Opening in your email client. Please send the email from there.",
         });
         onClose();
       }
