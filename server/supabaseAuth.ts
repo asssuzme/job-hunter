@@ -17,12 +17,13 @@ interface AuthRequest extends Request {
 
 export function setupSupabaseAuth(app: Express) {
   // Middleware to check if user is authenticated
-  app.use(async (req: AuthRequest, res, next) => {
-    if (req.session?.userId) {
+  app.use(async (req: Request, res: Response, next: NextFunction) => {
+    const authReq = req as AuthRequest;
+    if (authReq.session?.userId) {
       try {
-        const user = await storage.getUser(req.session.userId);
+        const user = await storage.getUser(authReq.session.userId);
         if (user) {
-          req.user = user;
+          authReq.user = user;
         }
       } catch (error) {
         console.error('Error fetching user:', error);
@@ -32,7 +33,8 @@ export function setupSupabaseAuth(app: Express) {
   });
 
   // Handle Supabase authentication callback
-  app.post('/api/auth/supabase/callback', async (req: AuthRequest, res: Response) => {
+  app.post('/api/auth/supabase/callback', async (req: Request, res: Response) => {
+    const authReq = req as AuthRequest;
     try {
       const { userId, email, accessToken, refreshToken, userMetadata } = req.body;
 
@@ -50,12 +52,12 @@ export function setupSupabaseAuth(app: Express) {
       });
 
       // Store session data
-      req.session.userId = userId;
-      req.session.googleAccessToken = accessToken;
-      req.session.googleRefreshToken = refreshToken;
+      authReq.session.userId = userId;
+      authReq.session.googleAccessToken = accessToken;
+      authReq.session.googleRefreshToken = refreshToken;
 
       // Save session
-      req.session.save((err) => {
+      authReq.session.save((err) => {
         if (err) {
           console.error('Error saving session:', err);
           return res.status(500).json({ error: 'Failed to save session' });
@@ -69,15 +71,16 @@ export function setupSupabaseAuth(app: Express) {
   });
 
   // Get current user endpoint
-  app.get('/api/auth/user', async (req: AuthRequest, res: Response) => {
-    if (!req.user) {
+  app.get('/api/auth/user', async (req: Request, res: Response) => {
+    const authReq = req as AuthRequest;
+    if (!authReq.user) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
-    res.json(req.user);
+    res.json(authReq.user);
   });
 
   // Logout endpoint
-  app.post('/api/auth/logout', (req: AuthRequest, res: Response) => {
+  app.post('/api/auth/logout', (req: Request, res: Response) => {
     req.session.destroy((err) => {
       if (err) {
         console.error('Error destroying session:', err);
@@ -90,8 +93,9 @@ export function setupSupabaseAuth(app: Express) {
 }
 
 // Middleware to protect routes
-export const isAuthenticated = (req: AuthRequest, res: Response, next: NextFunction) => {
-  if (!req.user) {
+export const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
+  const authReq = req as AuthRequest;
+  if (!authReq.user) {
     return res.status(401).json({ message: 'Unauthorized' });
   }
   next();

@@ -23,6 +23,15 @@ import AuthCallback from "@/pages/auth-callback";
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
+  // Check if we have OAuth callback parameters in the URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const hasAuthCode = urlParams.has('code');
+  
+  // If we have an auth code, render the AuthCallback component
+  if (hasAuthCode) {
+    return <AuthCallback />;
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">

@@ -2,7 +2,14 @@
 
 The error occurs because Supabase is redirecting to the wrong URL after Google login. Here's how to fix it:
 
-## Steps to Fix:
+## UPDATE: The Code is Fixed!
+
+I've updated the app to handle OAuth redirects properly. The app will now:
+1. Detect when Supabase redirects to `localhost:5000/?code=...`
+2. Automatically process the authentication
+3. Save the session and redirect to the home page
+
+## Steps to Configure Supabase:
 
 1. **Go to Supabase Dashboard**
    - Visit https://supabase.com/dashboard
@@ -12,11 +19,13 @@ The error occurs because Supabase is redirecting to the wrong URL after Google l
    - Click "Authentication" in the left sidebar
    - Click "URL Configuration"
 
-3. **Update Redirect URLs**
-   - Find the "Redirect URLs" section
-   - Add these URLs (remove any existing incorrect ones):
+3. **Update Redirect URLs** (Add ALL of these):
    ```
+   http://localhost:5000
+   http://localhost:5000/
    http://localhost:5000/auth/callback
+   https://YOUR-APP-NAME.replit.app
+   https://YOUR-APP-NAME.replit.app/
    https://YOUR-APP-NAME.replit.app/auth/callback
    ```
    - Replace YOUR-APP-NAME with your actual Replit app name
@@ -29,18 +38,23 @@ The error occurs because Supabase is redirecting to the wrong URL after Google l
 5. **Save Changes**
    - Click "Save" at the bottom of the page
 
-## Why This Happens:
+## Test the Fix:
 
-- Supabase needs to know where to redirect users after authentication
-- The current redirect is going to `localhost:5000/?code=...` which Safari can't handle
-- We need it to go to `localhost:5000/auth/callback` where our app can process the login
+1. **Clear your browser cache** or use an incognito window
+2. Go to http://localhost:5000
+3. Click "Sign in with Google"
+4. Complete the Google login
+5. You should be automatically redirected and logged in
 
-## After Making These Changes:
+## What Changed:
 
-1. Try logging in again with Google
-2. You should be redirected to the callback page and then to the app home page
-3. The authentication should complete successfully
+- App now detects OAuth callback parameters (`?code=...`) in the URL
+- Automatically processes the authentication when these parameters are present
+- Handles the redirect properly even when Supabase redirects to the root URL
 
-## Note:
-- Make sure you're using `http://` for localhost (not `https://`)
-- The callback URL must match exactly what's in the code
+## If Still Having Issues:
+
+1. Check the browser console for any errors
+2. Make sure all redirect URLs are added in Supabase
+3. Ensure cookies are enabled in your browser
+4. Try a different browser or incognito mode
