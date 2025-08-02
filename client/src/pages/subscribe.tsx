@@ -66,7 +66,8 @@ export default function Subscribe() {
     
     try {
       // Use apiRequest which already handles authentication properly
-      const data = await apiRequest("POST", "/api/create-subscription");
+      const response = await apiRequest("POST", "/api/create-subscription", {});
+      const data = await response.json();
       
       console.log("API Response data:", data);
       
