@@ -84,21 +84,14 @@ export default function Home() {
     return Math.abs(hash);
   };
 
-  // Calculate fake total jobs by summing up fake totals from all searches
-  let fakeTotalJobs = 0;
+  // Calculate total jobs analyzed from actual search results
+  let totalJobsAnalyzed = 0;
   if (stats?.recentSearches) {
     stats.recentSearches.forEach((search) => {
-      if (search.status === 'completed') {
-        const searchHash = hashCode(search.id);
-        const fakeJobsForSearch = 100 + (searchHash % 1900); // Each search gets unique fake total
-        fakeTotalJobs += fakeJobsForSearch;
+      if (search.status === 'completed' && search.results) {
+        totalJobsAnalyzed += search.results.length;
       }
     });
-  }
-  
-  // If no searches yet, show a default
-  if (fakeTotalJobs === 0) {
-    fakeTotalJobs = 736; // Default starting value
   }
   
 
@@ -157,15 +150,17 @@ export default function Home() {
                 {statsLoading ? (
                   <Loader2 className="h-8 w-8 animate-spin" />
                 ) : (
-                  fakeTotalJobs.toLocaleString()
+                  totalJobsAnalyzed.toLocaleString()
                 )}
               </p>
               <p className="text-sm text-muted-foreground">Jobs Analyzed</p>
             </div>
-            <div className="mt-4 flex items-center text-sm text-primary">
-              <TrendingUp className="h-4 w-4 mr-1" />
-              <span>+12% from last week</span>
-            </div>
+            {totalJobsAnalyzed > 0 && (
+              <div className="mt-4 flex items-center text-sm text-muted-foreground">
+                <TrendingUp className="h-4 w-4 mr-1" />
+                <span>From {stats?.recentSearches?.filter(s => s.status === 'completed').length || 0} searches</span>
+              </div>
+            )}
           </motion.div>
 
           {/* Applications Sent Card */}
@@ -195,10 +190,12 @@ export default function Home() {
               </p>
               <p className="text-sm text-muted-foreground">Applications Sent</p>
             </div>
-            <div className="mt-4 flex items-center text-sm text-accent">
-              <ArrowUpRight className="h-4 w-4 mr-1" />
-              <span>8 sent this week</span>
-            </div>
+            {(stats?.totalApplicationsSent || 0) > 0 && (
+              <div className="mt-4 flex items-center text-sm text-muted-foreground">
+                <ArrowUpRight className="h-4 w-4 mr-1" />
+                <span>Total applications sent</span>
+              </div>
+            )}
           </motion.div>
         </div>
 
