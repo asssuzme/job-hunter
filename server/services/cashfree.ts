@@ -41,10 +41,8 @@ export async function createCashfreeOrder(data: CreateOrderData) {
     };
 
     const response = await Cashfree.PGCreateOrder("2023-08-01", request);
-    console.log("Cashfree order response:", response.data);
     return response.data;
   } catch (error: any) {
-    console.error("Cashfree order creation error:", error);
     throw new Error(error.message || "Failed to create payment order");
   }
 }
@@ -54,7 +52,6 @@ export async function verifyPayment(orderId: string) {
     const response = await Cashfree.PGOrderFetchPayments("2023-08-01", orderId);
     return response.data;
   } catch (error: any) {
-    console.error("Cashfree payment verification error:", error);
     throw new Error(error.message || "Failed to verify payment");
   }
 }
@@ -64,7 +61,6 @@ export async function getOrderStatus(orderId: string) {
     const response = await Cashfree.PGFetchOrder("2023-08-01", orderId);
     return response.data;
   } catch (error: any) {
-    console.error("Cashfree order status error:", error);
     throw new Error(error.message || "Failed to fetch order status");
   }
 }

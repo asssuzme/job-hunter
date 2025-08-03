@@ -61,7 +61,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const stats = await storage.getDashboardStats(user.id);
       res.json(stats);
     } catch (error) {
-      console.error("Error fetching dashboard stats:", error);
       res.status(500).json({ message: "Failed to fetch dashboard stats" });
     }
   });
@@ -110,13 +109,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         totalApplications,
         responseRate,
-        averageResponseTime: parseFloat(averageResponseTime as string),
+        averageResponseTime: averageResponseTime,
         interviewsScheduled,
         weeklyApplications,
         totalJobsScraped: scrapingRequests.filter(r => r.status === 'completed').length
       });
     } catch (error) {
-      console.error("Error fetching analytics stats:", error);
       res.status(500).json({ message: "Failed to fetch analytics stats" });
     }
   });
@@ -910,19 +908,16 @@ Format the email with proper structure including greeting, body paragraphs, and 
         }
       };
 
-      console.log("Creating Cashfree order for user:", user.email);
       const cashfreeOrder = await createCashfreeOrderV2(orderData);
       
       // Store order ID in database for later verification
       await storage.updateUser(user.id, {
-        pending_payment_order_id: orderId
+        pendingPaymentOrderId: orderId
       });
       
       // The correct payment link format for Cashfree hosted checkout
       // According to Cashfree docs, we need to create a payment link using the payment_session_id
       const paymentLink = `https://sandbox.cashfree.com/pg/view/session/${cashfreeOrder.payment_session_id}`;
-      console.log("Generated payment link:", paymentLink);
-      console.log("Full Cashfree response:", JSON.stringify(cashfreeOrder, null, 2));
       
       res.json({
         orderId: cashfreeOrder.order_id,
@@ -935,8 +930,6 @@ Format the email with proper structure including greeting, body paragraphs, and 
       });
       
     } catch (error: any) {
-      console.error("Error creating payment session:", error);
-      
       // Check for IP whitelist error
       if (error.message && error.message.includes("IP address not allowed")) {
         res.status(403).json({ 
@@ -967,7 +960,7 @@ Format the email with proper structure including greeting, body paragraphs, and 
       if (orderStatus.order_status === 'PAID') {
         // Find user by order ID
         const users = await storage.getAllUsers();
-        const user = users.find(u => u.pending_payment_order_id === order_id);
+        const user = users.find(u => u.pendingPaymentOrderId === order_id);
         
         if (user) {
           // Update user subscription status
@@ -975,11 +968,11 @@ Format the email with proper structure including greeting, body paragraphs, and 
           subscriptionExpiry.setMonth(subscriptionExpiry.getMonth() + 1);
           
           await storage.updateUser(user.id, {
-            subscription_status: 'active',
-            subscription_expires_at: subscriptionExpiry.toISOString(),
-            payment_customer_id: orderStatus.customer_details?.customer_id || null,
-            payment_subscription_id: order_id,
-            pending_payment_order_id: null
+            subscriptionStatus: 'active',
+            subscriptionExpiresAt: subscriptionExpiry,
+            paymentCustomerId: orderStatus.customer_details?.customer_id || null,
+            subscriptionId: order_id,
+            pendingPaymentOrderId: null
           });
         }
         
@@ -988,7 +981,6 @@ Format the email with proper structure including greeting, body paragraphs, and 
         res.redirect('/subscribe?error=payment_failed');
       }
     } catch (error) {
-      console.error("Error processing payment return:", error);
       res.redirect('/subscribe?error=processing_failed');
     }
   });
@@ -1003,7 +995,7 @@ Format the email with proper structure including greeting, body paragraphs, and 
         
         // Find user by order ID
         const users = await storage.getAllUsers();
-        const user = users.find(u => u.pending_payment_order_id === orderId);
+        const user = users.find(u => u.pendingPaymentOrderId === orderId);
         
         if (user) {
           // Update user subscription status
@@ -1011,18 +1003,17 @@ Format the email with proper structure including greeting, body paragraphs, and 
           subscriptionExpiry.setMonth(subscriptionExpiry.getMonth() + 1);
           
           await storage.updateUser(user.id, {
-            subscription_status: 'active',
-            subscription_expires_at: subscriptionExpiry.toISOString(),
-            payment_customer_id: data.order.customer_details?.customer_id || null,
-            payment_subscription_id: orderId,
-            pending_payment_order_id: null
+            subscriptionStatus: 'active',
+            subscriptionExpiresAt: subscriptionExpiry,
+            paymentCustomerId: data.order.customer_details?.customer_id || null,
+            subscriptionId: orderId,
+            pendingPaymentOrderId: null
           });
         }
       }
       
       res.json({ success: true });
     } catch (error) {
-      console.error("Webhook processing error:", error);
       res.status(500).json({ error: "Webhook processing failed" });
     }
   });
@@ -1035,14 +1026,14 @@ Format the email with proper structure including greeting, body paragraphs, and 
 
     const user = req.user;
     
-    const hasActiveSubscription = user.subscription_status === 'active' && 
-                                 user.subscription_expires_at && 
-                                 new Date(user.subscription_expires_at) > new Date();
+    const hasActiveSubscription = user.subscriptionStatus === 'active' && 
+                                 user.subscriptionExpiresAt && 
+                                 new Date(user.subscriptionExpiresAt) > new Date();
     
     res.json({
       hasActiveSubscription,
       plan: hasActiveSubscription ? 'pro' : 'free',
-      expiresAt: user.subscription_expires_at
+      expiresAt: user.subscriptionExpiresAt
     });
   });
   
@@ -1056,21 +1047,19 @@ Format the email with proper structure including greeting, body paragraphs, and 
       const userId = req.user.id;
       
       // Update user subscription status
-      await db.update(users)
-        .set({
-          subscription_status: 'active',
-          subscription_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-        })
-        .where(eq(users.id, userId));
+      const subscriptionExpiry = new Date();
+      subscriptionExpiry.setMonth(subscriptionExpiry.getMonth() + 1);
       
-      console.log(`Subscription activated for user ${userId}`);
+      await storage.updateUser(userId, {
+        subscriptionStatus: 'active',
+        subscriptionExpiresAt: subscriptionExpiry
+      });
       
       return res.json({ 
         success: true, 
         message: 'Subscription activated successfully' 
       });
     } catch (error) {
-      console.error('Error activating subscription:', error);
       return res.status(500).json({ error: 'Failed to activate subscription' });
     }
   });

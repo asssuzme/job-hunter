@@ -38,8 +38,6 @@ export async function createCashfreeOrderV2(data: CreateOrderData) {
       },
     };
 
-    console.log("Creating Cashfree order with body:", JSON.stringify(requestBody, null, 2));
-
     const response = await fetch(`${CASHFREE_BASE_URL}/orders`, {
       method: 'POST',
       headers: {
@@ -52,8 +50,6 @@ export async function createCashfreeOrderV2(data: CreateOrderData) {
     });
 
     const responseText = await response.text();
-    console.log("Cashfree API response status:", response.status);
-    console.log("Cashfree API response:", responseText);
 
     if (!response.ok) {
       throw new Error(`Cashfree API error: ${response.status} - ${responseText}`);
@@ -62,7 +58,6 @@ export async function createCashfreeOrderV2(data: CreateOrderData) {
     const responseData = JSON.parse(responseText);
     return responseData;
   } catch (error: any) {
-    console.error("Cashfree order creation error:", error);
     throw new Error(error.message || "Failed to create payment order");
   }
 }
@@ -86,7 +81,6 @@ export async function getOrderStatusV2(orderId: string) {
 
     return JSON.parse(responseText);
   } catch (error: any) {
-    console.error("Cashfree order status error:", error);
     throw new Error(error.message || "Failed to fetch order status");
   }
 }

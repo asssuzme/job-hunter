@@ -87,11 +87,9 @@ export default function Home() {
       
       if (response.ok) {
         window.location.href = '/';
-      } else {
-        console.error('Logout failed');
       }
     } catch (error) {
-      console.error('Error during logout:', error);
+      // Logout error handled silently
     }
   };
 
@@ -99,22 +97,13 @@ export default function Home() {
     return null;
   }
 
-  // Generate user-specific fake total jobs number (always under 2000)
-  const hashCode = (str: string) => {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
-    }
-    return Math.abs(hash);
-  };
+  // Calculate actual statistics from database
 
   // Calculate total jobs analyzed from actual search results
   let totalJobsAnalyzed = 0;
   if (stats?.recentSearches) {
     stats.recentSearches.forEach((search) => {
-      if (search.status === 'completed' && search.results) {
+      if (search.status === 'completed' && search.results && Array.isArray(search.results)) {
         totalJobsAnalyzed += search.results.length;
       }
     });
@@ -135,7 +124,7 @@ export default function Home() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex-1">
               <h1 className="text-xl md:text-3xl font-bold mb-2">
-                Welcome back, {user.firstName || "User"}! 👋
+                Welcome back, {user && typeof user === 'object' && 'firstName' in user && user.firstName ? user.firstName : "User"}! 👋
               </h1>
               <p className="text-sm md:text-base text-muted-foreground">
                 Ready to find your next opportunity? Let's get started.
