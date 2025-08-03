@@ -19,43 +19,133 @@ export default function RefundPolicy() {
           animate={{ opacity: 1, y: 0 }}
           className="glass-card p-8"
         >
-          <h1 className="text-3xl font-bold mb-6">Cancellation & Refund Policy</h1>
-          <p className="text-sm text-muted-foreground mb-8">Last updated on 02-08-2025 16:31:18</p>
+          <h1 className="text-3xl font-bold mb-6">Refund Policy</h1>
+          <p className="text-sm text-muted-foreground mb-8">Effective Date: January 1, 2025 | Last Updated: August 4, 2025</p>
 
-          <div className="space-y-6 text-muted-foreground">
-            <p>
-              ASHUTOSH LATH believes in helping its customers as far as possible, and has therefore a liberal
-              cancellation policy. Under this policy:
-            </p>
+          <div className="space-y-8 text-muted-foreground">
+            <section>
+              <h2 className="text-xl font-semibold mb-3 text-foreground">1. Overview</h2>
+              <p>
+                At autoapply.ai, we strive to provide exceptional service. This refund policy outlines the terms 
+                under which you may request a refund for our subscription services.
+              </p>
+            </section>
 
-            <ul className="list-disc pl-6 space-y-4">
-              <li>
-                Cancellations will be considered only if the request is made immediately after placing the order.
-                However, the cancellation request may not be entertained if the orders have been communicated to the
-                vendors/merchants and they have initiated the process of shipping them.
-              </li>
+            <section>
+              <h2 className="text-xl font-semibold mb-3 text-foreground">2. Subscription Services</h2>
+              <div className="space-y-3">
+                <p><strong>2.1 Free Trial:</strong> We offer a free tier to try our service before subscribing.</p>
+                <p><strong>2.2 Monthly Subscriptions:</strong> Billed monthly in advance, non-refundable except as stated below.</p>
+                <p><strong>2.3 Annual Subscriptions:</strong> Billed annually in advance with special refund terms.</p>
+              </div>
+            </section>
 
-              <li>
-                ASHUTOSH LATH does not accept cancellation requests for perishable items like flowers, eatables
-                etc. However, refund/replacement can be made if the customer establishes that the quality of product
-                delivered is not good.
-              </li>
+            <section>
+              <h2 className="text-xl font-semibold mb-3 text-foreground">3. Refund Eligibility</h2>
+              <p className="mb-3">You may be eligible for a refund if:</p>
+              <ul className="list-disc pl-6 space-y-2">
+                <li><strong>Service Outage:</strong> Extended service unavailability (more than 24 hours) not caused by scheduled maintenance</li>
+                <li><strong>Major Feature Failure:</strong> Core features completely non-functional for more than 48 hours</li>
+                <li><strong>Billing Error:</strong> Accidental duplicate charges or incorrect amounts</li>
+                <li><strong>First-Time Subscribers:</strong> 7-day money-back guarantee for first-time Pro subscribers</li>
+              </ul>
+            </section>
 
-              <li>
-                In case of receipt of damaged or defective items please report the same to our Customer Service team.
-                The request will, however, be entertained once the merchant has checked and determined the same at his
-                own end. This should be reported within Only same day days of receipt of the products. In case you feel
-                that the product received is not as shown on the site or as per your expectations, you must bring it to the
-                notice of our customer service within Only same day days of receiving the product. The Customer
-                Service Team after looking into your complaint will take an appropriate decision.
-              </li>
+            <section>
+              <h2 className="text-xl font-semibold mb-3 text-foreground">4. Non-Refundable Situations</h2>
+              <p className="mb-3">Refunds are NOT provided for:</p>
+              <ul className="list-disc pl-6 space-y-2">
+                <li>Change of mind after the refund period</li>
+                <li>Failure to cancel subscription before renewal</li>
+                <li>Partial month usage</li>
+                <li>Third-party service issues (LinkedIn, Gmail, etc.)</li>
+                <li>Job application outcomes or lack of responses</li>
+                <li>Violation of our Terms of Service resulting in account termination</li>
+              </ul>
+            </section>
 
-              <li>
-                In case of complaints regarding products that come with a warranty from manufacturers, please refer
-                the issue to them. In case of any Refunds approved by the ASHUTOSH LATH, it'll take 1-2 Days days
-                for the refund to be processed to the end customer.
-              </li>
-            </ul>
+            <section>
+              <h2 className="text-xl font-semibold mb-3 text-foreground">5. Refund Process</h2>
+              <div className="space-y-3">
+                <p><strong>5.1 Request Timeline:</strong> Submit refund requests within 7 days of the charge</p>
+                <p><strong>5.2 How to Request:</strong> Email support@autoapply.ai with:</p>
+                <ul className="list-disc pl-6 ml-4 space-y-2">
+                  <li>Your account email</li>
+                  <li>Transaction ID or invoice number</li>
+                  <li>Reason for refund request</li>
+                  <li>Any supporting documentation</li>
+                </ul>
+                <p><strong>5.3 Review Period:</strong> We'll review requests within 3-5 business days</p>
+                <p><strong>5.4 Processing Time:</strong> Approved refunds processed within 5-10 business days</p>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold mb-3 text-foreground">6. Cancellation Policy</h2>
+              <div className="space-y-3">
+                <p><strong>6.1 Subscription Cancellation:</strong> Cancel anytime through account settings</p>
+                <p><strong>6.2 Effect of Cancellation:</strong> Access continues until the end of the billing period</p>
+                <p><strong>6.3 No Partial Refunds:</strong> No refunds for unused time in the billing period</p>
+                <p><strong>6.4 Re-subscription:</strong> You can re-subscribe at any time</p>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold mb-3 text-foreground">7. Pro-Rated Refunds</h2>
+              <p className="mb-3">Pro-rated refunds may be issued for:</p>
+              <ul className="list-disc pl-6 space-y-2">
+                <li>Annual subscriptions cancelled within 30 days</li>
+                <li>Service permanently discontinued by us</li>
+                <li>Account termination due to our error</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold mb-3 text-foreground">8. Payment Disputes</h2>
+              <p>
+                If you dispute a charge with your bank or credit card company (chargeback), we reserve the right to:
+              </p>
+              <ul className="list-disc pl-6 space-y-2 mt-3">
+                <li>Suspend your account during investigation</li>
+                <li>Terminate your account if chargeback is unwarranted</li>
+                <li>Refuse future service</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold mb-3 text-foreground">9. Currency and Taxes</h2>
+              <div className="space-y-3">
+                <p><strong>9.1 Currency:</strong> All refunds issued in the original payment currency</p>
+                <p><strong>9.2 Exchange Rates:</strong> We're not responsible for exchange rate fluctuations</p>
+                <p><strong>9.3 Taxes:</strong> Refunded amounts may be subject to tax adjustments</p>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold mb-3 text-foreground">10. Special Circumstances</h2>
+              <p>
+                We may consider refunds outside this policy for exceptional circumstances at our sole discretion. 
+                This includes but is not limited to medical emergencies, natural disasters, or other force majeure events.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold mb-3 text-foreground">11. Changes to This Policy</h2>
+              <p>
+                We reserve the right to modify this refund policy at any time. Changes will be effective immediately 
+                upon posting to our website. Your continued use of the service constitutes acceptance of the revised policy.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold mb-3 text-foreground">12. Contact Us</h2>
+              <p className="mb-3">For refund requests or questions about this policy:</p>
+              <div className="bg-muted/50 p-4 rounded-lg">
+                <p><strong>Email:</strong> support@autoapply.ai</p>
+                <p><strong>Response Time:</strong> 24-48 hours (business days)</p>
+                <p className="mt-2">Please include "Refund Request" in your email subject line</p>
+              </div>
+            </section>
           </div>
         </motion.div>
       </div>

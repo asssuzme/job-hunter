@@ -1,8 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import { ArrowLeft, Mail, MapPin, Phone, Clock } from "lucide-react";
+import { ArrowLeft, Mail, MessageSquare, Clock, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 
 export default function Contact() {
   return (
@@ -18,112 +17,108 @@ export default function Contact() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-6"
+          className="glass-card p-8"
         >
-          <div className="glass-card p-8">
-            <h1 className="text-3xl font-bold mb-6">Contact Us</h1>
-            <p className="text-muted-foreground mb-8">
-              We're here to help! Reach out to us for any questions, support, or feedback.
-            </p>
+          <h1 className="text-3xl font-bold mb-6">Contact Us</h1>
+          <p className="text-lg text-muted-foreground mb-8">
+            We're here to help with any questions or concerns about autoapply.ai
+          </p>
 
-            <div className="grid md:grid-cols-2 gap-6">
-              <Card className="p-6 space-y-4">
-                <div className="flex items-center gap-3">
-                  <Mail className="h-5 w-5 text-primary" />
-                  <div>
-                    <h3 className="font-semibold">Email Support</h3>
-                    <p className="text-sm text-muted-foreground">ashutoshlathvalo@gmail.com</p>
-                  </div>
+          <div className="grid gap-8 md:grid-cols-2">
+            {/* Support Section */}
+            <div className="space-y-6">
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-full bg-primary/10">
+                  <Mail className="h-6 w-6 text-primary" />
                 </div>
-              </Card>
+                <div>
+                  <h3 className="font-semibold mb-2">Email Support</h3>
+                  <p className="text-muted-foreground mb-2">
+                    For general inquiries and support:
+                  </p>
+                  <a 
+                    href="mailto:support@autoapply.ai" 
+                    className="text-primary hover:underline"
+                  >
+                    support@autoapply.ai
+                  </a>
+                </div>
+              </div>
 
-              <Card className="p-6 space-y-4">
-                <div className="flex items-center gap-3">
-                  <Clock className="h-5 w-5 text-primary" />
-                  <div>
-                    <h3 className="font-semibold">Response Time</h3>
-                    <p className="text-sm text-muted-foreground">24-48 hours</p>
-                  </div>
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-full bg-primary/10">
+                  <Clock className="h-6 w-6 text-primary" />
                 </div>
-              </Card>
+                <div>
+                  <h3 className="font-semibold mb-2">Response Time</h3>
+                  <p className="text-muted-foreground">
+                    We typically respond within 24-48 hours during business days
+                  </p>
+                </div>
+              </div>
 
-              <Card className="p-6 space-y-4">
-                <div className="flex items-center gap-3">
-                  <MapPin className="h-5 w-5 text-primary" />
-                  <div>
-                    <h3 className="font-semibold">Registered Office</h3>
-                    <p className="text-sm text-muted-foreground">
-                      T19 TOWERS RANIGANJ FLAT NO 1004<br />
-                      10H FLOOR NEAR RANIGANJ BUS DEPOT<br />
-                      Hyderabad, Telangana<br />
-                      PIN: 500003
-                    </p>
-                  </div>
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-full bg-primary/10">
+                  <Shield className="h-6 w-6 text-primary" />
                 </div>
-              </Card>
+                <div>
+                  <h3 className="font-semibold mb-2">Privacy & Security</h3>
+                  <p className="text-muted-foreground mb-2">
+                    For privacy concerns or data requests:
+                  </p>
+                  <a 
+                    href="mailto:privacy@autoapply.ai" 
+                    className="text-primary hover:underline"
+                  >
+                    privacy@autoapply.ai
+                  </a>
+                </div>
+              </div>
+            </div>
 
-              <Card className="p-6 space-y-4">
-                <div className="flex items-center gap-3">
-                  <Phone className="h-5 w-5 text-primary" />
-                  <div>
-                    <h3 className="font-semibold">Contact Number</h3>
-                    <p className="text-sm text-muted-foreground">
-                      +91 6302961924<br />
-                      Business Hours: Mon-Sat 9AM-6PM IST
-                    </p>
-                  </div>
+            {/* Business Information */}
+            <div className="space-y-6">
+              <div>
+                <h3 className="font-semibold mb-4">Business Information</h3>
+                <div className="space-y-3 text-muted-foreground">
+                  <p>
+                    <span className="font-medium">Company:</span> autoapply.ai
+                  </p>
+                  <p>
+                    <span className="font-medium">Operated by:</span> Ashutosh Lath
+                  </p>
+                  <p>
+                    <span className="font-medium">Service Type:</span> Job Application Automation Platform
+                  </p>
                 </div>
-              </Card>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-4">Data Protection Officer</h3>
+                <p className="text-muted-foreground mb-2">
+                  For GDPR/CCPA inquiries and data protection matters:
+                </p>
+                <a 
+                  href="mailto:dpo@autoapply.ai" 
+                  className="text-primary hover:underline"
+                >
+                  dpo@autoapply.ai
+                </a>
+              </div>
             </div>
           </div>
 
-          <div className="glass-card p-8">
-            <h2 className="text-2xl font-bold mb-6">Support Topics</h2>
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-semibold mb-2">Account & Billing</h3>
-                <p className="text-sm text-muted-foreground">
-                  Questions about your subscription, payment issues, or account management
-                </p>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-2">Technical Support</h3>
-                <p className="text-sm text-muted-foreground">
-                  Help with job scraping, email generation, or any technical difficulties
-                </p>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-2">Feature Requests</h3>
-                <p className="text-sm text-muted-foreground">
-                  Suggestions for new features or improvements to existing functionality
-                </p>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-2">Partnership Inquiries</h3>
-                <p className="text-sm text-muted-foreground">
-                  Business partnerships, integrations, or enterprise solutions
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="glass-card p-8">
-            <h2 className="text-2xl font-bold mb-6">Legal Information</h2>
-            <div className="space-y-3 text-sm text-muted-foreground">
-              <p><strong>Merchant Legal Entity Name:</strong> ASHUTOSH LATH</p>
-              <p><strong>Registered Address:</strong><br />
-                T19 TOWERS RANIGANJ FLAT NO 1004 10H FLOOR<br />
-                NEAR RANIGANJ BUS DEPOT<br />
-                Hyderabad, Telangana, PIN: 500003
-              </p>
-              <p><strong>Operational Address:</strong><br />
-                T19 TOWERS RANIGANJ FLAT NO 1004 10H FLOOR<br />
-                NEAR RANIGANJ BUS DEPOT<br />
-                Hyderabad, Telangana, PIN: 500003
-              </p>
-              <p><strong>Contact Number:</strong> +91 6302961924</p>
-              <p><strong>Email:</strong> ashutoshlathvalo@gmail.com</p>
-            </div>
+          <div className="mt-12 p-6 bg-muted/50 rounded-lg">
+            <h3 className="font-semibold mb-3 flex items-center gap-2">
+              <MessageSquare className="h-5 w-5" />
+              Before You Contact Us
+            </h3>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li>• Check our FAQ section for common questions</li>
+              <li>• Review our Terms of Service and Privacy Policy</li>
+              <li>• Include your account email when contacting support</li>
+              <li>• Be specific about any issues you're experiencing</li>
+            </ul>
           </div>
         </motion.div>
       </div>
