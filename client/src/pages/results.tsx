@@ -161,7 +161,18 @@ export default function Results() {
   
   // Use the stored fake data from enrichedResults
   const enrichedResults = scrapingResult.enrichedResults as any;
-  const fakeTotalJobs = enrichedResults?.fakeTotalJobs || 847;
+  let fakeTotalJobs = enrichedResults?.fakeTotalJobs;
+  
+  // For old searches without fakeTotalJobs, generate consistent number based on search ID
+  if (!fakeTotalJobs && requestId) {
+    let hash = 0;
+    for (let i = 0; i < requestId.length; i++) {
+      hash = ((hash << 5) - hash) + requestId.charCodeAt(i);
+      hash = hash & hash;
+    }
+    fakeTotalJobs = 500 + Math.abs(hash % 1501); // 500-2000
+  }
+  
   const freeJobs = enrichedResults?.freeJobs || canApplyJobs.length;
   const lockedJobs = enrichedResults?.lockedJobs || (fakeTotalJobs - freeJobs);
   

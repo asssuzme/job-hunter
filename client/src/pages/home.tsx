@@ -266,9 +266,17 @@ export default function Home() {
                       {search.status === 'completed' && search.enrichedResults ? (
                         (() => {
                           const enrichedResults = search.enrichedResults as any;
-                          // Only display if we have stored fake data
-                          if (!enrichedResults.fakeTotalJobs) return null;
-                          const fakeTotalJobs = enrichedResults.fakeTotalJobs;
+                          // Use stored fake total or generate consistent one for old searches
+                          let fakeTotalJobs = enrichedResults.fakeTotalJobs;
+                          if (!fakeTotalJobs) {
+                            // For old searches, generate consistent number based on search ID
+                            let hash = 0;
+                            for (let i = 0; i < search.id.length; i++) {
+                              hash = ((hash << 5) - hash) + search.id.charCodeAt(i);
+                              hash = hash & hash;
+                            }
+                            fakeTotalJobs = 500 + Math.abs(hash % 1501); // 500-2000
+                          }
                           const freeJobs = enrichedResults.freeJobs || enrichedResults.canApplyCount || 0;
                           const lockedJobs = enrichedResults.lockedJobs || (fakeTotalJobs - freeJobs);
                           return (
