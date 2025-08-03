@@ -184,13 +184,31 @@ export class DatabaseStorage implements IStorage {
     // Get recent searches for display (limit to 10)
     const recentSearches = allSearches.slice(0, 10);
 
-    // Calculate total jobs scraped
+    // Calculate total jobs scraped from ALL searches, not just recent ones
     let totalJobsScraped = 0;
 
-    for (const search of recentSearches) {
-      if (search.status === 'completed' && search.enrichedResults) {
-        const results = search.enrichedResults as any;
-        totalJobsScraped += results.totalCount || 0;
+    for (const search of allSearches) {
+      if (search.status === 'completed') {
+        // Check different possible locations for job count
+        if (search.enrichedResults) {
+          const results = search.enrichedResults as any;
+          totalJobsScraped += results.totalCount || 0;
+        } else if (search.filteredResults) {
+          const results = search.filteredResults as any;
+          // Count the actual jobs if it's an array
+          if (Array.isArray(results)) {
+            totalJobsScraped += results.length;
+          } else if (results.jobs && Array.isArray(results.jobs)) {
+            totalJobsScraped += results.jobs.length;
+          } else if (results.totalCount) {
+            totalJobsScraped += results.totalCount;
+          }
+        } else if (search.results) {
+          const results = search.results as any;
+          if (Array.isArray(results)) {
+            totalJobsScraped += results.length;
+          }
+        }
       }
     }
 

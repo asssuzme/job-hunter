@@ -109,17 +109,7 @@ export default function Home() {
     return null;
   }
 
-  // Calculate actual statistics from database
-
-  // Calculate total jobs analyzed from actual search results
-  let totalJobsAnalyzed = 0;
-  if (stats?.recentSearches) {
-    stats.recentSearches.forEach((search) => {
-      if (search.status === 'completed' && search.results && Array.isArray(search.results)) {
-        totalJobsAnalyzed += search.results.length;
-      }
-    });
-  }
+  // Use statistics from backend - no need to recalculate
   
 
 
@@ -177,12 +167,12 @@ export default function Home() {
                 {statsLoading ? (
                   <Spinner className="mx-0" />
                 ) : (
-                  totalJobsAnalyzed.toLocaleString()
+                  (stats?.totalJobsScraped || 0).toLocaleString()
                 )}
               </p>
               <p className="text-sm text-muted-foreground">Jobs Analyzed</p>
             </div>
-            {totalJobsAnalyzed > 0 && (
+            {(stats?.totalJobsScraped || 0) > 0 && (
               <div className="mt-4 flex items-center text-sm text-muted-foreground">
                 <TrendingUp className="h-4 w-4 mr-1" />
                 <span>From {stats?.recentSearches?.filter(s => s.status === 'completed').length || 0} searches</span>
