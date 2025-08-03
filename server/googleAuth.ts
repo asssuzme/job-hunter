@@ -68,14 +68,8 @@ export async function setupAuth(app: Express) {
 
   // Configure Google OAuth strategy
   // Handle production URL properly
-  let baseUrl;
-  if (process.env.NODE_ENV === 'production') {
-    baseUrl = 'https://service-genie-ashutoshlathrep.replit.app';
-  } else if (process.env.REPLIT_DEV_DOMAIN) {
-    baseUrl = `https://${process.env.REPLIT_DEV_DOMAIN}`;
-  } else {
-    baseUrl = 'http://localhost:5000';
-  }
+  // Always use production URL for gigfloww.com
+  const baseUrl = 'https://gigfloww.com';
     
   console.log("Configuring Google OAuth with base URL:", baseUrl);
   console.log("Client ID:", process.env.GOOGLE_CLIENT_ID);

@@ -10,6 +10,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- **2025-08-04**: Shifted completely to production environment (gigfloww.com):
+  - Forced all server configurations to use production settings
+  - Updated session cookies to always use secure settings with .gigfloww.com domain
+  - Changed all OAuth callback URLs to use https://gigfloww.com
+  - Updated payment webhook URLs to use production domain
+  - Removed development-specific authentication flows
+  - All API calls now configured for production environment
+
 - **2025-08-04**: Simplified navigation structure:
   - Removed redundant Dashboard menu item from sidebar
   - Made Job Search the primary landing page (/)

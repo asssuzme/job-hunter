@@ -56,15 +56,8 @@ export function setupSimpleGoogleAuth(app: Express) {
     authStates.set(state, { timestamp: Date.now() });
     cleanupAuthStates();
 
-    // Handle production URL properly
-    let baseUrl;
-    if (process.env.NODE_ENV === 'production' || req.get('host')?.includes('replit.app')) {
-      baseUrl = 'https://service-genie-ashutoshlathrep.replit.app';
-    } else if (process.env.REPLIT_DEV_DOMAIN) {
-      baseUrl = `https://${process.env.REPLIT_DEV_DOMAIN}`;
-    } else {
-      baseUrl = `${req.protocol}://${req.get('host')}`;
-    }
+    // Always use production URL for gigfloww.com
+    const baseUrl = 'https://gigfloww.com';
     
     const params = new URLSearchParams({
       client_id: process.env.GOOGLE_CLIENT_ID || '',

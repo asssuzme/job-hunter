@@ -1181,8 +1181,8 @@ Format the email with proper structure including greeting, body paragraphs, and 
           customerName: user.username || user.email.split('@')[0]
         },
         orderMeta: {
-          return_url: `${process.env.BASE_URL || (process.env.REPL_SLUG ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co` : 'http://localhost:5000')}/api/payment/return`,
-          notify_url: `${process.env.BASE_URL || (process.env.REPL_SLUG ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co` : 'http://localhost:5000')}/api/payment/webhook`
+          return_url: 'https://gigfloww.com/api/payment/return',
+          notify_url: 'https://gigfloww.com/api/payment/webhook'
         }
       };
 
