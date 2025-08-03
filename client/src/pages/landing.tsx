@@ -105,12 +105,16 @@ export default function Landing() {
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-4"
           >
-            <Button variant="ghost" className="hidden md:inline-flex">
-              Features
-            </Button>
-            <Button variant="ghost" className="hidden md:inline-flex">
-              Pricing
-            </Button>
+            <Link href="/privacy-policy">
+              <Button variant="ghost" className="hidden md:inline-flex">
+                Privacy Policy
+              </Button>
+            </Link>
+            <Link href="/terms-of-service">
+              <Button variant="ghost" className="hidden md:inline-flex">
+                Terms
+              </Button>
+            </Link>
             <Button
               onClick={handleSignIn}
               className="btn-primary"
