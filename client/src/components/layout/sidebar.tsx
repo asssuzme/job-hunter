@@ -22,26 +22,32 @@ const sidebarItems = [
     icon: LayoutDashboard,
     label: "Dashboard",
     href: "/",
+    description: "Overview & stats",
   },
   {
     icon: Search,
     label: "Job Search",
     href: "/search",
+    description: "Find opportunities",
+    badge: "New",
   },
   {
     icon: Briefcase,
     label: "Applications",
     href: "/applications",
+    description: "Track progress",
   },
   {
     icon: BarChart3,
     label: "Analytics",
     href: "/analytics",
+    description: "Insights & metrics",
   },
   {
     icon: Settings,
     label: "Settings",
     href: "/settings",
+    description: "Preferences",
   },
 ];
 
@@ -83,35 +89,87 @@ export function Sidebar({ user, onLogout, isOpen = false, onClose }: SidebarProp
         )}
       >
         {/* Logo */}
-        <div className="p-6 border-b">
-          <div className="flex items-center gap-3">
-            {/* Simple Text Logo */}
-            <h1 className="text-2xl font-black tracking-tight">
-              <span className="text-black dark:text-white">AUTOAPPLY</span>
-              <span className="text-blue-600">.AI</span>
-            </h1>
-          </div>
+        <div className="p-6 border-b border-border/10">
+          <motion.div 
+            className="flex items-center gap-3"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            {/* Logo with gradient effect */}
+            <motion.div 
+              className="relative"
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 400 }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl blur-lg opacity-20" />
+              <h1 className="relative text-2xl font-black tracking-tight">
+                <span className="bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+                  GIGFLOWW
+                </span>
+                <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  .AI
+                </span>
+              </h1>
+            </motion.div>
+          </motion.div>
         </div>
 
         {/* Navigation */}
         <nav className="flex-1 p-4">
           <ul className="space-y-2">
-            {sidebarItems.map((item) => {
+            {sidebarItems.map((item, index) => {
               const isActive = location === item.href;
               return (
-                <li key={item.href}>
+                <motion.li 
+                  key={item.href}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ 
+                    duration: 0.3, 
+                    delay: index * 0.05,
+                    ease: "easeOut"
+                  }}
+                >
                   <Link 
                     href={item.href}
                     className={cn(
-                      "sidebar-item flex items-center gap-3",
+                      "sidebar-item group",
                       isActive && "sidebar-item-active"
                     )}
                     onClick={handleClose}
                   >
-                    <item.icon className="h-5 w-5" />
-                    <span>{item.label}</span>
+                    <div className="relative">
+                      <item.icon className="h-5 w-5 transition-all duration-200" />
+                      {/* Active indicator dot */}
+                      {isActive && (
+                        <motion.div
+                          className="absolute -left-4 top-1/2 -translate-y-1/2 w-1 h-4 bg-white rounded-full"
+                          layoutId="active-indicator"
+                          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                        />
+                      )}
+                    </div>
+                    <div className="flex-1 flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <span className="block text-sm font-medium">{item.label}</span>
+                        {item.description && (
+                          <span className="block text-xs opacity-60">{item.description}</span>
+                        )}
+                      </div>
+                      {item.badge && (
+                        <motion.span 
+                          className="px-2 py-0.5 text-xs font-semibold rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: "spring", bounce: 0.5 }}
+                        >
+                          {item.badge}
+                        </motion.span>
+                      )}
+                    </div>
                   </Link>
-                </li>
+                </motion.li>
               );
             })}
           </ul>
