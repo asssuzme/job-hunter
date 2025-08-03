@@ -10,6 +10,11 @@ app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 // Session configuration
 app.set("trust proxy", 1);
 
+// Detect if running in production (Replit or custom domain)
+const isProduction = process.env.NODE_ENV === 'production' || 
+                    process.env.REPL_SLUG || 
+                    (typeof process.env.REPLIT_DOMAINS !== 'undefined');
+
 // Use memory store for simplicity
 app.use(
   session({
@@ -17,10 +22,11 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: process.env.NODE_ENV === 'production' || app.get('env') === 'production',
+      secure: isProduction,
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      sameSite: isProduction ? 'none' : 'lax',
+      domain: isProduction ? '.gigfloww.com' : undefined,
     },
   })
 );

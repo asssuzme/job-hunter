@@ -10,6 +10,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- **2025-08-03**: Fixed production deployment issues for https://gigfloww.com:
+  - Updated session cookie configuration to work with custom domain
+  - Added proper CORS headers for production domains
+  - Fixed Gmail OAuth callback URLs to use correct production domain
+  - Improved production environment detection for Replit deployment
+  - Set cookie domain to `.gigfloww.com` for cross-subdomain compatibility
+  - Ensured secure cookies with sameSite: 'none' for production
+
 - **2025-08-03**: Complete Vercel serverless deployment conversion:
   - Converted entire backend from Express.js to Vercel serverless functions
   - Migrated from session-based to JWT token authentication for stateless serverless compatibility

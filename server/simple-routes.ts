@@ -47,6 +47,31 @@ async function requireAuth(req: Request, res: Response, next: NextFunction) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // CORS configuration for production
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    const allowedOrigins = [
+      'https://gigfloww.com',
+      'https://www.gigfloww.com',
+      'https://service-genie-ashutoshlathrep.replit.app',
+      'http://localhost:5000',
+      'http://localhost:3000'
+    ];
+    
+    if (origin && allowedOrigins.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    }
+    
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(200);
+    }
+    
+    next();
+  });
+
   // === AUTHENTICATION ROUTES ===
   
   // Get current user
@@ -122,10 +147,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Gmail OAuth authorization
   app.get("/api/auth/gmail/authorize", requireAuth, (req, res) => {
+    // Determine the base URL based on the environment
+    let baseUrl: string;
+    if (process.env.NODE_ENV === 'production' || process.env.REPL_SLUG) {
+      // In production, use the actual domain
+      baseUrl = 'https://gigfloww.com';
+    } else {
+      // In development, use the protocol and host
+      baseUrl = `${req.protocol}://${req.get('host')}`;
+    }
+    
     const oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      `${req.protocol}://${req.get('host')}/api/auth/gmail/callback`
+      `${baseUrl}/api/auth/gmail/callback`
     );
 
     const authUrl = oauth2Client.generateAuthUrl({
@@ -148,10 +183,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     const { userId } = JSON.parse(state as string);
 
+    // Determine the base URL based on the environment
+    let baseUrl: string;
+    if (process.env.NODE_ENV === 'production' || process.env.REPL_SLUG) {
+      baseUrl = 'https://gigfloww.com';
+    } else {
+      baseUrl = `${req.protocol}://${req.get('host')}`;
+    }
+    
     const oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      `${req.protocol}://${req.get('host')}/api/auth/gmail/callback`
+      `${baseUrl}/api/auth/gmail/callback`
     );
 
     try {
