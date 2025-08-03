@@ -531,6 +531,20 @@ export default function Landing() {
       
       {/* Footer with policy links */}
       <Footer />
+      
+      {/* Temporary OAuth verification helper - remove after verification */}
+      <div className="fixed bottom-4 right-4 bg-blue-600 text-white p-4 rounded-lg shadow-lg max-w-sm">
+        <p className="text-sm font-semibold mb-2">OAuth Verification Pages:</p>
+        <div className="space-y-1">
+          <a href="/homepage" className="block text-xs underline hover:text-blue-200">
+            → View Homepage (for Google verification)
+          </a>
+          <a href="/privacy" className="block text-xs underline hover:text-blue-200">
+            → View Privacy Policy
+          </a>
+        </div>
+        <p className="text-xs mt-2 opacity-80">Update these URLs in Google Cloud Console</p>
+      </div>
     </div>
   );
 }
