@@ -21,7 +21,10 @@ import {
   Zap,
   MapPin,
   Briefcase,
-  Lock
+  Lock,
+  Filter,
+  Mail,
+  Lightbulb
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -632,15 +635,280 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
             )}
           </div>
 
-          {/* Progress Bar */}
+          {/* Enhanced Loading Animation */}
           {['pending', 'processing', 'filtering', 'enriching'].includes(scrapingResult.status) && (
-            <div className="space-y-2">
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Progress</span>
-                <span>{getProgressPercentage()}%</span>
+            <motion.div 
+              className="space-y-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
+              {/* Animated Progress Section */}
+              <div className="relative">
+                {/* Background glow effect */}
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 blur-xl"
+                  animate={{
+                    opacity: [0.3, 0.6, 0.3],
+                    scale: [0.95, 1.05, 0.95]
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                />
+                
+                {/* Progress Bar Container */}
+                <div className="relative glass-card p-4 border border-white/10">
+                  <div className="flex justify-between items-center mb-3">
+                    <div className="flex items-center gap-2">
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                      >
+                        <Loader2 className="h-4 w-4 text-primary" />
+                      </motion.div>
+                      <span className="text-sm font-medium">Progress</span>
+                    </div>
+                    <motion.span 
+                      className="text-sm font-bold text-primary"
+                      key={getProgressPercentage()}
+                      initial={{ scale: 1.2, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      {getProgressPercentage()}%
+                    </motion.span>
+                  </div>
+                  
+                  {/* Enhanced Progress Bar */}
+                  <div className="relative h-3 bg-secondary/50 rounded-full overflow-hidden">
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
+                      initial={{ width: "0%" }}
+                      animate={{ width: `${getProgressPercentage()}%` }}
+                      transition={{ duration: 0.5, ease: "easeOut" }}
+                    >
+                      {/* Animated shimmer effect */}
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                        animate={{ x: ["-100%", "200%"] }}
+                        transition={{
+                          duration: 1.5,
+                          repeat: Infinity,
+                          ease: "linear"
+                        }}
+                      />
+                    </motion.div>
+                  </div>
+                </div>
               </div>
-              <Progress value={getProgressPercentage()} className="h-2" />
-            </div>
+
+              {/* Dynamic Loading Messages */}
+              <motion.div
+                key={scrapingResult.status}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5 }}
+                className="space-y-3"
+              >
+                {/* Status-specific animations */}
+                {scrapingResult.status === 'pending' && (
+                  <div className="flex flex-col items-center gap-3">
+                    <motion.div className="relative">
+                      <motion.div
+                        className="absolute inset-0 bg-primary/20 rounded-full blur-xl"
+                        animate={{ scale: [1, 1.5, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      />
+                      <Globe className="h-8 w-8 text-primary relative z-10" />
+                    </motion.div>
+                    <span className="text-sm text-muted-foreground">
+                      Connecting to LinkedIn...
+                    </span>
+                  </div>
+                )}
+                
+                {scrapingResult.status === 'processing' && (
+                  <div className="flex items-center justify-center gap-3">
+                    <motion.div
+                      className="flex gap-1"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                    >
+                      {[0, 1, 2].map((i) => (
+                        <motion.div
+                          key={i}
+                          className="w-3 h-3 bg-primary rounded-full"
+                          animate={{
+                            y: [0, -10, 0],
+                            opacity: [0.5, 1, 0.5]
+                          }}
+                          transition={{
+                            duration: 1,
+                            repeat: Infinity,
+                            delay: i * 0.2
+                          }}
+                        />
+                      ))}
+                    </motion.div>
+                    <span className="text-sm text-muted-foreground">
+                      Scanning LinkedIn for opportunities...
+                    </span>
+                  </div>
+                )}
+
+                {scrapingResult.status === 'filtering' && (
+                  <div className="flex items-center justify-center gap-3">
+                    <motion.div
+                      animate={{ rotate: 180 }}
+                      transition={{ duration: 1, repeat: Infinity }}
+                    >
+                      <Filter className="h-5 w-5 text-primary" />
+                    </motion.div>
+                    <span className="text-sm text-muted-foreground">
+                      Filtering the best matches for you...
+                    </span>
+                  </div>
+                )}
+
+                {scrapingResult.status === 'enriching' && (
+                  <div className="flex items-center justify-center gap-3">
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 1, repeat: Infinity }}
+                    >
+                      <Mail className="h-5 w-5 text-primary" />
+                    </motion.div>
+                    <span className="text-sm text-muted-foreground">
+                      Finding contact information...
+                    </span>
+                  </div>
+                )}
+              </motion.div>
+
+              {/* Fun Facts / Tips Carousel */}
+              <motion.div
+                className="glass-card p-3 border border-primary/20"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1 }}
+              >
+                <div className="flex items-start gap-2">
+                  <Lightbulb className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+                  <motion.p
+                    key={Math.floor(Date.now() / 5000)} // Change every 5 seconds
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="text-xs text-muted-foreground"
+                  >
+                    {[
+                      "💡 Did you know? Personalized emails have 29% higher open rates!",
+                      "🎯 Pro tip: Follow up within 24 hours for best response rates",
+                      "📊 Companies receive 100+ applications per job posting on average",
+                      "⚡ Our AI finds hidden contact info not visible on job posts",
+                      "🔍 We're checking multiple data sources for accuracy"
+                    ][Math.floor(Date.now() / 5000) % 5]}
+                  </motion.p>
+                </div>
+              </motion.div>
+
+              {/* Live Status Updates */}
+              <motion.div
+                className="flex items-center justify-center gap-2 text-xs"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                <motion.div
+                  className="w-2 h-2 bg-green-500 rounded-full"
+                  animate={{ opacity: [0.3, 1, 0.3] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                />
+                <span className="text-muted-foreground">
+                  {scrapingResult.status === 'processing' && 'Analyzing job descriptions...'}
+                  {scrapingResult.status === 'filtering' && 'Matching your requirements...'}
+                  {scrapingResult.status === 'enriching' && 'Verifying contact details...'}
+                  {scrapingResult.status === 'pending' && 'Establishing secure connection...'}
+                </span>
+              </motion.div>
+
+              {/* Animated Job Cards Preview */}
+              <motion.div
+                className="mt-4 space-y-2"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.5 }}
+              >
+                <p className="text-xs text-muted-foreground text-center mb-2">Finding perfect matches...</p>
+                <div className="flex gap-2 overflow-hidden">
+                  {[0, 1, 2].map((i) => (
+                    <motion.div
+                      key={i}
+                      className="flex-1 glass-card p-3 border border-white/5"
+                      initial={{ opacity: 0, x: 100 }}
+                      animate={{ 
+                        opacity: [0, 1, 1, 0],
+                        x: [100, 0, -100, -200],
+                      }}
+                      transition={{
+                        duration: 4,
+                        repeat: Infinity,
+                        delay: i * 1.3,
+                        ease: "easeInOut"
+                      }}
+                    >
+                      <div className="space-y-1">
+                        <div className="h-2 bg-gradient-to-r from-blue-500/50 to-purple-500/50 rounded w-3/4" />
+                        <div className="h-2 bg-gradient-to-r from-purple-500/30 to-pink-500/30 rounded w-1/2" />
+                        <div className="h-1.5 bg-primary/20 rounded w-2/3 mt-2" />
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Animated Stats Preview */}
+              {scrapingResult.status === 'enriching' && (
+                <motion.div
+                  className="grid grid-cols-3 gap-2 mt-4"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  {[
+                    { label: "Jobs Found", color: "from-blue-500 to-indigo-500", icon: "💼" },
+                    { label: "With Contacts", color: "from-green-500 to-emerald-500", icon: "✉️" },
+                    { label: "Companies", color: "from-purple-500 to-pink-500", icon: "🏢" }
+                  ].map((stat, i) => (
+                    <motion.div
+                      key={stat.label}
+                      className="glass-card p-2 text-center"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.7 + i * 0.1 }}
+                    >
+                      <motion.div
+                        className="text-lg mb-1"
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ duration: 2, repeat: Infinity, delay: i * 0.3 }}
+                      >
+                        {stat.icon}
+                      </motion.div>
+                      <motion.div
+                        className={`h-1.5 bg-gradient-to-r ${stat.color} rounded-full`}
+                        initial={{ width: "0%" }}
+                        animate={{ width: "100%" }}
+                        transition={{ duration: 2, delay: 1 + i * 0.2 }}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
+            </motion.div>
           )}
 
           {/* Results Summary */}
