@@ -24,6 +24,13 @@ Preferred communication style: Simple, everyday language.
   - Consolidated user experience by eliminating duplicate functionality
   - Implemented redirect from /homepage to landing page (/) as requested
 
+- **2025-08-04**: Implemented geo-based pricing system:
+  - Users from India see ₹129/month for Pro plan
+  - Users from outside India see $2/month for Pro plan
+  - Added IP-based location detection using ipapi.co
+  - Updated Subscribe and Pricing pages to show dynamic pricing
+  - Modified payment system to handle both INR and USD currencies
+
 - **2025-08-04**: Enhanced job search loading experience:
   - Created full-screen immersive loading animation that replaces the form during processing
   - Added smooth animated progress bar that increases gradually (1% every 100ms)

@@ -3,12 +3,43 @@ import { Link } from "wouter";
 import { ArrowLeft, Check, X, Sparkles, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useState, useEffect } from "react";
 
 export default function Pricing() {
+  const [pricing, setPricing] = useState({
+    currency: 'INR',
+    price: 129,
+    symbol: '₹'
+  });
+  const [isLoadingPricing, setIsLoadingPricing] = useState(true);
+  
+  // Fetch user location and pricing
+  useEffect(() => {
+    const fetchPricing = async () => {
+      try {
+        const response = await fetch('/api/user-location');
+        if (response.ok) {
+          const data = await response.json();
+          setPricing({
+            currency: data.currency,
+            price: data.price,
+            symbol: data.symbol
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch pricing:', error);
+      } finally {
+        setIsLoadingPricing(false);
+      }
+    };
+    
+    fetchPricing();
+  }, []);
+
   const plans = [
     {
       name: "Free",
-      price: "₹0",
+      price: `${pricing.symbol}0`,
       period: "forever",
       description: "Perfect for getting started with job automation",
       features: [
@@ -26,7 +57,7 @@ export default function Pricing() {
     },
     {
       name: "Pro",
-      price: "₹999",
+      price: `${pricing.symbol}${pricing.price}`,
       period: "per month",
       description: "For serious job seekers who want to accelerate their search",
       features: [

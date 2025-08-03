@@ -17,6 +17,35 @@ export default function Subscribe() {
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [location, setLocation] = useLocation();
+  const [pricing, setPricing] = useState({
+    currency: 'INR',
+    price: 129,
+    symbol: '₹'
+  });
+  const [isLoadingPricing, setIsLoadingPricing] = useState(true);
+  
+  // Fetch user location and pricing
+  useEffect(() => {
+    const fetchPricing = async () => {
+      try {
+        const response = await fetch('/api/user-location');
+        if (response.ok) {
+          const data = await response.json();
+          setPricing({
+            currency: data.currency,
+            price: data.price,
+            symbol: data.symbol
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch pricing:', error);
+      } finally {
+        setIsLoadingPricing(false);
+      }
+    };
+    
+    fetchPricing();
+  }, []);
   
   // Check URL parameters for payment status
   useEffect(() => {
@@ -85,15 +114,18 @@ export default function Subscribe() {
     setIsProcessing(true);
     
     try {
-      // Use client-side payment SDK to bypass IP restrictions
-      await CashfreeClientService.createPaymentAndRedirect(
-        user.email || 'user@example.com',
-        user.id,
-        user.username || 'User'
-      );
+      // Create payment with appropriate currency and amount
+      const response = await apiRequest.post('/api/create-subscription', {
+        currency: pricing.currency,
+        amount: pricing.price
+      });
       
-      // The above function will redirect to Cashfree checkout
-      // Keep processing state true while redirecting
+      if (response.paymentLink) {
+        // Redirect to Cashfree payment page
+        window.location.href = response.paymentLink;
+      } else {
+        throw new Error('Failed to create payment session');
+      }
       
     } catch (error: any) {
       console.error("Payment error:", error);
@@ -128,15 +160,28 @@ export default function Subscribe() {
 
           {/* Pricing Card */}
           <Card className="glass-card p-8 text-center space-y-4">
-            <div className="flex items-center justify-center gap-1">
-              <IndianRupee className="h-8 w-8" />
-              <span className="text-5xl font-bold">129</span>
-              <span className="text-xl text-muted-foreground">/month</span>
-            </div>
-            
-            <p className="text-sm text-muted-foreground">
-              Billed monthly • Cancel anytime
-            </p>
+            {isLoadingPricing ? (
+              <div className="animate-pulse">
+                <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded w-32 mx-auto mb-2" />
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-48 mx-auto" />
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-center gap-1">
+                  {pricing.currency === 'INR' ? (
+                    <IndianRupee className="h-8 w-8" />
+                  ) : (
+                    <span className="text-4xl">{pricing.symbol}</span>
+                  )}
+                  <span className="text-5xl font-bold">{pricing.price}</span>
+                  <span className="text-xl text-muted-foreground">/month</span>
+                </div>
+                
+                <p className="text-sm text-muted-foreground">
+                  Billed monthly • Cancel anytime
+                </p>
+              </>
+            )}
           </Card>
 
           {/* Benefits */}
@@ -187,9 +232,9 @@ export default function Subscribe() {
             className="w-full" 
             size="lg"
             onClick={handleSubscribe}
-            disabled={isProcessing}
+            disabled={isProcessing || isLoadingPricing}
           >
-            {isProcessing ? "Processing..." : "Subscribe Now - ₹129/month"}
+            {isProcessing ? "Processing..." : `Subscribe Now - ${pricing.symbol}${pricing.price}/month`}
           </Button>
           
           <p className="text-xs text-center text-muted-foreground">

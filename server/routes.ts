@@ -1150,9 +1150,41 @@ Format the email with proper structure including greeting, body paragraphs, and 
     }
   });
   
+  // Get user location endpoint
+  app.get('/api/user-location', async (req: any, res) => {
+    try {
+      // Get user's IP address
+      const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
+      const userIP = Array.isArray(ip) ? ip[0] : ip.split(',')[0];
+      
+      // For development/localhost, assume India
+      if (userIP === '::1' || userIP === '127.0.0.1' || userIP.startsWith('::ffff:127.')) {
+        return res.json({ country: 'IN', currency: 'INR', price: 129 });
+      }
+      
+      // Use a free IP geolocation API (using HTTP as free tier doesn't support HTTPS)
+      const geoResponse = await fetch(`https://ipapi.co/${userIP}/json/`);
+      const geoData = await geoResponse.json();
+      
+      // Determine pricing based on country (ipapi.co uses 'country' field)
+      const isIndia = geoData.country === 'IN';
+      
+      res.json({
+        country: geoData.country || 'US',
+        currency: isIndia ? 'INR' : 'USD',
+        price: isIndia ? 129 : 2,
+        symbol: isIndia ? '₹' : '$'
+      });
+    } catch (error) {
+      // Default to USD pricing if geolocation fails
+      res.json({ country: 'US', currency: 'USD', price: 2, symbol: '$' });
+    }
+  });
+
   // Cashfree payment session endpoint
   app.post('/api/create-subscription', isAuthenticated, async (req: any, res) => {
     const user = req.user;
+    const { currency = 'INR', amount = 129 } = req.body;
 
     try {
       // Check if user already has an active subscription
@@ -1172,8 +1204,8 @@ Format the email with proper structure including greeting, body paragraphs, and 
       // Create Cashfree order
       const orderData = {
         orderId: orderId,
-        orderAmount: 129.00, // ₹129 per month
-        orderCurrency: "INR",
+        orderAmount: amount, // Dynamic amount based on location
+        orderCurrency: currency, // Dynamic currency based on location
         customerDetails: {
           customerId: user.id,
           customerEmail: user.email,
