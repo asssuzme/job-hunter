@@ -445,7 +445,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
   if (isProcessing) {
     return (
       <motion.div
-        className="min-h-screen relative -mx-4 -my-8 md:-mx-8 flex items-center justify-center bg-background overflow-hidden"
+        className="fixed inset-0 min-h-screen flex items-center justify-center bg-background overflow-hidden z-50"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
