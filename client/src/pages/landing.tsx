@@ -172,7 +172,7 @@ export default function Landing() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.5 }}
-              className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12"
+              className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8"
             >
               <button
                 onClick={handleSignIn}
@@ -203,6 +203,22 @@ export default function Landing() {
                 Watch Demo
                 <Clock className="h-5 w-5 ml-2" />
               </Button>
+            </motion.div>
+
+            {/* Privacy Policy & Terms - Prominent placement for Google OAuth */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.55, duration: 0.5 }}
+              className="text-center mb-12"
+            >
+              <Link href="/privacy-policy" className="text-primary hover:underline font-medium">
+                Privacy Policy
+              </Link>
+              <span className="mx-3 text-muted-foreground">•</span>
+              <Link href="/terms-of-service" className="text-primary hover:underline font-medium">
+                Terms of Service
+              </Link>
             </motion.div>
 
             {/* Trust badges */}

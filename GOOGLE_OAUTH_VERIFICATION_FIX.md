@@ -2,12 +2,23 @@
 
 ## Current Issues
 
-Based on the Google OAuth verification screenshot, there are two issues that need to be fixed in the Google Cloud Console:
+Based on the Google OAuth verification screenshot, there are two issues that need to be fixed:
 
 1. **Homepage requirements** - "Your home page does not include a link to your privacy policy"
 2. **Privacy policy requirements** - "Your privacy policy URL is the same as your home page URL"
 
-## Solution
+## What We've Fixed on Your Website
+
+I've made the following changes to ensure Google can find your privacy policy:
+
+1. ✅ **Added prominent Privacy Policy link in the hero section** - Immediately visible without scrolling
+2. ✅ **Added Privacy Policy link in the navigation header** - Visible at the top of the page
+3. ✅ **Privacy Policy link already exists in the footer** - Additional visibility
+4. ✅ **Created dedicated pages**:
+   - Privacy Policy: `https://gigfloww.com/privacy-policy`
+   - Terms of Service: `https://gigfloww.com/terms-of-service`
+
+## What You Need to Do in Google Cloud Console
 
 ### Step 1: Update OAuth 2.0 Consent Screen Configuration
 
@@ -15,47 +26,47 @@ Based on the Google OAuth verification screenshot, there are two issues that nee
 2. Navigate to **APIs & Services** > **OAuth consent screen**
 3. Click **Edit App**
 
-### Step 2: Update Application Homepage
+### Step 2: Update the URLs
 
-In the **App information** section:
+In the **App information** section, make sure these URLs are set correctly:
+
 - **Application home page**: `https://gigfloww.com`
-
-### Step 3: Update Privacy Policy URL
-
-In the **App information** section:
 - **Privacy policy link**: `https://gigfloww.com/privacy-policy`
-
-**Important**: Make sure the privacy policy URL is different from the homepage URL.
-
-### Step 4: Update Terms of Service URL
-
-In the **App information** section:
 - **Terms of service link**: `https://gigfloww.com/terms-of-service`
 
-### Step 5: Save Changes
+**IMPORTANT**: The privacy policy URL must be different from the homepage URL!
+
+### Step 3: Save and Submit
 
 1. Click **Save and Continue**
 2. Review all sections
-3. Submit for verification if prompted
+3. Submit for verification
 
-## What We've Already Done
+## Why This Should Now Pass Verification
 
-1. ✅ Added Privacy Policy link in the navigation header of the landing page
-2. ✅ Added Privacy Policy link in the footer (already existed)
-3. ✅ Created a dedicated Privacy Policy page at `/privacy-policy`
-4. ✅ Created a dedicated Terms of Service page at `/terms-of-service`
-5. ✅ Ensured Privacy Policy URL is different from homepage URL
-
-## Verification
-
-After updating the Google Cloud Console settings:
-
-1. The homepage (https://gigfloww.com) now has visible Privacy Policy links in:
+1. **Privacy Policy is now prominently visible** on the homepage in 3 locations:
+   - Hero section (immediately visible without scrolling)
    - Navigation header
    - Footer
 
-2. The Privacy Policy page is accessible at: https://gigfloww.com/privacy-policy
+2. **URLs are different**:
+   - Homepage: `https://gigfloww.com`
+   - Privacy Policy: `https://gigfloww.com/privacy-policy`
 
-3. The Terms of Service page is accessible at: https://gigfloww.com/terms-of-service
+3. **All pages are publicly accessible** without authentication
 
-The verification should pass once Google's system re-crawls your site with the updated configuration.
+## Troubleshooting
+
+If verification still fails:
+
+1. **Wait 24-48 hours** - Google needs time to re-crawl your site
+2. **Test in incognito mode** - Ensure privacy policy link is visible without login
+3. **Check Google's crawler** - Visit https://gigfloww.com and verify the privacy policy link is visible
+4. **Clear browser cache** - Ensure you're seeing the latest version
+
+## Additional Notes
+
+- Google's verification system checks that your homepage has a visible link to your privacy policy
+- The privacy policy must be on the same domain as your homepage
+- Both pages must be accessible without authentication
+- The verification process typically takes 24-72 hours after submission
