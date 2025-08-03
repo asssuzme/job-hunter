@@ -642,12 +642,25 @@ Format the email with proper structure including greeting, body paragraphs, and 
     try {
       const credentials = await storage.getGmailCredentials(req.user.id);
       res.json({ 
-        hasGmailAccess: !!credentials,
-        expiresAt: credentials?.expiresAt
+        hasGmailAccess: !!credentials && credentials.isActive !== false,
+        expiresAt: credentials?.expiresAt,
+        isLinked: !!credentials,
+        isActive: credentials?.isActive !== false
       });
     } catch (error) {
       console.error("Error checking Gmail status:", error);
       res.status(500).json({ error: "Failed to check Gmail status" });
+    }
+  });
+
+  // Unlink Gmail (without deleting credentials)
+  app.post("/api/auth/gmail/unlink", isAuthenticated, async (req: any, res) => {
+    try {
+      await storage.unlinkGmailCredentials(req.user.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error unlinking Gmail:", error);
+      res.status(500).json({ error: "Failed to unlink Gmail" });
     }
   });
 
@@ -705,10 +718,10 @@ Format the email with proper structure including greeting, body paragraphs, and 
         companyWebsite
       } = req.body;
 
-      // Check if user has Gmail credentials
+      // Check if user has active Gmail credentials
       const gmailCredentials = await storage.getGmailCredentials(req.user.id);
       
-      if (gmailCredentials && gmailCredentials.expiresAt > new Date()) {
+      if (gmailCredentials && gmailCredentials.expiresAt > new Date() && gmailCredentials.isActive !== false) {
         // User has valid Gmail credentials, send email directly
         try {
           const { refreshGmailToken } = await import('./gmailOAuth');

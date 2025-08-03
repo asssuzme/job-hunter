@@ -51,6 +51,7 @@ export interface IStorage {
   getGmailCredentials(userId: string): Promise<GmailCredentials | undefined>;
   upsertGmailCredentials(credentials: InsertGmailCredentials): Promise<GmailCredentials>;
   deleteGmailCredentials(userId: string): Promise<void>;
+  unlinkGmailCredentials(userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -249,6 +250,7 @@ export class DatabaseStorage implements IStorage {
           accessToken: credentials.accessToken,
           refreshToken: credentials.refreshToken,
           expiresAt: credentials.expiresAt,
+          isActive: true,
           updatedAt: new Date()
         }
       })
@@ -259,6 +261,16 @@ export class DatabaseStorage implements IStorage {
   async deleteGmailCredentials(userId: string): Promise<void> {
     await db
       .delete(gmailCredentials)
+      .where(eq(gmailCredentials.userId, userId));
+  }
+  
+  async unlinkGmailCredentials(userId: string): Promise<void> {
+    await db
+      .update(gmailCredentials)
+      .set({ 
+        isActive: false,
+        updatedAt: new Date()
+      })
       .where(eq(gmailCredentials.userId, userId));
   }
 }

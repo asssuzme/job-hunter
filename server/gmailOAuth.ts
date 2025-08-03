@@ -2,10 +2,9 @@ import { OAuth2Client } from 'google-auth-library';
 import crypto from 'crypto';
 
 // Gmail-specific OAuth configuration
+// Only request the minimum required scope for sending emails
 const GMAIL_SCOPES = [
-  'https://www.googleapis.com/auth/gmail.send',
-  'https://www.googleapis.com/auth/gmail.compose',
-  'https://www.googleapis.com/auth/gmail.modify'
+  'https://www.googleapis.com/auth/gmail.send'  // Only permission to send emails
 ];
 
 // Create OAuth client for Gmail

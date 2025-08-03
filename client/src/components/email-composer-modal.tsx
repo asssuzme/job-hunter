@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Send, Mail, Copy, CheckCircle, Sparkles, ShieldCheck } from "lucide-react";
+import { Loader2, Send, Mail, Copy, CheckCircle, Sparkles, ShieldCheck, Unlink } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -64,6 +64,29 @@ export function EmailComposerModal({
       toast({
         title: "Authorization failed",
         description: error.message || "Failed to start Gmail authorization",
+        variant: "destructive"
+      });
+    }
+  });
+  
+  // Handle Gmail unlink
+  const unlinkGmailMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest('/api/auth/gmail/unlink', {
+        method: 'POST'
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/gmail/status'] });
+      toast({
+        title: "Gmail unlinked",
+        description: "Your Gmail account has been unlinked. You can relink it anytime.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to unlink Gmail",
+        description: error.message || "Please try again",
         variant: "destructive"
       });
     }
@@ -240,6 +263,22 @@ export function EmailComposerModal({
 
         <DialogFooter className="flex gap-2 flex-col sm:flex-row">
           <div className="flex gap-2 flex-1">
+            {gmailStatus?.isLinked && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => unlinkGmailMutation.mutate()}
+                disabled={unlinkGmailMutation.isPending}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                {unlinkGmailMutation.isPending ? (
+                  <Spinner className="mr-2" />
+                ) : (
+                  <Unlink className="h-4 w-4 mr-2" />
+                )}
+                Unlink Gmail
+              </Button>
+            )}
             <Button
               variant="outline"
               onClick={handleCopyEmail}

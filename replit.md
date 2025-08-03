@@ -10,6 +10,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- **2025-08-03**: Enhanced Gmail integration with improved permissions and unlinking functionality:
+  - Reduced Gmail OAuth scope from multiple permissions to minimum required (`gmail.send` only)
+  - Added Gmail unlinking feature allowing users to disconnect without deleting credentials
+  - Implemented `isActive` field in gmailCredentials table for soft disconnect/reconnect
+  - Created `/api/auth/gmail/unlink` endpoint for managing Gmail connection state
+  - Updated email composer modal with unlink button for connected Gmail accounts
+  - Modified email sending logic to check both token validity and active status
+  - Users can now unlink and relink Gmail accounts anytime without re-authorization
+
 - **2025-08-03**: Fixed critical authentication issues and implemented Gmail OAuth integration:
   - Resolved database foreign key constraint violation by updating user upsert logic to preserve existing user IDs
   - Fixed infinite authentication loop by removing redundant auth state listeners
