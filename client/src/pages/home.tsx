@@ -21,7 +21,8 @@ import {
   Clock,
   ArrowUpRight,
   Sparkles,
-  Briefcase
+  Briefcase,
+  Lock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatCardSkeleton, Spinner } from "@/components/ui/loading-animations";
@@ -271,21 +272,28 @@ export default function Home() {
                       <p className="text-sm text-muted-foreground truncate">
                         {search.linkedinUrl}
                       </p>
-                      {search.status === 'completed' && search.filteredResults ? (
+                      {search.status === 'completed' && search.enrichedResults ? (
                         (() => {
-                          const searchHash = hashCode(search.id);
-                          const fakeTotalForSearch = 100 + (searchHash % 1900); // Always under 2000
-                          const canApplyCount = (search.filteredResults as any).canApplyCount || 0;
+                          const enrichedResults = search.enrichedResults as any;
+                          const fakeTotalJobs = enrichedResults.fakeTotalJobs || Math.floor(Math.random() * (2000 - 500 + 1)) + 500;
+                          const freeJobs = enrichedResults.freeJobs || enrichedResults.canApplyCount || 0;
+                          const lockedJobs = enrichedResults.lockedJobs || (fakeTotalJobs - freeJobs);
                           return (
                             <div className="flex items-center gap-4 mt-2">
                               <div className="flex items-center gap-1 text-xs">
                                 <Briefcase className="h-3 w-3" />
-                                <span>{fakeTotalForSearch.toLocaleString()} jobs</span>
+                                <span>{fakeTotalJobs.toLocaleString()} jobs</span>
                               </div>
                               <div className="flex items-center gap-1 text-xs text-green-600">
                                 <Users className="h-3 w-3" />
-                                <span>{canApplyCount} with contacts</span>
+                                <span>{freeJobs} with contacts</span>
                               </div>
+                              {lockedJobs > 0 && (
+                                <div className="flex items-center gap-1 text-xs text-amber-600">
+                                  <Lock className="h-3 w-3" />
+                                  <span>{lockedJobs} locked</span>
+                                </div>
+                              )}
                             </div>
                           );
                         })()

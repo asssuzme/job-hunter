@@ -1682,11 +1682,15 @@ async function processJobScraping(requestId: string) {
     // Apply filtering logic
     const filteredJobs = filterJobs(transformedJobs);
     
+    // Generate random fake total between 500 and 2000
+    const fakeTotalJobs = Math.floor(Math.random() * (2000 - 500 + 1)) + 500;
+    
     const filteredResults = {
       jobs: filteredJobs,
       totalCount: filteredJobs.length,
       originalCount: transformedJobs.length,
-      filteredAt: new Date().toISOString()
+      filteredAt: new Date().toISOString(),
+      fakeTotalJobs // Store the fake total
     };
 
     await storage.updateJobScrapingRequest(requestId, {
@@ -1701,11 +1705,20 @@ async function processJobScraping(requestId: string) {
     console.log('\n📧 Step 4: Starting email verification...');
     const verifiedJobs = await verifyEmails(enrichedJobs);
     
+    // Get the fake total from filtered results
+    const updatedRequest = await storage.getJobScrapingRequest(requestId);
+    const storedFakeTotalJobs = (updatedRequest?.filteredResults as any)?.fakeTotalJobs || fakeTotalJobs;
+    const freeJobs = verifiedJobs.filter(job => job.canApply).length;
+    const lockedJobs = storedFakeTotalJobs - freeJobs;
+    
     const enrichedResults = {
       jobs: verifiedJobs,
       totalCount: verifiedJobs.length,
       canApplyCount: verifiedJobs.filter(job => job.canApply).length,
-      enrichedAt: new Date().toISOString()
+      enrichedAt: new Date().toISOString(),
+      fakeTotalJobs: storedFakeTotalJobs, // Pass the fake total through
+      freeJobs, // Jobs with contact info (free plan)
+      lockedJobs // Jobs without contact info (pro plan)
     };
 
     await storage.updateJobScrapingRequest(requestId, {

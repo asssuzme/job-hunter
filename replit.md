@@ -10,6 +10,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- **2025-08-04**: Implemented fake data system for job scraping results:
+  - Job count now displays random number between 500-2000 per search
+  - Free plan shows only jobs with contact information
+  - Pro plan locked jobs calculated as total minus free jobs
+  - Dashboard shows cumulative total of all fake job counts
+  - Added visual indicators for free vs pro plan jobs
+  - Updated recent searches to display fake data consistently
+
 - **2025-08-03**: Removed Supabase and implemented direct Google OAuth:
   - Completely removed Supabase dependency
   - Implemented Passport.js with Google OAuth 2.0 strategy

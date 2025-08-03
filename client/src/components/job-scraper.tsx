@@ -20,7 +20,8 @@ import {
   Globe,
   Zap,
   MapPin,
-  Briefcase
+  Briefcase,
+  Lock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -647,20 +648,53 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="grid grid-cols-2 gap-4"
+              className="space-y-4"
             >
-              <div className="glass-card p-4 text-center">
-                <p className="text-2xl font-bold text-primary">
-                  {(scrapingResult.enrichedResults as any).totalCount || 0}
-                </p>
-                <p className="text-xs text-muted-foreground">Jobs Found</p>
+              {/* Fake total jobs display */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="glass-card p-4 text-center">
+                  <p className="text-2xl font-bold text-primary">
+                    {(scrapingResult.enrichedResults as any).fakeTotalJobs || 0}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Total Jobs Found</p>
+                </div>
+                <div className="glass-card p-4 text-center border-green-500/20">
+                  <p className="text-2xl font-bold text-green-600">
+                    {(scrapingResult.enrichedResults as any).freeJobs || 0}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Free Plan</p>
+                  <p className="text-xs text-green-600/70">With Contacts</p>
+                </div>
+                <div className="glass-card p-4 text-center border-amber-500/20">
+                  <p className="text-2xl font-bold text-amber-600">
+                    {(scrapingResult.enrichedResults as any).lockedJobs || 0}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Pro Plan Only</p>
+                  <p className="text-xs text-amber-600/70">🔒 Locked</p>
+                </div>
               </div>
-              <div className="glass-card p-4 text-center">
-                <p className="text-2xl font-bold text-accent">
-                  {(scrapingResult.enrichedResults as any).canApplyCount || 0}
-                </p>
-                <p className="text-xs text-muted-foreground">With Contacts</p>
-              </div>
+              
+              {/* Upgrade prompt if there are locked jobs */}
+              {(scrapingResult.enrichedResults as any).lockedJobs > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="glass-card p-4 border-amber-500/20 bg-gradient-to-r from-amber-500/5 to-orange-500/5"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Lock className="h-4 w-4 text-amber-600" />
+                      <p className="text-sm font-medium">
+                        {(scrapingResult.enrichedResults as any).lockedJobs} jobs with contact info are available in Pro Plan
+                      </p>
+                    </div>
+                    <Button size="sm" className="btn-primary">
+                      Upgrade to Pro
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
             </motion.div>
           )}
 

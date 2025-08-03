@@ -174,17 +174,25 @@ export class DatabaseStorage implements IStorage {
     totalApplicationsSent: number;
     recentSearches: JobScrapingRequest[];
   }> {
-    // Get recent searches for display (limit to 10)
-    const recentSearches = await db
+    // Get ALL searches to calculate cumulative total
+    const allSearches = await db
       .select()
       .from(jobScrapingRequests)
       .where(eq(jobScrapingRequests.userId, userId))
-      .orderBy(desc(jobScrapingRequests.createdAt))
-      .limit(10);
+      .orderBy(desc(jobScrapingRequests.createdAt));
     
-    // Simple fake data logic
-    const completedSearches = recentSearches.filter(s => s.status === 'completed').length;
-    const totalJobsScraped = completedSearches * 127; // Each search "finds" ~127 jobs
+    // Get recent searches for display (limit to 10)
+    const recentSearches = allSearches.slice(0, 10);
+    
+    // Calculate cumulative total of all fake jobs from all searches
+    let totalJobsScraped = 0;
+    for (const search of allSearches) {
+      if (search.status === 'completed' && search.enrichedResults) {
+        const enrichedResults = search.enrichedResults as any;
+        // Use the fake total if available, otherwise default to a random number
+        totalJobsScraped += enrichedResults.fakeTotalJobs || Math.floor(Math.random() * (2000 - 500 + 1)) + 500;
+      }
+    }
     
     // Get actual count of emails sent from emailApplications table
     const emailApplicationsResult = await db
