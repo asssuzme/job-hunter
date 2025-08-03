@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
+import { Link } from "wouter";
 import { ArrowRight, Sparkles, Search, Mail, Users, BarChart3, Target, Zap, Globe, Shield, CheckCircle, Star, TrendingUp, Briefcase, Brain, Clock, Award } from "lucide-react";
 import Footer from "@/components/footer";
 import { Badge } from "@/components/ui/badge";
