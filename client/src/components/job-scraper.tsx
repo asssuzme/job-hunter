@@ -307,7 +307,11 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
     });
   };
 
-  const isProcessing = !isAborted && (scrapeMutation.isPending || (scrapingResult && ['pending', 'processing', 'filtering', 'enriching'].includes(scrapingResult.status)));
+  const isProcessing = !isAborted && (
+    scrapeMutation.isPending || 
+    (currentRequestId && !scrapingResult) || // Loading the scraping result
+    (scrapingResult && ['pending', 'processing', 'filtering', 'enriching'].includes(scrapingResult.status))
+  );
 
   // Use state for smooth progress animation
   const [animatedProgress, setAnimatedProgress] = useState(0);
@@ -445,13 +449,14 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
   if (isProcessing) {
     return (
       <motion.div
-        className="fixed inset-0 min-h-screen flex items-center justify-center bg-background overflow-hidden z-50"
+        className="relative w-full flex items-center justify-center overflow-hidden"
+        style={{ minHeight: "calc(90vh - 120px)" }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
         {/* Animated gradient background */}
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 rounded-lg overflow-hidden">
           <motion.div
             className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10"
             animate={{
@@ -468,10 +473,10 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
           />
           {/* Floating orbs */}
           <motion.div
-            className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl"
+            className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl"
             animate={{
-              x: [0, 100, 0],
-              y: [0, -100, 0],
+              x: [0, 50, 0],
+              y: [0, -50, 0],
               scale: [1, 1.2, 1],
             }}
             transition={{
@@ -481,10 +486,10 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
             }}
           />
           <motion.div
-            className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl"
+            className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl"
             animate={{
-              x: [0, -100, 0],
-              y: [0, 100, 0],
+              x: [0, -50, 0],
+              y: [0, 50, 0],
               scale: [1, 1.3, 1],
             }}
             transition={{
