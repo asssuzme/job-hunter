@@ -10,6 +10,19 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- **2025-08-03**: Complete Vercel serverless deployment conversion:
+  - Converted entire backend from Express.js to Vercel serverless functions
+  - Migrated from session-based to JWT token authentication for stateless serverless compatibility
+  - Created comprehensive API endpoint structure with proper authentication and CORS handling
+  - Implemented JWT token management with localStorage storage and Authorization headers
+  - Updated all client-side authentication flows to work with new JWT system
+  - Created utility libraries for auth, database connections, and CORS management
+  - Built complete serverless API covering dashboard stats, job scraping, email generation/sending
+  - Added Gmail OAuth integration and resume upload functionality for serverless environment
+  - Updated database operations to work with per-request connections in serverless functions
+  - Created detailed deployment guide and environment variable configuration
+  - Architecture now fully compatible with Vercel's serverless platform for global scalability
+
 - **2025-08-03**: Fixed production authentication persistence issue:
   - Resolved session cookies not persisting in production due to incorrect environment detection
   - Updated session configuration to properly detect production environment using Replit domain
