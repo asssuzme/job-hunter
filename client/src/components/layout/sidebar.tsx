@@ -154,7 +154,10 @@ export function Sidebar({ user, onLogout, isOpen = false, onClose }: SidebarProp
                       <div className="space-y-0.5">
                         <span className="block text-sm font-medium">{item.label}</span>
                         {item.description && (
-                          <span className="block text-xs opacity-60">{item.description}</span>
+                          <span className={cn(
+                            "block text-xs",
+                            isActive ? "opacity-90" : "opacity-60"
+                          )}>{item.description}</span>
                         )}
                       </div>
                       {item.badge && (
