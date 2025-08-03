@@ -16,7 +16,6 @@ import Analytics from "@/pages/analytics";
 import Settings from "@/pages/settings";
 import Subscribe from "@/pages/subscribe";
 import PrivacyPolicy from "@/pages/privacy-policy";
-import { Privacy } from "@/pages/privacy";
 import { Terms } from "@/pages/terms";
 import TermsOfService from "@/pages/terms-of-service";
 import RefundPolicy from "@/pages/refund-policy";
@@ -67,7 +66,6 @@ function Router() {
       <Route path="/auth/callback" component={AuthCallback} />
       {/* Policy pages accessible to all */}
       <Route path="/homepage" component={HomepageRedirect} />
-      <Route path="/privacy" component={Privacy} />
       <Route path="/terms" component={Terms} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms-of-service" component={TermsOfService} />

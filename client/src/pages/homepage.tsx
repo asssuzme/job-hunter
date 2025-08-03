@@ -32,7 +32,7 @@ export default function Homepage() {
               <h1 className="text-xl font-bold">AutoApply.ai</h1>
             </div>
             <div className="flex items-center gap-6">
-              <Link href="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              <Link href="/privacy-policy" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                 Privacy Policy
               </Link>
               <Link href="/terms-of-service" className="text-sm text-muted-foreground hover:text-primary transition-colors">
