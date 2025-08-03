@@ -85,6 +85,33 @@ async function isAuthenticated(req: Request, res: Response, next: NextFunction) 
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // CORS configuration for production
+  app.use((req, res, next) => {
+    const allowedOrigins = [
+      'http://localhost:5000',
+      'http://localhost:3000',
+      'https://gigfloww.com',
+      'https://www.gigfloww.com',
+      'https://*.replit.dev',
+      'https://*.repl.co'
+    ];
+    
+    const origin = req.headers.origin;
+    if (origin && (allowedOrigins.some(allowed => 
+      allowed.includes('*') ? origin.includes(allowed.replace('https://*', '')) : allowed === origin
+    ))) {
+      res.header('Access-Control-Allow-Origin', origin);
+      res.header('Access-Control-Allow-Credentials', 'true');
+      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+      res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    }
+    
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(200);
+    }
+    
+    next();
+  });
   // Initialize Passport
   app.use(passport.initialize());
   app.use(passport.session());
@@ -854,7 +881,7 @@ Format the email with proper structure including greeting, body paragraphs, and 
   app.get("/api/auth/gmail/authorize", isAuthenticated, async (req: any, res) => {
     try {
       const { getGmailAuthUrl } = await import('./gmailOAuth');
-      const authUrl = getGmailAuthUrl(req.user.id);
+      const authUrl = getGmailAuthUrl(req.user.id, req);
       res.json({ authUrl });
     } catch (error) {
       console.error("Error generating Gmail auth URL:", error);
@@ -872,7 +899,7 @@ Format the email with proper structure including greeting, body paragraphs, and 
       }
 
       const { handleGmailCallback } = await import('./gmailOAuth');
-      const gmailData = await handleGmailCallback(code, state);
+      const gmailData = await handleGmailCallback(code, state, req);
       
       // Store Gmail credentials
       await storage.upsertGmailCredentials({

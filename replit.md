@@ -30,6 +30,15 @@ Preferred communication style: Simple, everyday language.
   - Simplified authentication flow with session-based auth
   - All authentication now handled directly through Google
 
+- **2025-08-04**: Shifted back to production environment for https://gigfloww.com:
+  - Re-enabled production detection with gigfloww.com domain checks
+  - Updated session cookies to use secure settings with sameSite: 'none' for production
+  - Set cookie domain to '.gigfloww.com' for cross-subdomain compatibility
+  - Added CORS headers for production domains (gigfloww.com, www.gigfloww.com)
+  - Updated Gmail OAuth to dynamically generate redirect URLs based on request hostname
+  - Configured frontend auth logic to use Google OAuth for production domain
+  - All OAuth callbacks now work properly with both development and production URLs
+
 - **2025-08-03**: Reverted to development environment:
   - Shifted back to development URL (http://localhost:5000) due to multiple bugs in production
   - Session persistence issues causing repeated logouts

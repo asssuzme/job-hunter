@@ -10,8 +10,10 @@ app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 // Session configuration
 app.set("trust proxy", 1);
 
-// Force development mode for now
-const isProduction = false;
+// Detect production environment
+const isProduction = process.env.NODE_ENV === 'production' || 
+  process.env.REPLIT_DOMAINS?.includes('gigfloww.com') ||
+  process.env.REPLIT_DOMAINS?.includes('gigfloww.repl.co');
 
 // Use default memory store for session persistence
 app.use(
@@ -20,11 +22,11 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: isProduction ? true : false,
+      secure: isProduction,
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       sameSite: isProduction ? 'none' : 'lax',
-      // Remove domain restriction for Replit
+      domain: isProduction ? '.gigfloww.com' : undefined,
     },
   })
 );

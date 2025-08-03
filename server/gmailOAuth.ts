@@ -8,7 +8,7 @@ const GMAIL_SCOPES = [
 ];
 
 // Create OAuth client for Gmail
-export function createGmailOAuthClient() {
+export function createGmailOAuthClient(req?: any) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   
@@ -16,16 +16,31 @@ export function createGmailOAuthClient() {
     throw new Error('Gmail OAuth credentials not configured');
   }
 
+  // Determine redirect URL based on environment
+  let redirectUrl;
+  if (req && req.hostname) {
+    // Use request hostname for dynamic redirect
+    const protocol = req.secure || req.hostname.includes('gigfloww.com') ? 'https' : 'http';
+    redirectUrl = `${protocol}://${req.hostname}/api/auth/gmail/callback`;
+  } else {
+    // Fallback to environment-based URL
+    const isProduction = process.env.NODE_ENV === 'production' || 
+      process.env.REPLIT_DOMAINS?.includes('gigfloww.com');
+    redirectUrl = isProduction 
+      ? 'https://gigfloww.com/api/auth/gmail/callback'
+      : `${process.env.REPLIT_DEV_DOMAIN || 'http://localhost:5000'}/api/auth/gmail/callback`;
+  }
+
   return new OAuth2Client(
     clientId,
     clientSecret,
-    `${process.env.REPLIT_DEV_DOMAIN || 'http://localhost:5000'}/api/auth/gmail/callback`
+    redirectUrl
   );
 }
 
 // Generate Gmail authorization URL
-export function getGmailAuthUrl(userId: string): string {
-  const oauth2Client = createGmailOAuthClient();
+export function getGmailAuthUrl(userId: string, req?: any): string {
+  const oauth2Client = createGmailOAuthClient(req);
   
   // Create state parameter with user ID
   const state = Buffer.from(JSON.stringify({
@@ -43,9 +58,9 @@ export function getGmailAuthUrl(userId: string): string {
 }
 
 // Handle Gmail OAuth callback
-export async function handleGmailCallback(code: string, state: string) {
+export async function handleGmailCallback(code: string, state: string, req?: any) {
   try {
-    const oauth2Client = createGmailOAuthClient();
+    const oauth2Client = createGmailOAuthClient(req);
     
     // Decode and validate state
     const stateData = JSON.parse(Buffer.from(state, 'base64').toString());

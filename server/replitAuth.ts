@@ -38,9 +38,12 @@ export function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env.NODE_ENV === 'production' || 
+        process.env.REPLIT_DOMAINS?.includes('gigfloww.com'),
       maxAge: sessionTtl,
-      sameSite: 'lax',
+      sameSite: process.env.NODE_ENV === 'production' || 
+        process.env.REPLIT_DOMAINS?.includes('gigfloww.com') ? 'none' : 'lax',
+      domain: process.env.REPLIT_DOMAINS?.includes('gigfloww.com') ? '.gigfloww.com' : undefined,
     },
   });
 }

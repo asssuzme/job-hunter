@@ -7,7 +7,11 @@ export async function signInWithGoogle() {
                        window.location.hostname.includes('.replit.dev') ||
                        window.location.hostname.includes('.repl.co');
   
-  if (isDevelopment) {
+  // Always use Google OAuth for gigfloww.com
+  const isProduction = window.location.hostname === 'gigfloww.com' || 
+                      window.location.hostname === 'www.gigfloww.com';
+  
+  if (isDevelopment && !isProduction) {
     window.location.href = '/api/auth/dev-login';
   } else {
     window.location.href = '/api/auth/google';
