@@ -368,7 +368,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
   };
 
   // Handle abort
-  const handleAbort = () => {
+  const handleAbort = async () => {
     // Set ref immediately for instant abort
     abortRef.current = true;
     setIsAborted(true);
@@ -376,29 +376,36 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
     // Cancel ALL scrape-job queries
     queryClient.cancelQueries({ 
       predicate: (query) => {
-        return query.queryKey[0]?.toString().includes('/api/scrape-job');
+        return query.queryKey[0]?.toString().includes('/api/scrape-job') || false;
       }
     });
     
     // Remove ALL scrape-job queries from cache
     queryClient.removeQueries({ 
       predicate: (query) => {
-        return query.queryKey[0]?.toString().includes('/api/scrape-job');
+        return query.queryKey[0]?.toString().includes('/api/scrape-job') || false;
       }
     });
     
+    // Call backend to abort Apify actors
+    if (currentRequestId) {
+      try {
+        await apiRequest(`/api/scrape-job/${currentRequestId}/abort`, {
+          method: 'POST'
+        });
+      } catch (error) {
+        console.error('Failed to abort Apify actors:', error);
+      }
+    }
+    
     // Clear the request ID to prevent any further polling
-    const clearedId = currentRequestId;
     setCurrentRequestId(null);
     setAnimatedProgress(0);
     
-    // Force a small delay to ensure all queries are cancelled
-    setTimeout(() => {
-      toast({
-        title: "Search Aborted",
-        description: "Job search has been cancelled",
-      });
-    }, 100);
+    toast({
+      title: "Search Aborted",
+      description: "Job search has been cancelled",
+    });
   };
 
   // Show full-screen loading animation when processing

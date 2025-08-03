@@ -433,6 +433,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Check if user has a resume
+  // Abort job scraping endpoint
+  app.post("/api/scrape-job/:id/abort", isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Get the job scraping request with run IDs
+      const request = await storage.getJobScrapingRequest(id);
+      if (!request) {
+        return res.status(404).json({ error: "Job scraping request not found" });
+      }
+      
+      // Abort each Apify run if it has a run ID
+      const abortPromises = [];
+      
+      if (request.jobScraperRunId) {
+        abortPromises.push(
+          fetch(`https://api.apify.com/v2/actor-runs/${request.jobScraperRunId}/abort?token=apify_api_9dhAJl3j2KT3Ew2l5Na8I8r0byW2Gn3QVX4g`, {
+            method: 'POST'
+          })
+        );
+      }
+      
+      if (request.profileScraperRunId) {
+        abortPromises.push(
+          fetch(`https://api.apify.com/v2/actor-runs/${request.profileScraperRunId}/abort?token=apify_api_9dhAJl3j2KT3Ew2l5Na8I8r0byW2Gn3QVX4g`, {
+            method: 'POST'
+          })
+        );
+      }
+      
+      if (request.emailVerifierRunId) {
+        abortPromises.push(
+          fetch(`https://api.apify.com/v2/actor-runs/${request.emailVerifierRunId}/abort?token=apify_api_9dhAJl3j2KT3Ew2l5Na8I8r0byW2Gn3QVX4g`, {
+            method: 'POST'
+          })
+        );
+      }
+      
+      // Wait for all abort requests
+      await Promise.allSettled(abortPromises);
+      
+      // Update status to cancelled
+      await storage.cancelJobScrapingRequest(id);
+      
+      res.json({ message: "Job scraping aborted successfully" });
+    } catch (error) {
+      console.error("Error aborting job scraping:", error);
+      res.status(500).json({ error: "Failed to abort job scraping" });
+    }
+  });
+
   app.get("/api/user/resume", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.id;
@@ -1329,7 +1380,7 @@ function filterJobs(jobs: JobData[]): FilteredJobData[] {
   return Array.from(companyMap.values());
 }
 
-async function enrichJobsWithProfiles(jobs: FilteredJobData[]): Promise<FilteredJobData[]> {
+async function enrichJobsWithProfiles(jobs: FilteredJobData[], requestId?: string): Promise<FilteredJobData[]> {
   // Get jobs that have poster LinkedIn URLs - be very specific about checking
   const jobsWithProfiles = jobs.filter((job: FilteredJobData) => {
     const hasUrl = job.jobPosterLinkedinUrl && job.jobPosterLinkedinUrl.trim() !== '' && job.jobPosterLinkedinUrl !== 'N/A';
@@ -1361,8 +1412,9 @@ async function enrichJobsWithProfiles(jobs: FilteredJobData[]): Promise<Filtered
     };
     console.log("Sending request to profile scraper:", JSON.stringify(requestBody, null, 2));
 
-    const response = await fetch(
-      "https://api.apify.com/v2/acts/dev_fusion~linkedin-profile-scraper/run-sync-get-dataset-items?token=apify_api_9dhAJl3j2KT3Ew2l5Na8I8r0byW2Gn3QVX4g",
+    // Start async profile scraper run
+    const runResponse = await fetch(
+      "https://api.apify.com/v2/acts/dev_fusion~linkedin-profile-scraper/runs?token=apify_api_9dhAJl3j2KT3Ew2l5Na8I8r0byW2Gn3QVX4g",
       {
         method: "POST",
         headers: {
@@ -1372,15 +1424,61 @@ async function enrichJobsWithProfiles(jobs: FilteredJobData[]): Promise<Filtered
       }
     );
 
-    console.log("Profile scraper response status:", response.status);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Profile scraping failed:", response.status, response.statusText, errorText);
+    if (!runResponse.ok) {
+      const errorText = await runResponse.text();
+      console.error("Profile scraping failed:", runResponse.status, runResponse.statusText, errorText);
       return jobs.map(job => ({ ...job, canApply: false }));
     }
 
-    const profileResults = await response.json();
+    const runData = await runResponse.json();
+    const profileScraperRunId = runData.data.id;
+    
+    // Store the run ID if we have a request ID
+    if (requestId) {
+      await storage.updateJobScrapingRequest(requestId, { 
+        profileScraperRunId 
+      });
+    }
+
+    // Poll for completion
+    let profileResults = [];
+    let attempts = 0;
+    const maxAttempts = 60;
+    
+    while (attempts < maxAttempts) {
+      // Check if cancelled
+      if (requestId) {
+        const currentRequest = await storage.getJobScrapingRequest(requestId);
+        if (currentRequest?.status === 'cancelled') {
+          throw new Error('Profile scraping was cancelled');
+        }
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 3000)); // 3 seconds between polls
+      
+      const statusResponse = await fetch(`https://api.apify.com/v2/actor-runs/${profileScraperRunId}?token=apify_api_9dhAJl3j2KT3Ew2l5Na8I8r0byW2Gn3QVX4g`);
+      if (!statusResponse.ok) continue;
+      
+      const statusData = await statusResponse.json();
+      const status = statusData.data.status;
+      
+      if (status === 'SUCCEEDED') {
+        const datasetResponse = await fetch(`https://api.apify.com/v2/actor-runs/${profileScraperRunId}/dataset/items?token=apify_api_9dhAJl3j2KT3Ew2l5Na8I8r0byW2Gn3QVX4g`);
+        if (datasetResponse.ok) {
+          profileResults = await datasetResponse.json();
+          break;
+        }
+      } else if (status === 'FAILED' || status === 'ABORTED') {
+        throw new Error(`Profile scraping ${status.toLowerCase()}`);
+      }
+      
+      attempts++;
+    }
+    
+    if (profileResults.length === 0 && attempts >= maxAttempts) {
+      console.error("Profile scraping timed out");
+      return jobs.map(job => ({ ...job, canApply: false }));
+    }
     console.log("\n🔍 PROFILE SCRAPER RESPONSE ANALYSIS:");
     console.log("Response type:", typeof profileResults);
     console.log("Is array:", Array.isArray(profileResults));
@@ -1511,7 +1609,7 @@ async function enrichJobsWithProfiles(jobs: FilteredJobData[]): Promise<Filtered
   }
 }
 
-async function verifyEmails(jobs: any[]) {
+async function verifyEmails(jobs: any[], requestId?: string) {
   try {
     // Extract emails from jobs that can apply
     const emailsToVerify = jobs
@@ -1525,8 +1623,6 @@ async function verifyEmails(jobs: any[]) {
 
     console.log(`\n📧 Verifying ${emailsToVerify.length} emails...`);
     
-    const verificationUrl = 'https://api.apify.com/v2/acts/devil_port369-owner~email-verifier/run-sync-get-dataset-items?token=apify_api_9dhAJl3j2KT3Ew2l5Na8I8r0byW2Gn3QVX4g';
-    
     const requestBody = {
       emails: emailsToVerify,
       proxy: {
@@ -1537,7 +1633,8 @@ async function verifyEmails(jobs: any[]) {
 
     console.log("Email verification request:", JSON.stringify(requestBody, null, 2));
 
-    const response = await fetch(verificationUrl, {
+    // Start async email verifier run
+    const runResponse = await fetch('https://api.apify.com/v2/acts/devil_port369-owner~email-verifier/runs?token=apify_api_9dhAJl3j2KT3Ew2l5Na8I8r0byW2Gn3QVX4g', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1545,9 +1642,9 @@ async function verifyEmails(jobs: any[]) {
       body: JSON.stringify(requestBody)
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Email verification API error: ${response.status} - ${errorText}`);
+    if (!runResponse.ok) {
+      const errorText = await runResponse.text();
+      console.error(`Email verification API error: ${runResponse.status} - ${errorText}`);
       // Return jobs with unknown status if verification fails
       return jobs.map(job => ({
         ...job,
@@ -1555,7 +1652,58 @@ async function verifyEmails(jobs: any[]) {
       }));
     }
 
-    const verificationResults = await response.json();
+    const runData = await runResponse.json();
+    const emailVerifierRunId = runData.data.id;
+    
+    // Store the run ID if we have a request ID
+    if (requestId) {
+      await storage.updateJobScrapingRequest(requestId, { 
+        emailVerifierRunId 
+      });
+    }
+
+    // Poll for completion
+    let verificationResults = [];
+    let attempts = 0;
+    const maxAttempts = 60;
+    
+    while (attempts < maxAttempts) {
+      // Check if cancelled
+      if (requestId) {
+        const currentRequest = await storage.getJobScrapingRequest(requestId);
+        if (currentRequest?.status === 'cancelled') {
+          throw new Error('Email verification was cancelled');
+        }
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2 seconds between polls
+      
+      const statusResponse = await fetch(`https://api.apify.com/v2/actor-runs/${emailVerifierRunId}?token=apify_api_9dhAJl3j2KT3Ew2l5Na8I8r0byW2Gn3QVX4g`);
+      if (!statusResponse.ok) continue;
+      
+      const statusData = await statusResponse.json();
+      const status = statusData.data.status;
+      
+      if (status === 'SUCCEEDED') {
+        const datasetResponse = await fetch(`https://api.apify.com/v2/actor-runs/${emailVerifierRunId}/dataset/items?token=apify_api_9dhAJl3j2KT3Ew2l5Na8I8r0byW2Gn3QVX4g`);
+        if (datasetResponse.ok) {
+          verificationResults = await datasetResponse.json();
+          break;
+        }
+      } else if (status === 'FAILED' || status === 'ABORTED') {
+        throw new Error(`Email verification ${status.toLowerCase()}`);
+      }
+      
+      attempts++;
+    }
+    
+    if (verificationResults.length === 0 && attempts >= maxAttempts) {
+      console.error("Email verification timed out");
+      return jobs.map(job => ({
+        ...job,
+        emailVerificationStatus: job.canApply ? 'unknown' : undefined
+      }));
+    }
     console.log("Email verification results:", JSON.stringify(verificationResults, null, 2));
 
     // Create a map of email to verification status
@@ -1622,8 +1770,8 @@ async function processJobScraping(requestId: string) {
       urls: [request.linkedinUrl]
     };
 
-    // Call Apify LinkedIn scraper API using the sync endpoint
-    const response = await fetch("https://api.apify.com/v2/acts/curious_coder~linkedin-jobs-scraper/run-sync-get-dataset-items?token=apify_api_9dhAJl3j2KT3Ew2l5Na8I8r0byW2Gn3QVX4g", {
+    // Step 1: Start the Apify job scraper (async)
+    const runResponse = await fetch("https://api.apify.com/v2/acts/curious_coder~linkedin-jobs-scraper/runs?token=apify_api_9dhAJl3j2KT3Ew2l5Na8I8r0byW2Gn3QVX4g", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -1631,12 +1779,58 @@ async function processJobScraping(requestId: string) {
       body: JSON.stringify(requestBody)
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Apify API error: ${response.status} ${response.statusText} - ${errorText}`);
+    if (!runResponse.ok) {
+      const errorText = await runResponse.text();
+      throw new Error(`Apify API error: ${runResponse.status} ${runResponse.statusText} - ${errorText}`);
     }
 
-    const rawResults = await response.json();
+    const runData = await runResponse.json();
+    const jobScraperRunId = runData.data.id;
+    
+    // Store the run ID for potential abort
+    await storage.updateJobScrapingRequest(requestId, { 
+      jobScraperRunId 
+    });
+
+    // Step 2: Poll for completion
+    let rawResults = [];
+    let attempts = 0;
+    const maxAttempts = 60; // 5 minutes max (5 seconds * 60)
+    
+    while (attempts < maxAttempts) {
+      // Check if cancelled
+      const currentRequest = await storage.getJobScrapingRequest(requestId);
+      if (currentRequest?.status === 'cancelled') {
+        throw new Error('Job scraping was cancelled');
+      }
+      
+      // Wait 5 seconds between polls
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      
+      // Check run status
+      const statusResponse = await fetch(`https://api.apify.com/v2/actor-runs/${jobScraperRunId}?token=apify_api_9dhAJl3j2KT3Ew2l5Na8I8r0byW2Gn3QVX4g`);
+      if (!statusResponse.ok) continue;
+      
+      const statusData = await statusResponse.json();
+      const status = statusData.data.status;
+      
+      if (status === 'SUCCEEDED') {
+        // Get the dataset
+        const datasetResponse = await fetch(`https://api.apify.com/v2/actor-runs/${jobScraperRunId}/dataset/items?token=apify_api_9dhAJl3j2KT3Ew2l5Na8I8r0byW2Gn3QVX4g`);
+        if (datasetResponse.ok) {
+          rawResults = await datasetResponse.json();
+          break;
+        }
+      } else if (status === 'FAILED' || status === 'ABORTED') {
+        throw new Error(`Job scraping ${status.toLowerCase()}`);
+      }
+      
+      attempts++;
+    }
+    
+    if (rawResults.length === 0 && attempts >= maxAttempts) {
+      throw new Error('Job scraping timed out');
+    }
     console.log("Raw job scraping results sample:", JSON.stringify(rawResults.slice(0, 2), null, 2));
     console.log("Total jobs scraped:", rawResults.length);
     
@@ -1727,11 +1921,11 @@ async function processJobScraping(requestId: string) {
     });
 
     // Profile enrichment step
-    const enrichedJobs = await enrichJobsWithProfiles(filteredJobs);
+    const enrichedJobs = await enrichJobsWithProfiles(filteredJobs, requestId);
     
     // Email verification step
     console.log('\n📧 Step 4: Starting email verification...');
-    const verifiedJobs = await verifyEmails(enrichedJobs);
+    const verifiedJobs = await verifyEmails(enrichedJobs, requestId);
     
     // Get the fake total from filtered results
     const updatedRequest = await storage.getJobScrapingRequest(requestId);

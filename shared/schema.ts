@@ -46,6 +46,10 @@ export const jobScrapingRequests = pgTable("job_scraping_requests", {
   filteredResults: jsonb("filtered_results"),
   enrichedResults: jsonb("enriched_results"),
   errorMessage: text("error_message"),
+  // Apify run IDs for aborting
+  jobScraperRunId: varchar("job_scraper_run_id"),
+  profileScraperRunId: varchar("profile_scraper_run_id"),
+  emailVerifierRunId: varchar("email_verifier_run_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   completedAt: timestamp("completed_at"),
 });
