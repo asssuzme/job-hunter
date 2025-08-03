@@ -52,7 +52,7 @@ export default function RefundPolicy() {
               <h2 className="text-xl font-semibold mb-3 text-foreground">5. Refund Process</h2>
               <div className="space-y-3">
                 <p><strong>5.1 Request Timeline:</strong> Submit refund requests within 7 days of the charge</p>
-                <p><strong>5.2 How to Request:</strong> Email support@autoapply.ai with:</p>
+                <p><strong>5.2 How to Request:</strong> Email team@gigfloww.com with:</p>
                 <ul className="list-disc pl-6 ml-4 space-y-2">
                   <li>Your account email</li>
                   <li>Transaction ID or invoice number</li>
@@ -125,7 +125,7 @@ export default function RefundPolicy() {
               <h2 className="text-xl font-semibold mb-3 text-foreground">12. Contact Us</h2>
               <p className="mb-3">For refund requests or questions about this policy:</p>
               <div className="bg-muted/50 p-4 rounded-lg">
-                <p><strong>Email:</strong> support@autoapply.ai</p>
+                <p><strong>Email:</strong> team@gigfloww.com</p>
                 <p><strong>Response Time:</strong> 24-48 hours (business days)</p>
                 <p className="mt-2">Please include "Refund Request" in your email subject line</p>
               </div>

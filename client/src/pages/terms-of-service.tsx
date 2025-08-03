@@ -178,8 +178,8 @@ export default function TermsOfService() {
               <h2 className="text-xl font-semibold mb-3 text-foreground">17. Contact Information</h2>
               <p className="mb-3">For questions about these Terms, contact us at:</p>
               <div className="bg-muted/50 p-4 rounded-lg">
-                <p><strong>Email:</strong> legal@autoapply.ai</p>
-                <p><strong>Support:</strong> support@autoapply.ai</p>
+                <p><strong>Email:</strong> team@gigfloww.com</p>
+                <p><strong>Support:</strong> team@gigfloww.com</p>
               </div>
             </section>
       </div>

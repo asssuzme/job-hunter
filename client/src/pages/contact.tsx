@@ -21,10 +21,10 @@ export default function Contact() {
                     For general inquiries and support:
                   </p>
                   <a 
-                    href="mailto:support@autoapply.ai" 
+                    href="mailto:team@gigfloww.com" 
                     className="text-primary hover:underline"
                   >
-                    support@autoapply.ai
+                    team@gigfloww.com
                   </a>
                 </div>
               </div>
@@ -51,10 +51,10 @@ export default function Contact() {
                     For privacy concerns or data requests:
                   </p>
                   <a 
-                    href="mailto:privacy@autoapply.ai" 
+                    href="mailto:team@gigfloww.com" 
                     className="text-primary hover:underline"
                   >
-                    privacy@autoapply.ai
+                    team@gigfloww.com
                   </a>
                 </div>
               </div>
@@ -83,10 +83,10 @@ export default function Contact() {
                   For GDPR/CCPA inquiries and data protection matters:
                 </p>
                 <a 
-                  href="mailto:dpo@autoapply.ai" 
+                  href="mailto:team@gigfloww.com" 
                   className="text-primary hover:underline"
                 >
-                  dpo@autoapply.ai
+                  team@gigfloww.com
                 </a>
               </div>
             </div>

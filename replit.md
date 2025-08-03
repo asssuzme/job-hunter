@@ -10,6 +10,11 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- **2025-08-04**: Updated all contact email addresses site-wide to team@gigfloww.com:
+  - Replaced all instances of autoapply.ai email addresses across footer, contact page, legal pages
+  - Consolidated all support/privacy/legal/DPO emails to single email: team@gigfloww.com
+  - Updated refund request instructions to use team@gigfloww.com
+
 - **2025-08-04**: Fixed and finalized fake data system for consistent job counts:
   - New searches generate random fake total (500-2000) that's permanently stored
   - Old searches use consistent hash-based generation from search ID

@@ -96,14 +96,14 @@ export default function Footer() {
             <ul className="space-y-3">
               <li className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Mail className="h-4 w-4" />
-                <a href="mailto:support@autoapply.ai" className="hover:text-primary transition-colors">
-                  support@autoapply.ai
+                <a href="mailto:team@gigfloww.com" className="hover:text-primary transition-colors">
+                  team@gigfloww.com
                 </a>
               </li>
               <li className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Mail className="h-4 w-4" />
-                <a href="mailto:privacy@autoapply.ai" className="hover:text-primary transition-colors">
-                  privacy@autoapply.ai
+                <a href="mailto:team@gigfloww.com" className="hover:text-primary transition-colors">
+                  team@gigfloww.com
                 </a>
               </li>
               <li className="flex items-start gap-2 text-sm text-muted-foreground">

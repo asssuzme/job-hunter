@@ -176,8 +176,8 @@ export default function PrivacyPolicy() {
               <h2 className="text-xl font-semibold mb-3 text-foreground">13. Contact Information</h2>
               <p className="mb-3">For privacy-related questions or to exercise your rights, contact us at:</p>
               <div className="bg-muted/50 p-4 rounded-lg">
-                <p><strong>Email:</strong> privacy@autoapply.ai</p>
-                <p><strong>Data Protection Officer:</strong> dpo@autoapply.ai</p>
+                <p><strong>Email:</strong> team@gigfloww.com</p>
+                <p><strong>Data Protection Officer:</strong> team@gigfloww.com</p>
                 <p><strong>Address:</strong> autoapply.ai, c/o Ashutosh Lath</p>
               </div>
             </section>
