@@ -133,6 +133,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
       location: "",
       workType: "1",
     },
+    mode: "onChange", // Validate on change to clear errors immediately
   });
 
   // Check for existing resume on component mount
