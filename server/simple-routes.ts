@@ -51,9 +51,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use((req, res, next) => {
     const origin = req.headers.origin;
     const allowedOrigins = [
-      'https://gigfloww.com',
-      'https://www.gigfloww.com',
       'https://service-genie-ashutoshlathrep.replit.app',
+      'https://service-genie-ashutoshlathrep.repl.co',
       'http://localhost:5000',
       'http://localhost:3000'
     ];
@@ -96,41 +95,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Supabase OAuth callback
   app.post("/api/auth/supabase/callback", async (req, res) => {
-    const { userId, email, userMetadata } = req.body;
-    
-    if (!userId || !email) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-    
-    // Upsert user
-    const [user] = await db
-      .insert(users)
-      .values({
-        id: userId,
-        email: email,
-        firstName: userMetadata?.first_name || userMetadata?.given_name || null,
-        lastName: userMetadata?.last_name || userMetadata?.family_name || null,
-        profileImageUrl: userMetadata?.avatar_url || userMetadata?.picture || null,
-      })
-      .onConflictDoUpdate({
-        target: users.id,
-        set: {
+    try {
+      const { userId, email, userMetadata } = req.body;
+      
+      if (!userId || !email) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+      
+      // Upsert user
+      const [user] = await db
+        .insert(users)
+        .values({
+          id: userId,
           email: email,
           firstName: userMetadata?.first_name || userMetadata?.given_name || null,
           lastName: userMetadata?.last_name || userMetadata?.family_name || null,
           profileImageUrl: userMetadata?.avatar_url || userMetadata?.picture || null,
-        },
-      })
-      .returning();
-    
-    // Set session
-    req.session.userId = user.id;
-    req.session.save((err: any) => {
-      if (err) {
-        return res.status(500).json({ error: 'Failed to save session' });
-      }
-      res.json({ success: true, userId: user.id });
-    });
+        })
+        .onConflictDoUpdate({
+          target: users.id,
+          set: {
+            email: email,
+            firstName: userMetadata?.first_name || userMetadata?.given_name || null,
+            lastName: userMetadata?.last_name || userMetadata?.family_name || null,
+            profileImageUrl: userMetadata?.avatar_url || userMetadata?.picture || null,
+          },
+        })
+        .returning();
+      
+      // Set session
+      req.session.userId = user.id;
+      req.session.save((err: any) => {
+        if (err) {
+          console.error('Session save error:', err);
+          return res.status(500).json({ error: 'Failed to save session' });
+        }
+        res.json({ success: true, userId: user.id });
+      });
+    } catch (error) {
+      console.error('Supabase callback error:', error);
+      res.status(500).json({ error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' });
+    }
   });
 
   // Logout
@@ -149,9 +154,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/auth/gmail/authorize", requireAuth, (req, res) => {
     // Determine the base URL based on the environment
     let baseUrl: string;
-    if (process.env.NODE_ENV === 'production' || process.env.REPL_SLUG) {
-      // In production, use the actual domain
-      baseUrl = 'https://gigfloww.com';
+    if (process.env.REPL_SLUG) {
+      // In production on Replit
+      baseUrl = 'https://service-genie-ashutoshlathrep.replit.app';
     } else {
       // In development, use the protocol and host
       baseUrl = `${req.protocol}://${req.get('host')}`;
@@ -185,8 +190,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     // Determine the base URL based on the environment
     let baseUrl: string;
-    if (process.env.NODE_ENV === 'production' || process.env.REPL_SLUG) {
-      baseUrl = 'https://gigfloww.com';
+    if (process.env.REPL_SLUG) {
+      baseUrl = 'https://service-genie-ashutoshlathrep.replit.app';
     } else {
       baseUrl = `${req.protocol}://${req.get('host')}`;
     }

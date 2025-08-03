@@ -10,11 +10,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-- **2025-08-03**: Custom domain SSL certificate issue identified:
-  - gigfloww.com showing SSL certificate error
-  - Domain needs to be properly deployed through Replit's deployment system
-  - User should use https://service-genie-ashutoshlathrep.replit.app until deployment is complete
-  - Created deployment guide for proper custom domain setup
+- **2025-08-03**: Shifted to Replit production URL exclusively:
+  - Removed all references to gigfloww.com due to SSL certificate issues
+  - Now using https://service-genie-ashutoshlathrep.replit.app as the production URL
+  - Updated CORS to only allow Replit URLs
+  - Removed domain restrictions from session cookies
+  - Updated Gmail OAuth callbacks to use Replit URL
+  - Added error handling to auth callback for better debugging
 
 - **2025-08-03**: Fixed production deployment issues for https://gigfloww.com:
   - Updated session cookie configuration to work with custom domain
