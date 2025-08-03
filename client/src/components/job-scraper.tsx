@@ -127,6 +127,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
   const [resumeText, setResumeText] = useState<string>("");
   const [resumeFileName, setResumeFileName] = useState<string>("");
   const [isLoadingResume, setIsLoadingResume] = useState(true);
+  const [isAborted, setIsAborted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -204,6 +205,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
     },
     onSuccess: (data) => {
       setCurrentRequestId(data.requestId);
+      setIsAborted(false); // Reset abort flag when starting new search
       toast({
         title: "Search Started",
         description: "Searching for job listings..."
@@ -221,8 +223,9 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
   // Status polling
   const { data: scrapingResult, isLoading: isPolling } = useQuery<JobScrapingResponse>({
     queryKey: [`/api/scrape-job/${currentRequestId}`],
-    enabled: !!currentRequestId,
+    enabled: !!currentRequestId && !isAborted,
     refetchInterval: ({ state }) => {
+      if (isAborted) return false;
       const status = state.data?.status;
       return status === 'pending' || status === 'processing' || status === 'filtering' || status === 'enriching' ? 2000 : false;
     },
@@ -358,6 +361,15 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
 
   // Handle abort
   const handleAbort = () => {
+    // Set aborted flag to stop polling
+    setIsAborted(true);
+    
+    // Cancel the query to stop polling
+    if (currentRequestId) {
+      queryClient.cancelQueries({ queryKey: [`/api/scrape-job/${currentRequestId}`] });
+      queryClient.removeQueries({ queryKey: [`/api/scrape-job/${currentRequestId}`] });
+    }
+    
     setCurrentRequestId(null);
     setAnimatedProgress(0);
     toast({
