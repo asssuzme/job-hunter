@@ -159,22 +159,14 @@ export default function Results() {
   const canApplyJobs = enrichedJobs.filter((job: any) => job.canApply);
   const cannotApplyJobs = enrichedJobs.filter((job: any) => !job.canApply);
   
-  // Generate search-specific fake total jobs count (always under 2000)
-  const generateSearchJobCount = (searchId: string) => {
-    let hash = 0;
-    for (let i = 0; i < searchId.length; i++) {
-      hash = ((hash << 5) - hash) + searchId.charCodeAt(i);
-      hash = hash & hash; // Convert to 32-bit integer
-    }
-    // Generate a number between 100-1999
-    return 100 + Math.abs(hash % 1900);
-  };
-
-  const actualJobCount = enrichedJobs.length;
-  const fakeTotalJobs = requestId ? generateSearchJobCount(requestId) : 847;
+  // Use the stored fake data from enrichedResults
+  const enrichedResults = scrapingResult.enrichedResults as any;
+  const fakeTotalJobs = enrichedResults?.fakeTotalJobs || 847;
+  const freeJobs = enrichedResults?.freeJobs || canApplyJobs.length;
+  const lockedJobs = enrichedResults?.lockedJobs || (fakeTotalJobs - freeJobs);
   
-  // Calculate fake numbers for Pro Plan (total - actual jobs with contacts)
-  const fakeProPlanJobs = fakeTotalJobs - canApplyJobs.length;
+  // For consistency, use lockedJobs for Pro Plan display
+  const fakeProPlanJobs = lockedJobs;
 
   return (
     <DashboardLayout user={user} onLogout={() => window.location.href = "/api/auth/logout"} title="Job Results">
