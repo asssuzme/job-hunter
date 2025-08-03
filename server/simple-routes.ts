@@ -352,6 +352,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // === JOB SCRAPING ROUTES ===
   
+  // Generate LinkedIn URL from search parameters
+  app.post("/api/generate-linkedin-url", requireAuth, async (req, res) => {
+    const { keyword, location, workType } = req.body;
+    
+    if (!keyword || !location || !workType) {
+      return res.status(400).json({ error: 'Missing required parameters' });
+    }
+
+    try {
+      // Simple LinkedIn URL generation
+      const baseUrl = 'https://www.linkedin.com/jobs/search';
+      const params = new URLSearchParams({
+        keywords: keyword,
+        location: location,
+        f_WT: workType // 1=Onsite, 2=Remote, 3=Hybrid
+      });
+      
+      const linkedinUrl = `${baseUrl}?${params.toString()}`;
+      
+      res.json({ 
+        linkedinUrl,
+        message: `Generated LinkedIn search URL for ${keyword} in ${location}`
+      });
+    } catch (error) {
+      console.error('Error generating LinkedIn URL:', error);
+      res.status(500).json({ error: 'Failed to generate LinkedIn URL' });
+    }
+  });
+  
   app.post("/api/job-scraping/submit", requireAuth, async (req, res) => {
     const { search, location } = req.body;
     
