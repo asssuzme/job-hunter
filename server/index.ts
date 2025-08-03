@@ -1,10 +1,36 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
+import session from "express-session";
+import { registerRoutes } from "./simple-routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
+
+// Session configuration
+app.set("trust proxy", 1);
+
+// Use memory store for simplicity
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || 'your-secret-key-here',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production' || app.get('env') === 'production',
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    },
+  })
+);
+
+// Extend session types
+declare module 'express-session' {
+  interface SessionData {
+    userId?: string;
+  }
+}
 
 app.use((req, res, next) => {
   const start = Date.now();
