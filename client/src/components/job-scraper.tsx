@@ -128,6 +128,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
   const [resumeFileName, setResumeFileName] = useState<string>("");
   const [isLoadingResume, setIsLoadingResume] = useState(true);
   const [isAborted, setIsAborted] = useState(false);
+  const abortRef = useRef(false); // Use ref for immediate abort tracking
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -204,8 +205,10 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
       return response;
     },
     onSuccess: (data) => {
+      // Reset abort flags when starting new search
+      abortRef.current = false;
+      setIsAborted(false);
       setCurrentRequestId(data.requestId);
-      setIsAborted(false); // Reset abort flag when starting new search
       toast({
         title: "Search Started",
         description: "Searching for job listings..."
@@ -223,16 +226,21 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
   // Status polling
   const { data: scrapingResult, isLoading: isPolling } = useQuery<JobScrapingResponse>({
     queryKey: [`/api/scrape-job/${currentRequestId}`],
-    enabled: !!currentRequestId && !isAborted,
+    enabled: !!currentRequestId && !isAborted && !abortRef.current,
     refetchInterval: ({ state }) => {
-      if (isAborted) return false;
+      // Check ref for immediate abort
+      if (abortRef.current || isAborted || !currentRequestId) return false;
       const status = state.data?.status;
       return status === 'pending' || status === 'processing' || status === 'filtering' || status === 'enriching' ? 2000 : false;
     },
+    gcTime: 0, // Don't cache aborted queries
+    staleTime: 0, // Always fetch fresh data
   });
 
   // Handle completion
   useEffect(() => {
+    if (isAborted) return; // Don't process completion if aborted
+    
     if (scrapingResult?.status === 'completed' && scrapingResult.enrichedResults) {
       const results = scrapingResult.enrichedResults as any;
       
@@ -251,7 +259,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
       }
 
     }
-  }, [scrapingResult, onComplete, toast]);
+  }, [scrapingResult, onComplete, toast, isAborted]);
 
   // Handle file upload
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -298,14 +306,14 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
     });
   };
 
-  const isProcessing = scrapeMutation.isPending || (scrapingResult && ['pending', 'processing', 'filtering', 'enriching'].includes(scrapingResult.status));
+  const isProcessing = !isAborted && (scrapeMutation.isPending || (scrapingResult && ['pending', 'processing', 'filtering', 'enriching'].includes(scrapingResult.status)));
 
   // Use state for smooth progress animation
   const [animatedProgress, setAnimatedProgress] = useState(0);
 
   // Update progress smoothly over time
   useEffect(() => {
-    if (!scrapingResult) {
+    if (!scrapingResult || isAborted) {
       setAnimatedProgress(0);
       return;
     }
@@ -323,9 +331,9 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
     // Smoothly animate to target progress
     const interval = setInterval(() => {
       setAnimatedProgress(current => {
-        if (current >= targetProgress) {
+        if (current >= targetProgress || isAborted) {
           clearInterval(interval);
-          return targetProgress;
+          return isAborted ? current : targetProgress;
         }
         // Increase by 1% every 100ms for smooth animation
         return Math.min(current + 1, targetProgress);
@@ -333,7 +341,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
     }, 100);
 
     return () => clearInterval(interval);
-  }, [scrapingResult?.status]);
+  }, [scrapingResult?.status, isAborted]);
 
   const getProgressPercentage = () => {
     return animatedProgress;
@@ -361,21 +369,36 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
 
   // Handle abort
   const handleAbort = () => {
-    // Set aborted flag to stop polling
+    // Set ref immediately for instant abort
+    abortRef.current = true;
     setIsAborted(true);
     
-    // Cancel the query to stop polling
-    if (currentRequestId) {
-      queryClient.cancelQueries({ queryKey: [`/api/scrape-job/${currentRequestId}`] });
-      queryClient.removeQueries({ queryKey: [`/api/scrape-job/${currentRequestId}`] });
-    }
+    // Cancel ALL scrape-job queries
+    queryClient.cancelQueries({ 
+      predicate: (query) => {
+        return query.queryKey[0]?.toString().includes('/api/scrape-job');
+      }
+    });
     
+    // Remove ALL scrape-job queries from cache
+    queryClient.removeQueries({ 
+      predicate: (query) => {
+        return query.queryKey[0]?.toString().includes('/api/scrape-job');
+      }
+    });
+    
+    // Clear the request ID to prevent any further polling
+    const clearedId = currentRequestId;
     setCurrentRequestId(null);
     setAnimatedProgress(0);
-    toast({
-      title: "Search Aborted",
-      description: "Job search has been cancelled",
-    });
+    
+    // Force a small delay to ensure all queries are cancelled
+    setTimeout(() => {
+      toast({
+        title: "Search Aborted",
+        description: "Job search has been cancelled",
+      });
+    }, 100);
   };
 
   // Show full-screen loading animation when processing
