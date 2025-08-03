@@ -266,7 +266,9 @@ export default function Home() {
                       {search.status === 'completed' && search.enrichedResults ? (
                         (() => {
                           const enrichedResults = search.enrichedResults as any;
-                          const fakeTotalJobs = enrichedResults.fakeTotalJobs || Math.floor(Math.random() * (2000 - 500 + 1)) + 500;
+                          // Only display if we have stored fake data
+                          if (!enrichedResults.fakeTotalJobs) return null;
+                          const fakeTotalJobs = enrichedResults.fakeTotalJobs;
                           const freeJobs = enrichedResults.freeJobs || enrichedResults.canApplyCount || 0;
                           const lockedJobs = enrichedResults.lockedJobs || (fakeTotalJobs - freeJobs);
                           return (

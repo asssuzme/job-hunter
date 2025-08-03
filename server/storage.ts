@@ -189,8 +189,10 @@ export class DatabaseStorage implements IStorage {
     for (const search of allSearches) {
       if (search.status === 'completed' && search.enrichedResults) {
         const enrichedResults = search.enrichedResults as any;
-        // Use the fake total if available, otherwise default to a random number
-        totalJobsScraped += enrichedResults.fakeTotalJobs || Math.floor(Math.random() * (2000 - 500 + 1)) + 500;
+        // Only use stored fake total - never generate new random numbers here
+        if (enrichedResults.fakeTotalJobs) {
+          totalJobsScraped += enrichedResults.fakeTotalJobs;
+        }
       }
     }
     
