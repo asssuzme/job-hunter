@@ -20,15 +20,22 @@ export function createGmailOAuthClient(req?: any) {
   let redirectUrl;
   if (req && req.hostname) {
     // Use request hostname for dynamic redirect
-    const protocol = req.secure || req.hostname.includes('gigfloww.com') ? 'https' : 'http';
+    const protocol = req.secure || req.hostname.includes('gigfloww.com') || 
+      req.hostname.includes('service-genie-ashutoshlathrep.replit.app') ? 'https' : 'http';
     redirectUrl = `${protocol}://${req.hostname}/api/auth/gmail/callback`;
   } else {
     // Fallback to environment-based URL
     const isProduction = process.env.NODE_ENV === 'production' || 
-      process.env.REPLIT_DOMAINS?.includes('gigfloww.com');
-    redirectUrl = isProduction 
-      ? 'https://gigfloww.com/api/auth/gmail/callback'
-      : `${process.env.REPLIT_DEV_DOMAIN || 'http://localhost:5000'}/api/auth/gmail/callback`;
+      process.env.REPLIT_DOMAINS?.includes('gigfloww.com') ||
+      process.env.REPLIT_DOMAINS?.includes('service-genie-ashutoshlathrep.replit.app');
+    
+    if (process.env.REPLIT_DOMAINS?.includes('service-genie-ashutoshlathrep.replit.app')) {
+      redirectUrl = 'https://service-genie-ashutoshlathrep.replit.app/api/auth/gmail/callback';
+    } else if (process.env.REPLIT_DOMAINS?.includes('gigfloww.com')) {
+      redirectUrl = 'https://gigfloww.com/api/auth/gmail/callback';
+    } else {
+      redirectUrl = `${process.env.REPLIT_DEV_DOMAIN || 'http://localhost:5000'}/api/auth/gmail/callback`;
+    }
   }
 
   return new OAuth2Client(

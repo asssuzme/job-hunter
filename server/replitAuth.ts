@@ -39,10 +39,12 @@ export function getSession() {
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production' || 
-        process.env.REPLIT_DOMAINS?.includes('gigfloww.com'),
+        process.env.REPLIT_DOMAINS?.includes('gigfloww.com') ||
+        process.env.REPLIT_DOMAINS?.includes('service-genie-ashutoshlathrep.replit.app'),
       maxAge: sessionTtl,
       sameSite: process.env.NODE_ENV === 'production' || 
-        process.env.REPLIT_DOMAINS?.includes('gigfloww.com') ? 'none' : 'lax',
+        process.env.REPLIT_DOMAINS?.includes('gigfloww.com') ||
+        process.env.REPLIT_DOMAINS?.includes('service-genie-ashutoshlathrep.replit.app') ? 'none' : 'lax',
       domain: process.env.REPLIT_DOMAINS?.includes('gigfloww.com') ? '.gigfloww.com' : undefined,
     },
   });

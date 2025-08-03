@@ -13,7 +13,8 @@ app.set("trust proxy", 1);
 // Detect production environment
 const isProduction = process.env.NODE_ENV === 'production' || 
   process.env.REPLIT_DOMAINS?.includes('gigfloww.com') ||
-  process.env.REPLIT_DOMAINS?.includes('gigfloww.repl.co');
+  process.env.REPLIT_DOMAINS?.includes('gigfloww.repl.co') ||
+  process.env.REPLIT_DOMAINS?.includes('service-genie-ashutoshlathrep.replit.app');
 
 // Use default memory store for session persistence
 app.use(
@@ -26,7 +27,7 @@ app.use(
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       sameSite: isProduction ? 'none' : 'lax',
-      domain: isProduction ? '.gigfloww.com' : undefined,
+      domain: isProduction && process.env.REPLIT_DOMAINS?.includes('gigfloww.com') ? '.gigfloww.com' : undefined,
     },
   })
 );

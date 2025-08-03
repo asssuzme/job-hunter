@@ -4,12 +4,14 @@
 export async function signInWithGoogle() {
   // TEMPORARY: Use dev login in development to bypass Google OAuth issues
   const isDevelopment = window.location.hostname === 'localhost' || 
-                       window.location.hostname.includes('.replit.dev') ||
+                       (window.location.hostname.includes('.replit.dev') && 
+                        !window.location.hostname.includes('service-genie-ashutoshlathrep')) ||
                        window.location.hostname.includes('.repl.co');
   
-  // Always use Google OAuth for gigfloww.com
+  // Always use Google OAuth for production domains
   const isProduction = window.location.hostname === 'gigfloww.com' || 
-                      window.location.hostname === 'www.gigfloww.com';
+                      window.location.hostname === 'www.gigfloww.com' ||
+                      window.location.hostname === 'service-genie-ashutoshlathrep.replit.app';
   
   if (isDevelopment && !isProduction) {
     window.location.href = '/api/auth/dev-login';

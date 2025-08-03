@@ -93,7 +93,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       'https://gigfloww.com',
       'https://www.gigfloww.com',
       'https://*.replit.dev',
-      'https://*.repl.co'
+      'https://*.repl.co',
+      'https://service-genie-ashutoshlathrep.replit.app'
     ];
     
     const origin = req.headers.origin;
