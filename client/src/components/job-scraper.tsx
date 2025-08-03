@@ -296,18 +296,43 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
 
   const isProcessing = scrapeMutation.isPending || (scrapingResult && ['pending', 'processing', 'filtering', 'enriching'].includes(scrapingResult.status));
 
+  // Use state for smooth progress animation
+  const [animatedProgress, setAnimatedProgress] = useState(0);
 
+  // Update progress smoothly over time
+  useEffect(() => {
+    if (!scrapingResult) {
+      setAnimatedProgress(0);
+      return;
+    }
+
+    let targetProgress = 0;
+    switch (scrapingResult.status) {
+      case 'pending': targetProgress = 25; break;
+      case 'processing': targetProgress = 50; break;
+      case 'filtering': targetProgress = 70; break;
+      case 'enriching': targetProgress = 85; break;
+      case 'completed': targetProgress = 100; break;
+      default: targetProgress = 0;
+    }
+
+    // Smoothly animate to target progress
+    const interval = setInterval(() => {
+      setAnimatedProgress(current => {
+        if (current >= targetProgress) {
+          clearInterval(interval);
+          return targetProgress;
+        }
+        // Increase by 1% every 100ms for smooth animation
+        return Math.min(current + 1, targetProgress);
+      });
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [scrapingResult?.status]);
 
   const getProgressPercentage = () => {
-    if (!scrapingResult) return 0;
-    switch (scrapingResult.status) {
-      case 'pending': return 20;
-      case 'processing': return 40;
-      case 'filtering': return 60;
-      case 'enriching': return 80;
-      case 'completed': return 100;
-      default: return 0;
-    }
+    return animatedProgress;
   };
 
   const getStatusMessage = () => {
@@ -329,6 +354,235 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
         return scrapingResult.status;
     }
   };
+
+  // Show full-screen loading animation when processing
+  if (isProcessing && scrapingResult) {
+    return (
+      <motion.div
+        className="min-h-screen relative -mx-4 -my-8 md:-mx-8 px-4 py-8 md:px-8 flex items-center justify-center bg-background/95 backdrop-blur-lg overflow-y-auto"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="w-full max-w-2xl">
+          <motion.div 
+            className="space-y-8"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            {/* Main Loading Container */}
+            <div className="text-center space-y-4">
+              <motion.div className="relative inline-block">
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-blue-500/30 via-purple-500/30 to-pink-500/30 rounded-full blur-2xl"
+                  animate={{
+                    scale: [1, 1.5, 1],
+                    opacity: [0.5, 0.8, 0.5]
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                />
+                {/* Status-specific central icon */}
+                {scrapingResult.status === 'pending' && (
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  >
+                    <Globe className="h-20 w-20 text-primary relative z-10" />
+                  </motion.div>
+                )}
+                {scrapingResult.status === 'processing' && (
+                  <Search className="h-20 w-20 text-primary relative z-10" />
+                )}
+                {scrapingResult.status === 'filtering' && (
+                  <motion.div
+                    animate={{ rotate: 180 }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  >
+                    <Filter className="h-20 w-20 text-primary relative z-10" />
+                  </motion.div>
+                )}
+                {scrapingResult.status === 'enriching' && (
+                  <motion.div
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <Mail className="h-20 w-20 text-primary relative z-10" />
+                  </motion.div>
+                )}
+              </motion.div>
+
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold">{getStatusMessage()}</h2>
+                <p className="text-sm text-muted-foreground">
+                  ID: {scrapingResult.id.slice(0, 8).toUpperCase()}
+                </p>
+              </div>
+            </div>
+
+            {/* Enhanced Progress Bar */}
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 blur-xl" />
+              <div className="relative glass-card p-6 space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Progress</span>
+                  <motion.span 
+                    className="text-sm font-bold text-primary"
+                    key={getProgressPercentage()}
+                    initial={{ scale: 1.2, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {getProgressPercentage()}%
+                  </motion.span>
+                </div>
+                
+                <div className="relative h-4 bg-secondary/30 rounded-full overflow-hidden">
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
+                    initial={{ width: "0%" }}
+                    animate={{ width: `${getProgressPercentage()}%` }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                  >
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                      animate={{ x: ["-100%", "200%"] }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "linear"
+                      }}
+                    />
+                  </motion.div>
+                </div>
+
+                {/* Live Status Updates */}
+                <motion.div
+                  className="flex items-center justify-center gap-2"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <motion.div
+                    className="w-2 h-2 bg-green-500 rounded-full"
+                    animate={{ opacity: [0.3, 1, 0.3] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    {scrapingResult.status === 'processing' && 'Analyzing job descriptions...'}
+                    {scrapingResult.status === 'filtering' && 'Matching your requirements...'}
+                    {scrapingResult.status === 'enriching' && 'Verifying contact details...'}
+                    {scrapingResult.status === 'pending' && 'Establishing secure connection...'}
+                  </span>
+                </motion.div>
+              </div>
+            </div>
+
+            {/* Tips Carousel */}
+            <motion.div
+              className="glass-card p-4 border border-primary/10"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1 }}
+            >
+              <div className="flex items-start gap-3">
+                <Lightbulb className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
+                <motion.p
+                  key={Math.floor(Date.now() / 5000)}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="text-sm"
+                >
+                  {[
+                    "💡 Did you know? Personalized emails have 29% higher open rates!",
+                    "🎯 Pro tip: Follow up within 24 hours for best response rates",
+                    "📊 Companies receive 100+ applications per job posting on average",
+                    "⚡ Our AI finds hidden contact info not visible on job posts",
+                    "🔍 We're checking multiple data sources for accuracy",
+                    "✨ Each job is carefully matched to your requirements",
+                    "🚀 We're finding the decision makers for each company"
+                  ][Math.floor(Date.now() / 5000) % 7]}
+                </motion.p>
+              </div>
+            </motion.div>
+
+            {/* Animated Job Cards */}
+            <div className="relative h-32 overflow-hidden">
+              {[0, 1, 2].map((i) => (
+                <motion.div
+                  key={i}
+                  className="absolute inset-x-0 glass-card p-4 border border-white/5"
+                  initial={{ opacity: 0, x: 300 }}
+                  animate={{ 
+                    opacity: [0, 1, 1, 0],
+                    x: [300, 0, -300],
+                  }}
+                  transition={{
+                    duration: 5,
+                    repeat: Infinity,
+                    delay: i * 1.5,
+                    ease: "easeInOut"
+                  }}
+                >
+                  <div className="space-y-2">
+                    <div className="h-3 bg-gradient-to-r from-blue-500/50 to-purple-500/50 rounded w-3/4" />
+                    <div className="h-2 bg-gradient-to-r from-purple-500/30 to-pink-500/30 rounded w-1/2" />
+                    <div className="flex gap-2 mt-3">
+                      <div className="h-2 bg-primary/20 rounded w-20" />
+                      <div className="h-2 bg-primary/20 rounded w-16" />
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Stats Preview for Enriching */}
+            {scrapingResult.status === 'enriching' && (
+              <motion.div
+                className="grid grid-cols-3 gap-3"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                {[
+                  { label: "Jobs Found", color: "from-blue-500 to-indigo-500", icon: "💼" },
+                  { label: "With Contacts", color: "from-green-500 to-emerald-500", icon: "✉️" },
+                  { label: "Companies", color: "from-purple-500 to-pink-500", icon: "🏢" }
+                ].map((stat, i) => (
+                  <motion.div
+                    key={stat.label}
+                    className="glass-card p-3 text-center"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.7 + i * 0.1 }}
+                  >
+                    <motion.div
+                      className="text-2xl mb-2"
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 2, repeat: Infinity, delay: i * 0.3 }}
+                    >
+                      {stat.icon}
+                    </motion.div>
+                    <motion.div
+                      className={`h-2 bg-gradient-to-r ${stat.color} rounded-full`}
+                      initial={{ width: "0%" }}
+                      animate={{ width: "100%" }}
+                      transition={{ duration: 2, delay: 1 + i * 0.2 }}
+                    />
+                    <p className="text-xs text-muted-foreground mt-2">{stat.label}</p>
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+          </motion.div>
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <div className="space-y-4 md:space-y-6">

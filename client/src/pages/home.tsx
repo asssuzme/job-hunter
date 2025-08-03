@@ -332,7 +332,7 @@ export default function Home() {
 
       {/* New Search Dialog */}
       <Dialog open={showNewSearch} onOpenChange={setShowNewSearch}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold flex items-center gap-2">
               <Search className="h-6 w-6 text-primary" />
