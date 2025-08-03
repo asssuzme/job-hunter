@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
-import { supabase } from '@/lib/supabase';
-import { Loader2 } from 'lucide-react';
 import { GridLoader } from '@/components/ui/loading-animations';
 import { motion } from 'framer-motion';
 
@@ -10,61 +8,10 @@ export default function AuthCallback() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const handleCallback = async () => {
-      try {
-        // Get the session from Supabase
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) throw sessionError;
-        
-        if (session) {
-          // Sync with backend once
-          const response = await fetch('/api/auth/supabase/callback', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-              userId: session.user.id,
-              email: session.user.email,
-              accessToken: session.provider_token,
-              refreshToken: session.provider_refresh_token,
-              userMetadata: session.user.user_metadata,
-            }),
-          });
-          
-          if (response.ok) {
-            // Success! Verify the session is created before redirect
-            // Add a small delay to ensure session is saved
-            await new Promise(resolve => setTimeout(resolve, 100));
-            
-            const authCheckResponse = await fetch('/api/auth/user', {
-              credentials: 'include'
-            });
-            
-            if (authCheckResponse.ok) {
-              // Session verified, redirect
-              window.location.href = '/';
-            } else {
-              // Force a hard reload to ensure cookies are picked up
-              window.location.href = '/';
-            }
-          } else {
-            const error = await response.text();
-            throw new Error(`Failed to sync session with backend: ${error}`);
-          }
-        } else {
-          // No session, redirect to home
-          setLocation('/');
-        }
-      } catch (err) {
-        console.error('Auth callback error:', err);
-        setError(err instanceof Error ? err.message : 'Authentication failed');
-        setTimeout(() => setLocation('/'), 2000);
-      }
-    };
-    
-    // Wait a bit for Supabase to process the URL tokens
-    setTimeout(handleCallback, 500);
+    // This page is no longer needed with direct Google OAuth
+    // Google OAuth callback is handled by the backend
+    // Just redirect to home
+    setLocation('/');
   }, [setLocation]);
 
   if (error) {

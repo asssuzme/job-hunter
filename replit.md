@@ -10,6 +10,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- **2025-08-03**: Removed Supabase and implemented direct Google OAuth:
+  - Completely removed Supabase dependency
+  - Implemented Passport.js with Google OAuth 2.0 strategy
+  - Updated frontend to use direct Google OAuth endpoints
+  - Simplified authentication flow with session-based auth
+  - All authentication now handled directly through Google
+
 - **2025-08-03**: Shifted to Replit production URL exclusively:
   - Removed all references to gigfloww.com due to SSL certificate issues
   - Now using https://service-genie-ashutoshlathrep.replit.app as the production URL

@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Sparkles, Search, Mail, Users, BarChart3, Target, Zap, Globe, Shield, CheckCircle, Star, TrendingUp, Briefcase, Brain, Clock, Award } from "lucide-react";
 import Footer from "@/components/footer";
 import { Badge } from "@/components/ui/badge";
-import { signInWithGoogle } from "@/lib/supabase";
+import { signInWithGoogle } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Spinner, PageLoader } from "@/components/ui/loading-animations";
 
