@@ -21,11 +21,11 @@ passport.use(
           return done(new Error('No email found in Google profile'));
         }
 
-        // Find or create user
+        // Find user by email first
         const existingUser = await db
           .select()
           .from(users)
-          .where(eq(users.id, profile.id))
+          .where(eq(users.email, email))
           .limit(1);
 
         let user;
@@ -34,15 +34,14 @@ passport.use(
           [user] = await db
             .update(users)
             .set({
-              email: email,
               firstName: profile.name?.givenName || null,
               lastName: profile.name?.familyName || null,
               profileImageUrl: profile.photos?.[0]?.value || null,
             })
-            .where(eq(users.id, profile.id))
+            .where(eq(users.email, email))
             .returning();
         } else {
-          // Create new user
+          // Create new user with Google ID
           [user] = await db
             .insert(users)
             .values({
