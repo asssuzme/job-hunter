@@ -22,6 +22,9 @@ import Homepage from "@/pages/homepage";
 import TermsOfService from "@/pages/terms-of-service";
 import RefundPolicy from "@/pages/refund-policy";
 import Contact from "@/pages/contact";
+import Features from "@/pages/features";
+import Pricing from "@/pages/pricing";
+import HowItWorks from "@/pages/how-it-works";
 import Sitemap from "@/pages/sitemap";
 import NotFound from "@/pages/not-found";
 import AuthCallback from "@/pages/auth-callback";
@@ -62,6 +65,9 @@ function Router() {
       <Route path="/terms-of-service" component={TermsOfService} />
       <Route path="/refund-policy" component={RefundPolicy} />
       <Route path="/contact" component={Contact} />
+      <Route path="/features" component={Features} />
+      <Route path="/pricing" component={Pricing} />
+      <Route path="/how-it-works" component={HowItWorks} />
       <Route path="/sitemap" component={Sitemap} />
       <Route component={NotFound} />
     </Switch>
