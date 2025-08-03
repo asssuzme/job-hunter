@@ -215,7 +215,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
 
   // Status polling
   const { data: scrapingResult, isLoading: isPolling } = useQuery<JobScrapingResponse>({
-    queryKey: [`/api/scrape-job/status/${currentRequestId}`],
+    queryKey: [`/api/scrape-job/${currentRequestId}`],
     enabled: !!currentRequestId,
     refetchInterval: ({ state }) => {
       const status = state.data?.status;

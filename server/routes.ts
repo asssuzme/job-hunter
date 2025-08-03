@@ -1,7 +1,6 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupSupabaseAuth, isAuthenticated } from "./supabaseAuth";
 import { 
   insertJobScrapingRequestSchema, 
   linkedinUrlSchema,
@@ -12,9 +11,10 @@ import {
 import { z } from "zod";
 import OpenAI from "openai";
 import multer from "multer";
-import express from "express";
-import session from "express-session";
-import { getSession } from "./googleAuth";
+import passport from './passport-config';
+import { db } from "./db";
+import { users } from "@shared/schema";
+import { eq } from "drizzle-orm";
 
 // Token refresh function
 async function refreshGoogleToken(refreshToken: string): Promise<{ access_token: string; refresh_token?: string } | null> {
@@ -45,8 +45,50 @@ async function refreshGoogleToken(refreshToken: string): Promise<{ access_token:
 
 // Configure multer for memory storage
 const upload = multer({ storage: multer.memoryStorage() });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+// Extend Express Request type
+declare global {
+  namespace Express {
+    interface Request {
+      user?: User;
+    }
+  }
+}
+
+// Add session data interface
+declare module 'express-session' {
+  interface SessionData {
+    userId?: string;
+  }
+}
+
+// Simple auth middleware
+async function isAuthenticated(req: Request, res: Response, next: NextFunction) {
+  if (!req.session.userId) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+  
+  const [user] = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, req.session.userId))
+    .limit(1);
+  
+  if (!user) {
+    req.session.destroy(() => {});
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+  
+  req.user = user;
+  next();
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize Passport
+  app.use(passport.initialize());
+  app.use(passport.session());
+
   // CORS configuration for production
   app.use((req, res, next) => {
     const origin = req.headers.origin;
@@ -70,13 +112,104 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     next();
   });
+
+  // === AUTHENTICATION ROUTES ===
   
-  // Session middleware
-  app.set("trust proxy", 1);
-  app.use(getSession());
-  
-  // Auth middleware
-  setupSupabaseAuth(app);
+  // Get current user
+  app.get("/api/auth/user", async (req, res) => {
+    console.log('Auth check - Session ID:', req.sessionID);
+    console.log('Auth check - User ID:', req.session.userId);
+    
+    if (!req.session.userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+    
+    try {
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, req.session.userId))
+        .limit(1);
+      
+      if (!user) {
+        console.log('No user found for ID:', req.session.userId);
+        req.session.destroy(() => {});
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+      
+      console.log('User found:', user.email);
+      res.json(user);
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Google OAuth login
+  app.get('/api/auth/google', 
+    passport.authenticate('google', { scope: ['profile', 'email'] })
+  );
+
+  // TEMPORARY: Development bypass for testing
+  app.get('/api/auth/dev-login', async (req, res) => {
+    if (process.env.NODE_ENV !== 'development') {
+      return res.status(404).send('Not found');
+    }
+    
+    // Create or get test user
+    const testEmail = 'test@example.com';
+    let [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, testEmail))
+      .limit(1);
+    
+    if (!user) {
+      [user] = await db
+        .insert(users)
+        .values({
+          id: 'dev-user-123',
+          email: testEmail,
+          firstName: 'Test',
+          lastName: 'User',
+        })
+        .returning();
+    }
+    
+    req.session.userId = user.id;
+    await new Promise<void>((resolve) => {
+      req.session.save(() => resolve());
+    });
+    
+    res.redirect('/');
+  });
+
+  // Google OAuth callback
+  app.get('/api/auth/google/callback',
+    passport.authenticate('google', { failureRedirect: '/login' }),
+    async (req: any, res) => {
+      if (req.user) {
+        req.session.userId = req.user.id;
+        await new Promise<void>((resolve) => {
+          req.session.save(() => resolve());
+        });
+      }
+      res.redirect('/');
+    }
+  );
+
+  // Logout endpoint
+  app.post('/api/auth/logout', (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).json({ message: 'Failed to logout' });
+      }
+      res.clearCookie('connect.sid');
+      res.json({ message: 'Logged out successfully' });
+    });
+  });
+
+  // === DASHBOARD ENDPOINTS ===
 
   // Dashboard stats endpoint
   app.get('/api/dashboard/stats', isAuthenticated, async (req: any, res) => {
@@ -152,6 +285,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching email applications:", error);
       res.status(500).json({ message: "Failed to fetch email applications" });
+    }
+  });
+
+  // Generate LinkedIn URL from search parameters
+  app.post("/api/generate-linkedin-url", isAuthenticated, async (req, res) => {
+    const { keyword, location, workType } = req.body;
+    
+    if (!keyword || !location || !workType) {
+      return res.status(400).json({ error: 'Missing required parameters' });
+    }
+
+    try {
+      // Simple LinkedIn URL generation
+      const baseUrl = 'https://www.linkedin.com/jobs/search';
+      const params = new URLSearchParams({
+        keywords: keyword,
+        location: location,
+        f_WT: workType // 1=Onsite, 2=Remote, 3=Hybrid
+      });
+      
+      const linkedinUrl = `${baseUrl}?${params.toString()}`;
+      
+      res.json({ 
+        linkedinUrl,
+        message: `Generated LinkedIn search URL for ${keyword} in ${location}`
+      });
+    } catch (error) {
+      console.error('Error generating LinkedIn URL:', error);
+      res.status(500).json({ error: 'Failed to generate LinkedIn URL' });
     }
   });
 
