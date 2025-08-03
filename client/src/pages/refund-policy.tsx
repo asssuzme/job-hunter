@@ -1,28 +1,12 @@
-import { motion } from "framer-motion";
-import { Link } from "wouter";
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import LegalPageLayout from "@/components/legal-page-layout";
 
 export default function RefundPolicy() {
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container max-w-4xl mx-auto px-4 py-8">
-        <Link href="/">
-          <Button variant="ghost" className="mb-6">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Home
-          </Button>
-        </Link>
-        
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="glass-card p-8"
-        >
-          <h1 className="text-3xl font-bold mb-6">Refund Policy</h1>
-          <p className="text-sm text-muted-foreground mb-8">Effective Date: January 1, 2025 | Last Updated: August 4, 2025</p>
-
-          <div className="space-y-8 text-muted-foreground">
+    <LegalPageLayout 
+      title="Refund Policy" 
+      lastUpdated="Effective Date: January 1, 2025 | Last Updated: August 4, 2025"
+    >
+      <div className="space-y-8 text-muted-foreground">
             <section>
               <h2 className="text-xl font-semibold mb-3 text-foreground">1. Overview</h2>
               <p>
@@ -146,9 +130,7 @@ export default function RefundPolicy() {
                 <p className="mt-2">Please include "Refund Request" in your email subject line</p>
               </div>
             </section>
-          </div>
-        </motion.div>
       </div>
-    </div>
+    </LegalPageLayout>
   );
 }

@@ -1,30 +1,14 @@
-import { motion } from "framer-motion";
-import { Link } from "wouter";
-import { ArrowLeft, Mail, MessageSquare, Clock, Shield } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Mail, MessageSquare, Clock, Shield } from "lucide-react";
+import LegalPageLayout from "@/components/legal-page-layout";
 
 export default function Contact() {
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container max-w-4xl mx-auto px-4 py-8">
-        <Link href="/">
-          <Button variant="ghost" className="mb-6">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Home
-          </Button>
-        </Link>
-        
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="glass-card p-8"
-        >
-          <h1 className="text-3xl font-bold mb-6">Contact Us</h1>
-          <p className="text-lg text-muted-foreground mb-8">
-            We're here to help with any questions or concerns about autoapply.ai
-          </p>
-
-          <div className="grid gap-8 md:grid-cols-2">
+    <LegalPageLayout 
+      title="Contact Us" 
+      lastUpdated="We're here to help with any questions or concerns"
+    >
+      <div className="space-y-8">
+        <div className="grid gap-8 md:grid-cols-2">
             {/* Support Section */}
             <div className="space-y-6">
               <div className="flex items-start gap-4">
@@ -106,22 +90,21 @@ export default function Contact() {
                 </a>
               </div>
             </div>
-          </div>
+        </div>
 
-          <div className="mt-12 p-6 bg-muted/50 rounded-lg">
-            <h3 className="font-semibold mb-3 flex items-center gap-2">
-              <MessageSquare className="h-5 w-5" />
-              Before You Contact Us
-            </h3>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>• Check our FAQ section for common questions</li>
-              <li>• Review our Terms of Service and Privacy Policy</li>
-              <li>• Include your account email when contacting support</li>
-              <li>• Be specific about any issues you're experiencing</li>
-            </ul>
-          </div>
-        </motion.div>
+        <div className="mt-12 p-6 bg-muted/50 rounded-lg">
+          <h3 className="font-semibold mb-3 flex items-center gap-2">
+            <MessageSquare className="h-5 w-5" />
+            Before You Contact Us
+          </h3>
+          <ul className="space-y-2 text-sm text-muted-foreground">
+            <li>• Check our FAQ section for common questions</li>
+            <li>• Review our Terms of Service and Privacy Policy</li>
+            <li>• Include your account email when contacting support</li>
+            <li>• Be specific about any issues you're experiencing</li>
+          </ul>
+        </div>
       </div>
-    </div>
+    </LegalPageLayout>
   );
 }
