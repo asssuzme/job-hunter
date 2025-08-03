@@ -10,8 +10,8 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      // Force development callback URL for now
-      callbackURL: 'http://localhost:5000/api/auth/google/callback',
+      // Dynamic callback URL based on request
+      callbackURL: '/api/auth/google/callback',
     },
     async (accessToken, refreshToken, profile, done) => {
       try {

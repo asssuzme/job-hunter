@@ -3,7 +3,11 @@
 // Sign in with Google
 export async function signInWithGoogle() {
   // TEMPORARY: Use dev login in development to bypass Google OAuth issues
-  if (window.location.hostname === 'localhost') {
+  const isDevelopment = window.location.hostname === 'localhost' || 
+                       window.location.hostname.includes('.replit.dev') ||
+                       window.location.hostname.includes('.repl.co');
+  
+  if (isDevelopment) {
     window.location.href = '/api/auth/dev-login';
   } else {
     window.location.href = '/api/auth/google';
