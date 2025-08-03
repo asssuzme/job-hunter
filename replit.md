@@ -22,6 +22,7 @@ Preferred communication style: Simple, everyday language.
   - Removed redundant Dashboard menu item from sidebar
   - Made Job Search the primary landing page (/)
   - Consolidated user experience by eliminating duplicate functionality
+  - Implemented redirect from /homepage to landing page (/) as requested
 
 - **2025-08-04**: Enhanced job search loading experience:
   - Created full-screen immersive loading animation that replaces the form during processing

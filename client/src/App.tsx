@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -18,7 +18,6 @@ import Subscribe from "@/pages/subscribe";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import { Privacy } from "@/pages/privacy";
 import { Terms } from "@/pages/terms";
-import Homepage from "@/pages/homepage";
 import TermsOfService from "@/pages/terms-of-service";
 import RefundPolicy from "@/pages/refund-policy";
 import Contact from "@/pages/contact";
@@ -28,6 +27,15 @@ import HowItWorks from "@/pages/how-it-works";
 import Sitemap from "@/pages/sitemap";
 import NotFound from "@/pages/not-found";
 import AuthCallback from "@/pages/auth-callback";
+
+// Homepage redirect component
+const HomepageRedirect = () => {
+  const [, setLocation] = useLocation();
+  useEffect(() => {
+    setLocation('/');
+  }, [setLocation]);
+  return <PageLoader />;
+};
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -58,7 +66,7 @@ function Router() {
       {/* Auth callback route */}
       <Route path="/auth/callback" component={AuthCallback} />
       {/* Policy pages accessible to all */}
-      <Route path="/homepage" component={Homepage} />
+      <Route path="/homepage" component={HomepageRedirect} />
       <Route path="/privacy" component={Privacy} />
       <Route path="/terms" component={Terms} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
