@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { FilteredJobCard } from "@/components/filtered-job-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -40,7 +41,7 @@ interface EnrichedJob {
 }
 
 interface ScrapingResult {
-  status: 'pending' | 'processing' | 'completed' | 'failed';
+  status: 'pending' | 'processing' | 'filtering' | 'enriching' | 'completed' | 'failed';
   enrichedResults?: {
     jobs: EnrichedJob[];
   };
@@ -61,14 +62,20 @@ export default function Results() {
   const [dynamicMessage, setDynamicMessage] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
   const [tipIndex, setTipIndex] = useState(0);
+  const [isAborted, setIsAborted] = useState(false);
+  const abortRef = useRef(false);
+  const { toast } = useToast();
   
   const { data: scrapingResult, isLoading } = useQuery<ScrapingResult>({
     queryKey: ['/api/scrape-job', requestId],
-    enabled: !!requestId,
+    enabled: !!requestId && !isAborted && !abortRef.current,
     refetchInterval: ({ state }) => {
+      if (abortRef.current || isAborted) return false;
       const status = state.data?.status;
       return status === 'pending' || status === 'processing' || status === 'filtering' || status === 'enriching' ? 2000 : false;
     },
+    gcTime: 0,
+    staleTime: 0,
   });
 
   // Rotating messages for loading animation
@@ -107,8 +114,47 @@ export default function Results() {
     loadUserResume();
   }, []);
 
+  // Handle abort
+  const handleAbort = async () => {
+    // Set ref immediately for instant abort
+    abortRef.current = true;
+    setIsAborted(true);
+    
+    // Cancel the query
+    queryClient.cancelQueries({ 
+      queryKey: ['/api/scrape-job', requestId]
+    });
+    
+    // Remove the query from cache
+    queryClient.removeQueries({ 
+      queryKey: ['/api/scrape-job', requestId]
+    });
+    
+    // Call backend to abort Apify actors
+    if (requestId) {
+      try {
+        await apiRequest(`/api/scrape-job/${requestId}/abort`, {
+          method: 'POST'
+        });
+      } catch (error) {
+        console.error("Error aborting job:", error);
+      }
+    }
+    
+    // Show abort message
+    toast({
+      title: "Search Cancelled",
+      description: "The job search has been cancelled."
+    });
+    
+    // Navigate back to dashboard after a short delay
+    setTimeout(() => {
+      setLocation('/');
+    }, 1500);
+  };
+
   // Check if still processing
-  const isProcessing = scrapingResult && ['pending', 'processing', 'filtering', 'enriching'].includes(scrapingResult.status);
+  const isProcessing = !isAborted && scrapingResult && ['pending', 'processing', 'filtering', 'enriching'].includes(scrapingResult.status);
 
   // Update progress smoothly over 4 minutes
   useEffect(() => {
@@ -343,6 +389,19 @@ export default function Results() {
             }}
           />
         </div>
+
+        {/* Close button in top right */}
+        <motion.button
+          onClick={handleAbort}
+          className="absolute top-4 right-4 z-50 p-2 rounded-full bg-background/80 backdrop-blur-sm border border-border hover:bg-secondary transition-colors"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.5 }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+        >
+          <X className="h-5 w-5" />
+        </motion.button>
 
         <div className="relative z-10 w-full max-w-2xl px-4">
           <motion.div 
@@ -579,13 +638,22 @@ export default function Results() {
               <p className="text-muted-foreground italic">{dynamicMessage}</p>
             </motion.div>
 
-            {/* Back to Dashboard Button */}
+            {/* Cancel and Back to Dashboard Buttons */}
             <motion.div
-              className="flex justify-center"
+              className="flex justify-center gap-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1 }}
             >
+              <Button
+                onClick={handleAbort}
+                variant="destructive"
+                size="lg"
+                className="gap-2"
+              >
+                <X className="h-4 w-4" />
+                Cancel Search
+              </Button>
               <Link href="/">
                 <Button
                   variant="outline"

@@ -18,6 +18,8 @@ Preferred communication style: Simple, everyday language.
   - Created animated job card previews that slide across the screen
   - Added abort functionality with Cancel button and X icon to stop job search
   - Fixed scrolling issues by adding overflow-y-auto to dialog containers
+  - Extended cancel functionality to results page for viewing ongoing searches
+  - Added X close button and Cancel Search button to results page loading animation
 
 - **2025-08-04**: Updated all contact email addresses site-wide to team@gigfloww.com:
   - Replaced all instances of autoapply.ai email addresses across footer, contact page, legal pages
