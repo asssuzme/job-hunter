@@ -10,6 +10,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- **2025-08-04**: Enhanced job search loading experience:
+  - Created full-screen immersive loading animation that replaces the form during processing
+  - Added smooth animated progress bar that increases gradually (1% every 100ms)
+  - Implemented status-specific animations (globe, search, filter, mail icons)
+  - Added tips carousel that rotates every 5 seconds with helpful information
+  - Created animated job card previews that slide across the screen
+  - Added abort functionality with Cancel button and X icon to stop job search
+  - Fixed scrolling issues by adding overflow-y-auto to dialog containers
+
 - **2025-08-04**: Updated all contact email addresses site-wide to team@gigfloww.com:
   - Replaced all instances of autoapply.ai email addresses across footer, contact page, legal pages
   - Consolidated all support/privacy/legal/DPO emails to single email: team@gigfloww.com

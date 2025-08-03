@@ -24,7 +24,8 @@ import {
   Lock,
   Filter,
   Mail,
-  Lightbulb
+  Lightbulb,
+  X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -355,6 +356,16 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
     }
   };
 
+  // Handle abort
+  const handleAbort = () => {
+    setCurrentRequestId(null);
+    setAnimatedProgress(0);
+    toast({
+      title: "Search Aborted",
+      description: "Job search has been cancelled",
+    });
+  };
+
   // Show full-screen loading animation when processing
   if (isProcessing && scrapingResult) {
     return (
@@ -578,7 +589,36 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
                 ))}
               </motion.div>
             )}
+
+            {/* Abort Button */}
+            <motion.div
+              className="flex justify-center mt-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.5 }}
+            >
+              <Button
+                onClick={handleAbort}
+                variant="outline"
+                size="lg"
+                className="glass-card border-red-500/20 hover:bg-red-500/10 hover:border-red-500/40 transition-all group"
+              >
+                <X className="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform" />
+                Cancel Search
+              </Button>
+            </motion.div>
           </motion.div>
+
+          {/* Close button in corner */}
+          <motion.button
+            onClick={handleAbort}
+            className="absolute top-4 right-4 p-2 rounded-full glass-card hover:bg-red-500/10 hover:border-red-500/20 transition-all group"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5 }}
+          >
+            <X className="h-5 w-5 text-muted-foreground group-hover:text-red-500 transition-colors" />
+          </motion.button>
         </div>
       </motion.div>
     );
