@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { PageLoader } from "@/components/ui/loading-animations";
 import { useAuth } from "@/hooks/useAuth";
 import { BarChart3, TrendingUp, Calendar, Target, Mail, CheckCircle, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -35,17 +36,7 @@ export default function Analytics() {
         onLogout={() => window.location.href = "/api/auth/logout"} 
         title="Analytics"
       >
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3 }}
-            className="text-center"
-          >
-            <Loader2 className="h-16 w-16 text-primary animate-spin mx-auto mb-4" />
-            <p className="text-lg text-muted-foreground">Loading analytics data...</p>
-          </motion.div>
-        </div>
+        <PageLoader />
       </DashboardLayout>
     );
   }

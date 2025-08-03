@@ -33,6 +33,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { z } from "zod";
+import { DotsLoader } from "@/components/ui/loading-animations";
 
 interface JobScrapingResponse {
   id: string;
@@ -585,7 +586,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
           >
             {isProcessing ? (
               <>
-                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                <DotsLoader className="mr-2" />
                 Processing...
               </>
             ) : (

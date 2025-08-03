@@ -24,6 +24,7 @@ import {
   Briefcase
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { StatCardSkeleton, Spinner } from "@/components/ui/loading-animations";
 import { Badge } from "@/components/ui/badge";
 import { JobScraper } from "@/components/job-scraper";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -163,7 +164,7 @@ export default function Home() {
             <div className="space-y-2">
               <p className="text-3xl font-bold">
                 {statsLoading ? (
-                  <Loader2 className="h-8 w-8 animate-spin" />
+                  <Spinner className="mx-0" />
                 ) : (
                   totalJobsAnalyzed.toLocaleString()
                 )}
@@ -198,7 +199,7 @@ export default function Home() {
             <div className="space-y-2">
               <p className="text-3xl font-bold">
                 {statsLoading ? (
-                  <Loader2 className="h-8 w-8 animate-spin" />
+                  <Spinner className="mx-0" />
                 ) : (
                   stats?.totalApplicationsSent || 0
                 )}

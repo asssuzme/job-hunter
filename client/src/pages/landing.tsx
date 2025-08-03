@@ -6,6 +6,7 @@ import Footer from "@/components/footer";
 import { Badge } from "@/components/ui/badge";
 import { signInWithGoogle } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { Spinner, PageLoader } from "@/components/ui/loading-animations";
 
 export default function Landing() {
   const { isLoading } = useAuth();
@@ -25,19 +26,7 @@ export default function Landing() {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3 }}
-          className="relative"
-        >
-          <div className="h-20 w-20 border-4 border-primary bg-opacity-20 rounded-full animate-spin"></div>
-          <div className="absolute inset-0 h-20 w-20 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-        </motion.div>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   return (

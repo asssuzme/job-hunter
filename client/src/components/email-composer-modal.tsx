@@ -9,6 +9,7 @@ import { Loader2, Send, Mail, Copy, CheckCircle, Sparkles, ShieldCheck } from "l
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { Spinner, DotsLoader } from "@/components/ui/loading-animations";
 
 interface EmailComposerModalProps {
   isOpen: boolean;
@@ -187,7 +188,7 @@ export function EmailComposerModal({
               {(isGeneratingEmail || localGenerating) ? (
                 <div className="flex flex-col items-end gap-1">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <DotsLoader />
                     Generating personalized email...
                   </div>
                   <div className="text-xs text-muted-foreground">
@@ -276,7 +277,7 @@ export function EmailComposerModal({
             >
               {sendEmailMutation.isPending ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Spinner className="mr-2" />
                   Sending...
                 </>
               ) : (
@@ -326,7 +327,7 @@ export function EmailComposerModal({
                   className="flex-1 bg-blue-600 hover:bg-blue-700"
                 >
                   {authorizeGmailMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Spinner className="mr-2" />
                   ) : (
                     <Mail className="h-4 w-4 mr-2" />
                   )}

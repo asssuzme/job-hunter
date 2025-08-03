@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import { supabase } from '@/lib/supabase';
 import { Loader2 } from 'lucide-react';
+import { GridLoader } from '@/components/ui/loading-animations';
+import { motion } from 'framer-motion';
 
 export default function AuthCallback() {
   const [, setLocation] = useLocation();
@@ -65,10 +67,22 @@ export default function AuthCallback() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-        <p className="text-muted-foreground">Completing sign in...</p>
-      </div>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
+        className="text-center space-y-4"
+      >
+        <GridLoader className="mx-auto" />
+        <motion.p
+          className="text-muted-foreground"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          Completing sign in...
+        </motion.p>
+      </motion.div>
     </div>
   );
 }
