@@ -18,7 +18,9 @@ const GOOGLE_SCOPES = [
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
-  const isProduction = process.env.NODE_ENV === 'production';
+  // Check if we're in production by looking for Replit production domain
+  const isProduction = process.env.NODE_ENV === 'production' || 
+    (process.env.REPLIT_DEV_DOMAIN && !process.env.REPLIT_DEV_DOMAIN.includes('-dev.'));
   
   // Use memory store for now
   return session({

@@ -10,6 +10,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- **2025-08-03**: Fixed production authentication persistence issue:
+  - Resolved session cookies not persisting in production due to incorrect environment detection
+  - Updated session configuration to properly detect production environment using Replit domain
+  - Fixed cookie settings to use `sameSite: "none"` with secure cookies for production HTTPS
+  - Authentication now persists correctly after login on production URLs
+  - Sessions maintain state across page refreshes and navigation
+
 - **2025-08-03**: Enhanced Gmail integration with improved permissions and unlinking functionality:
   - Reduced Gmail OAuth scope from multiple permissions to minimum required (`gmail.send` only)
   - Added Gmail unlinking feature allowing users to disconnect without deleting credentials

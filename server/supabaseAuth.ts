@@ -63,14 +63,6 @@ export function setupSupabaseAuth(app: Express) {
           return res.status(500).json({ error: 'Failed to save session' });
         }
         
-        // Debug log for production
-        console.log('Session saved successfully for user:', user.id);
-        console.log('Session cookie settings:', {
-          secure: req.secure,
-          sameSite: req.session.cookie.sameSite,
-          httpOnly: req.session.cookie.httpOnly
-        });
-        
         res.json({ success: true, userId: user.id });
       });
     } catch (error) {
