@@ -102,26 +102,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Missing required fields' });
       }
       
-      // Upsert user
-      const [user] = await db
-        .insert(users)
-        .values({
-          id: userId,
-          email: email,
-          firstName: userMetadata?.first_name || userMetadata?.given_name || null,
-          lastName: userMetadata?.last_name || userMetadata?.family_name || null,
-          profileImageUrl: userMetadata?.avatar_url || userMetadata?.picture || null,
-        })
-        .onConflictDoUpdate({
-          target: users.id,
-          set: {
+      // First, try to find existing user
+      const existingUser = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+      
+      let user;
+      if (existingUser.length > 0) {
+        // Update existing user
+        [user] = await db
+          .update(users)
+          .set({
             email: email,
             firstName: userMetadata?.first_name || userMetadata?.given_name || null,
             lastName: userMetadata?.last_name || userMetadata?.family_name || null,
             profileImageUrl: userMetadata?.avatar_url || userMetadata?.picture || null,
-          },
-        })
-        .returning();
+          })
+          .where(eq(users.id, userId))
+          .returning();
+      } else {
+        // Insert new user
+        [user] = await db
+          .insert(users)
+          .values({
+            id: userId,
+            email: email,
+            firstName: userMetadata?.first_name || userMetadata?.given_name || null,
+            lastName: userMetadata?.last_name || userMetadata?.family_name || null,
+            profileImageUrl: userMetadata?.avatar_url || userMetadata?.picture || null,
+          })
+          .returning();
+      }
       
       // Set session
       req.session.userId = user.id;
