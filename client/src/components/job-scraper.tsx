@@ -6,7 +6,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Link,
   Search,
@@ -15,6 +15,7 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle,
+  CheckCircle2,
   Activity,
   Sparkles,
   Globe,
@@ -310,61 +311,93 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
 
   // Use state for smooth progress animation
   const [animatedProgress, setAnimatedProgress] = useState(0);
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [dynamicMessage, setDynamicMessage] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
 
-  // Update progress smoothly over time
+  // Rotating messages
+  const rotatingMessages = [
+    "This might take a few minutes — we're pulling thousands of listings.",
+    "Our AI is scanning for the best matches.",
+    "Almost there — mapping contacts to companies.",
+    "Hang tight — good things take time 🚀."
+  ];
+
+  // Update progress smoothly over 4 minutes
   useEffect(() => {
-    if (!scrapingResult || isAborted) {
+    if (!isProcessing || isAborted) {
       setAnimatedProgress(0);
+      setStartTime(null);
+      setShowSuccess(false);
       return;
     }
 
-    let targetProgress = 0;
-    switch (scrapingResult.status) {
-      case 'pending': targetProgress = 25; break;
-      case 'processing': targetProgress = 50; break;
-      case 'filtering': targetProgress = 70; break;
-      case 'enriching': targetProgress = 85; break;
-      case 'completed': targetProgress = 100; break;
-      default: targetProgress = 0;
+    // Set start time when processing begins
+    if (!startTime) {
+      setStartTime(Date.now());
     }
 
-    // Smoothly animate to target progress
+    const totalDuration = 4 * 60 * 1000; // 4 minutes in milliseconds
     const interval = setInterval(() => {
-      setAnimatedProgress(current => {
-        if (current >= targetProgress || isAborted) {
-          clearInterval(interval);
-          return isAborted ? current : targetProgress;
-        }
-        // Increase by 1% every 100ms for smooth animation
-        return Math.min(current + 1, targetProgress);
-      });
-    }, 100);
+      if (!startTime || isAborted) return;
+
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min((elapsed / totalDuration) * 100, 99); // Cap at 99% until actually complete
+      
+      // If actually completed, jump to 100%
+      if (scrapingResult?.status === 'completed') {
+        setAnimatedProgress(100);
+        setShowSuccess(true);
+        clearInterval(interval);
+      } else {
+        setAnimatedProgress(progress);
+      }
+    }, 100); // Update every 100ms for smooth animation
 
     return () => clearInterval(interval);
-  }, [scrapingResult?.status, isAborted]);
+  }, [isProcessing, startTime, scrapingResult?.status, isAborted]);
+
+  // Rotate dynamic messages
+  useEffect(() => {
+    if (!isProcessing || isAborted) return;
+
+    let messageIndex = 0;
+    setDynamicMessage(rotatingMessages[0]);
+
+    const interval = setInterval(() => {
+      messageIndex = (messageIndex + 1) % rotatingMessages.length;
+      setDynamicMessage(rotatingMessages[messageIndex]);
+    }, 25000); // Change message every 25 seconds
+
+    return () => clearInterval(interval);
+  }, [isProcessing, isAborted]);
 
   const getProgressPercentage = () => {
-    return animatedProgress;
+    return Math.floor(animatedProgress);
   };
 
   const getStatusMessage = () => {
-    if (!scrapingResult) return "";
-    switch (scrapingResult.status) {
-      case 'pending':
-        return 'Initializing search...';
-      case 'processing':
-        return 'Scraping LinkedIn jobs...';
-      case 'filtering':
-        return 'Filtering results...';
-      case 'enriching':
-        return 'Finding contact information...';
-      case 'completed':
-        return 'Search complete!';
-      case 'failed':
-        return 'Search failed';
-      default:
-        return scrapingResult.status;
-    }
+    const progress = animatedProgress;
+    
+    if (progress < 20) return "Connecting to LinkedIn…";
+    if (progress < 40) return "Scraping job listings…";
+    if (progress < 60) return "Analyzing job descriptions…";
+    if (progress < 80) return "Finding decision makers…";
+    if (progress < 100) return "Preparing your results…";
+    return "Search complete!";
+  };
+
+  const getEstimatedTime = () => {
+    if (!startTime) return "~4 minutes";
+    
+    const elapsed = Date.now() - startTime;
+    const totalDuration = 4 * 60 * 1000; // 4 minutes
+    const remaining = Math.max(0, totalDuration - elapsed);
+    const minutes = Math.ceil(remaining / 60000);
+    
+    if (minutes === 0) return "Almost done...";
+    if (minutes === 1) return "~1 minute left";
+    return `~${minutes} minutes left`;
   };
 
   // Handle abort
@@ -409,26 +442,120 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
   };
 
   // Show full-screen loading animation when processing
-  if (isProcessing && scrapingResult) {
+  if (isProcessing) {
     return (
       <motion.div
-        className="min-h-screen relative -mx-4 -my-8 md:-mx-8 px-4 py-8 md:px-8 flex items-center justify-center bg-background/95 backdrop-blur-lg overflow-y-auto"
+        className="min-h-screen relative -mx-4 -my-8 md:-mx-8 flex items-center justify-center bg-background overflow-hidden"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="w-full max-w-2xl">
+        {/* Animated gradient background */}
+        <div className="absolute inset-0">
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10"
+            animate={{
+              backgroundPosition: ["0% 0%", "100% 100%", "0% 0%"],
+            }}
+            transition={{
+              duration: 15,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+            style={{
+              backgroundSize: "400% 400%"
+            }}
+          />
+          {/* Floating orbs */}
+          <motion.div
+            className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl"
+            animate={{
+              x: [0, 100, 0],
+              y: [0, -100, 0],
+              scale: [1, 1.2, 1],
+            }}
+            transition={{
+              duration: 20,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+          <motion.div
+            className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl"
+            animate={{
+              x: [0, -100, 0],
+              y: [0, 100, 0],
+              scale: [1, 1.3, 1],
+            }}
+            transition={{
+              duration: 25,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+        </div>
+
+        <div className="relative z-10 w-full max-w-2xl px-4">
           <motion.div 
             className="space-y-8"
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            {/* Main Loading Container */}
-            <div className="text-center space-y-4">
-              <motion.div className="relative inline-block">
+            {/* Success animation */}
+            <AnimatePresence>
+              {showSuccess && (
                 <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-blue-500/30 via-purple-500/30 to-pink-500/30 rounded-full blur-2xl"
+                  className="fixed inset-0 flex items-center justify-center z-50"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <motion.div
+                    className="bg-white dark:bg-gray-800 rounded-full p-8 shadow-2xl"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: [0, 1.2, 1] }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <CheckCircle2 className="h-24 w-24 text-green-500" />
+                  </motion.div>
+                  {/* Confetti effect */}
+                  {[...Array(20)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="absolute w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500"
+                      initial={{
+                        x: 0,
+                        y: 0,
+                        opacity: 1,
+                      }}
+                      animate={{
+                        x: (Math.random() - 0.5) * 400,
+                        y: (Math.random() - 0.5) * 400,
+                        opacity: 0,
+                        rotate: Math.random() * 360,
+                      }}
+                      transition={{
+                        duration: 1,
+                        delay: i * 0.02,
+                        ease: "easeOut"
+                      }}
+                      style={{
+                        left: "50%",
+                        top: "50%",
+                      }}
+                    />
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Main Loading Container */}
+            <div className="text-center space-y-6">
+              <motion.div className="relative inline-block">
+                {/* Pulsing glow behind icon */}
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-blue-500/40 via-purple-500/40 to-pink-500/40 rounded-full blur-2xl"
                   animate={{
                     scale: [1, 1.5, 1],
                     opacity: [0.5, 0.8, 0.5]
@@ -439,164 +566,171 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
                     ease: "easeInOut"
                   }}
                 />
-                {/* Status-specific central icon */}
-                {scrapingResult.status === 'pending' && (
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                  >
-                    <Globe className="h-20 w-20 text-primary relative z-10" />
-                  </motion.div>
-                )}
-                {scrapingResult.status === 'processing' && (
-                  <Search className="h-20 w-20 text-primary relative z-10" />
-                )}
-                {scrapingResult.status === 'filtering' && (
-                  <motion.div
-                    animate={{ rotate: 180 }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                  >
-                    <Filter className="h-20 w-20 text-primary relative z-10" />
-                  </motion.div>
-                )}
-                {scrapingResult.status === 'enriching' && (
-                  <motion.div
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    <Mail className="h-20 w-20 text-primary relative z-10" />
-                  </motion.div>
-                )}
+                
+                {/* Animated magnifying glass with AI sparkles */}
+                <motion.div
+                  className="relative"
+                  animate={{ 
+                    rotate: [0, 10, -10, 0],
+                  }}
+                  transition={{
+                    duration: 4,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
+                  <Search className="h-24 w-24 text-primary relative z-10" />
+                  {/* AI sparkles */}
+                  {[...Array(3)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="absolute"
+                      animate={{
+                        scale: [0, 1, 0],
+                        opacity: [0, 1, 0],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        delay: i * 0.6,
+                        ease: "easeOut"
+                      }}
+                      style={{
+                        left: `${30 + i * 20}%`,
+                        top: `${20 + i * 15}%`,
+                      }}
+                    >
+                      <Sparkles className="h-4 w-4 text-yellow-500" />
+                    </motion.div>
+                  ))}
+                </motion.div>
               </motion.div>
 
-              <div className="space-y-2">
-                <h2 className="text-2xl font-bold">{getStatusMessage()}</h2>
-                <p className="text-sm text-muted-foreground">
-                  ID: {scrapingResult.id.slice(0, 8).toUpperCase()}
-                </p>
+              <div className="space-y-3">
+                <motion.h2 
+                  className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+                  key={getStatusMessage()}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  {getStatusMessage()}
+                </motion.h2>
+                <motion.p 
+                  className="text-lg text-muted-foreground"
+                  key={getEstimatedTime()}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  {getEstimatedTime()}
+                </motion.p>
               </div>
             </div>
 
             {/* Enhanced Progress Bar */}
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 blur-xl" />
-              <div className="relative glass-card p-6 space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Progress</span>
-                  <motion.span 
-                    className="text-sm font-bold text-primary"
-                    key={getProgressPercentage()}
-                    initial={{ scale: 1.2, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    {getProgressPercentage()}%
-                  </motion.span>
-                </div>
-                
-                <div className="relative h-4 bg-secondary/30 rounded-full overflow-hidden">
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
-                    initial={{ width: "0%" }}
-                    animate={{ width: `${getProgressPercentage()}%` }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                  >
+              {/* Glow effect */}
+              <motion.div 
+                className="absolute -inset-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full blur-md opacity-75"
+                animate={{
+                  opacity: [0.5, 0.75, 0.5]
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
+              
+              <div className="relative bg-background/80 backdrop-blur-xl rounded-full p-6 border border-primary/20">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <motion.span 
+                      className="text-sm font-medium flex items-center gap-2"
+                      animate={{ opacity: [0.7, 1, 0.7] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      <motion.div
+                        className="w-2 h-2 bg-green-500 rounded-full"
+                        animate={{ scale: [1, 1.5, 1] }}
+                        transition={{ duration: 1, repeat: Infinity }}
+                      />
+                      Processing
+                    </motion.span>
+                    <motion.span 
+                      className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+                      key={getProgressPercentage()}
+                      initial={{ scale: 1.2, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      {getProgressPercentage()}%
+                    </motion.span>
+                  </div>
+                  
+                  <div className="relative h-6 bg-secondary/30 rounded-full overflow-hidden">
                     <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                      animate={{ x: ["-100%", "200%"] }}
-                      transition={{
-                        duration: 1.5,
-                        repeat: Infinity,
-                        ease: "linear"
-                      }}
+                      className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
+                      style={{ width: `${animatedProgress}%` }}
+                      transition={{ duration: 0.5, ease: "easeOut" }}
+                    >
+                      {/* Animated shimmer effect */}
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                        animate={{ x: ["-100%", "200%"] }}
+                        transition={{
+                          duration: 1.5,
+                          repeat: Infinity,
+                          ease: "linear"
+                        }}
+                      />
+                    </motion.div>
+                    
+                    {/* Progress bar glow at the end */}
+                    <motion.div
+                      className="absolute top-0 bottom-0 w-8 bg-gradient-to-r from-transparent to-white/30 blur-md"
+                      style={{ left: `${animatedProgress - 2}%` }}
                     />
-                  </motion.div>
+                  </div>
                 </div>
-
-                {/* Live Status Updates */}
-                <motion.div
-                  className="flex items-center justify-center gap-2"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                >
-                  <motion.div
-                    className="w-2 h-2 bg-green-500 rounded-full"
-                    animate={{ opacity: [0.3, 1, 0.3] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                  />
-                  <span className="text-xs text-muted-foreground">
-                    {scrapingResult.status === 'processing' && 'Analyzing job descriptions...'}
-                    {scrapingResult.status === 'filtering' && 'Matching your requirements...'}
-                    {scrapingResult.status === 'enriching' && 'Verifying contact details...'}
-                    {scrapingResult.status === 'pending' && 'Establishing secure connection...'}
-                  </span>
-                </motion.div>
               </div>
             </div>
 
-            {/* Tips Carousel */}
+            {/* Dynamic message */}
             <motion.div
-              className="glass-card p-4 border border-primary/10"
+              className="text-center"
+              key={dynamicMessage}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5 }}
             >
-              <div className="flex items-start gap-3">
-                <Lightbulb className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
-                <motion.p
-                  key={Math.floor(Date.now() / 5000)}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="text-sm"
-                >
-                  {[
-                    "💡 Did you know? Personalized emails have 29% higher open rates!",
-                    "🎯 Pro tip: Follow up within 24 hours for best response rates",
-                    "📊 Companies receive 100+ applications per job posting on average",
-                    "⚡ Our AI finds hidden contact info not visible on job posts",
-                    "🔍 We're checking multiple data sources for accuracy",
-                    "✨ Each job is carefully matched to your requirements",
-                    "🚀 We're finding the decision makers for each company"
-                  ][Math.floor(Date.now() / 5000) % 7]}
-                </motion.p>
-              </div>
+              <p className="text-muted-foreground italic">{dynamicMessage}</p>
             </motion.div>
 
-            {/* Animated Job Cards */}
-            <div className="relative h-32 overflow-hidden">
-              {[0, 1, 2].map((i) => (
-                <motion.div
-                  key={i}
-                  className="absolute inset-x-0 glass-card p-4 border border-white/5"
-                  initial={{ opacity: 0, x: 300 }}
-                  animate={{ 
-                    opacity: [0, 1, 1, 0],
-                    x: [300, 0, -300],
-                  }}
-                  transition={{
-                    duration: 5,
-                    repeat: Infinity,
-                    delay: i * 1.5,
-                    ease: "easeInOut"
-                  }}
-                >
-                  <div className="space-y-2">
-                    <div className="h-3 bg-gradient-to-r from-blue-500/50 to-purple-500/50 rounded w-3/4" />
-                    <div className="h-2 bg-gradient-to-r from-purple-500/30 to-pink-500/30 rounded w-1/2" />
-                    <div className="flex gap-2 mt-3">
-                      <div className="h-2 bg-primary/20 rounded w-20" />
-                      <div className="h-2 bg-primary/20 rounded w-16" />
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Stats Preview for Enriching */}
-            {scrapingResult.status === 'enriching' && (
-              <motion.div
-                className="grid grid-cols-3 gap-3"
+            {/* Cancel Button */}
+            <motion.div
+              className="flex justify-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1 }}
+            >
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={handleAbort}
+                className="gap-2"
+              >
+                <X className="h-4 w-4" />
+                Cancel Search
+              </Button>
+            </motion.div>
+          </motion.div>
+        </div>
+      </motion.div>
+    );
+  }
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.5 }}
