@@ -1,7 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import {
-  LayoutDashboard,
   Search,
   Briefcase,
   BarChart3,
@@ -19,15 +18,9 @@ import { cn } from "@/lib/utils";
 
 const sidebarItems = [
   {
-    icon: LayoutDashboard,
-    label: "Dashboard",
-    href: "/",
-    description: "Overview & stats",
-  },
-  {
     icon: Search,
     label: "Job Search",
-    href: "/search",
+    href: "/",
     description: "Find opportunities",
     badge: "New",
   },

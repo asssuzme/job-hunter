@@ -10,6 +10,11 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- **2025-08-04**: Simplified navigation structure:
+  - Removed redundant Dashboard menu item from sidebar
+  - Made Job Search the primary landing page (/)
+  - Consolidated user experience by eliminating duplicate functionality
+
 - **2025-08-04**: Enhanced job search loading experience:
   - Created full-screen immersive loading animation that replaces the form during processing
   - Added smooth animated progress bar that increases gradually (1% every 100ms)
