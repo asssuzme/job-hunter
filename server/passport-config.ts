@@ -10,9 +10,8 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      callbackURL: process.env.REPL_SLUG 
-        ? 'https://service-genie-ashutoshlathrep.replit.app/api/auth/google/callback'
-        : 'http://localhost:5000/api/auth/google/callback',
+      // Force development callback URL for now
+      callbackURL: 'http://localhost:5000/api/auth/google/callback',
     },
     async (accessToken, refreshToken, profile, done) => {
       try {

@@ -17,13 +17,12 @@ Preferred communication style: Simple, everyday language.
   - Simplified authentication flow with session-based auth
   - All authentication now handled directly through Google
 
-- **2025-08-03**: Shifted to Replit production URL exclusively:
-  - Removed all references to gigfloww.com due to SSL certificate issues
-  - Now using https://service-genie-ashutoshlathrep.replit.app as the production URL
-  - Updated CORS to only allow Replit URLs
-  - Removed domain restrictions from session cookies
-  - Updated Gmail OAuth callbacks to use Replit URL
-  - Added error handling to auth callback for better debugging
+- **2025-08-03**: Reverted to development environment:
+  - Shifted back to development URL (http://localhost:5000) due to multiple bugs in production
+  - Session persistence issues causing repeated logouts
+  - Job search form submission not working properly
+  - Development environment provides better stability for testing and debugging
+  - Removed production-specific configurations temporarily
 
 - **2025-08-03**: Fixed production deployment issues for https://gigfloww.com:
   - Updated session cookie configuration to work with custom domain

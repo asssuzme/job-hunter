@@ -283,6 +283,18 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
 
   const handleSubmit = (data: JobSearchFormData) => {
     console.log('Form submitted with data:', data);
+    console.log('Form errors:', form.formState.errors);
+    
+    // Validate all fields are filled
+    if (!data.keyword || !data.location || !data.workType) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     scrapeMutation.mutate({ 
       keyword: data.keyword,
       location: data.location,

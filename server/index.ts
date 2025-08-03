@@ -10,9 +10,8 @@ app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 // Session configuration
 app.set("trust proxy", 1);
 
-// Detect if running in production (Replit)
-const isProduction = process.env.REPL_SLUG || 
-                    (typeof process.env.REPLIT_DOMAINS !== 'undefined');
+// Force development mode for now
+const isProduction = false;
 
 // Use default memory store for session persistence
 app.use(
