@@ -120,6 +120,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     passport.authenticate('google', { scope: ['profile', 'email'] })
   );
 
+  // TEMPORARY: Development bypass for testing
+  app.get('/api/auth/dev-login', async (req, res) => {
+    if (process.env.NODE_ENV !== 'development') {
+      return res.status(404).send('Not found');
+    }
+    
+    // Create or get test user
+    const testEmail = 'test@example.com';
+    let [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, testEmail))
+      .limit(1);
+    
+    if (!user) {
+      [user] = await db
+        .insert(users)
+        .values({
+          id: 'dev-user-123',
+          email: testEmail,
+          firstName: 'Test',
+          lastName: 'User',
+        })
+        .returning();
+    }
+    
+    req.session.userId = user.id;
+    await new Promise<void>((resolve) => {
+      req.session.save(() => resolve());
+    });
+    
+    res.redirect('/');
+  });
+
   // Google OAuth callback
   app.get('/api/auth/google/callback',
     passport.authenticate('google', { failureRedirect: '/' }),
