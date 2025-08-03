@@ -7,6 +7,7 @@ import OpenAI from "openai";
 import multer from "multer";
 import { google } from "googleapis";
 import { MailService } from '@sendgrid/mail';
+import passport from './passport-config';
 // import PDFParse from 'pdf-parse'; // Commenting out for now due to import issue
 
 // Extend Express Request type to include user
@@ -47,6 +48,10 @@ async function requireAuth(req: Request, res: Response, next: NextFunction) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize Passport
+  app.use(passport.initialize());
+  app.use(passport.session());
+
   // CORS configuration for production
   app.use((req, res, next) => {
     const origin = req.headers.origin;
@@ -93,71 +98,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(user);
   });
 
-  // Supabase OAuth callback
-  app.post("/api/auth/supabase/callback", async (req, res) => {
-    try {
-      const { userId, email, userMetadata } = req.body;
-      
-      if (!userId || !email) {
-        return res.status(400).json({ error: 'Missing required fields' });
-      }
-      
-      // First, try to find existing user
-      const existingUser = await db
-        .select()
-        .from(users)
-        .where(eq(users.id, userId))
-        .limit(1);
-      
-      let user;
-      if (existingUser.length > 0) {
-        // Update existing user
-        [user] = await db
-          .update(users)
-          .set({
-            email: email,
-            firstName: userMetadata?.first_name || userMetadata?.given_name || null,
-            lastName: userMetadata?.last_name || userMetadata?.family_name || null,
-            profileImageUrl: userMetadata?.avatar_url || userMetadata?.picture || null,
-          })
-          .where(eq(users.id, userId))
-          .returning();
-      } else {
-        // Insert new user
-        [user] = await db
-          .insert(users)
-          .values({
-            id: userId,
-            email: email,
-            firstName: userMetadata?.first_name || userMetadata?.given_name || null,
-            lastName: userMetadata?.last_name || userMetadata?.family_name || null,
-            profileImageUrl: userMetadata?.avatar_url || userMetadata?.picture || null,
-          })
-          .returning();
-      }
-      
-      // Set session
-      req.session.userId = user.id;
-      req.session.save((err: any) => {
+  // Google OAuth login
+  app.get('/api/auth/google', 
+    passport.authenticate('google', { scope: ['profile', 'email'] })
+  );
+
+  // Google OAuth callback
+  app.get('/api/auth/google/callback',
+    passport.authenticate('google', { failureRedirect: '/' }),
+    (req, res) => {
+      // Successful authentication
+      req.session.userId = (req.user as any).id;
+      req.session.save((err) => {
         if (err) {
           console.error('Session save error:', err);
-          return res.status(500).json({ error: 'Failed to save session' });
+          return res.redirect('/?error=session_error');
         }
-        res.json({ success: true, userId: user.id });
+        // Redirect to frontend
+        res.redirect('/');
       });
-    } catch (error) {
-      console.error('Supabase callback error:', error);
-      res.status(500).json({ error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' });
     }
-  });
+  );
 
   // Logout
   app.post("/api/auth/logout", (req, res) => {
-    req.session.destroy((err: any) => {
+    req.logout((err) => {
       if (err) {
         return res.status(500).json({ error: 'Failed to logout' });
       }
-      res.json({ success: true });
+      req.session.destroy((err: any) => {
+        if (err) {
+          return res.status(500).json({ error: 'Failed to destroy session' });
+        }
+        res.json({ success: true });
+      });
     });
   });
 
