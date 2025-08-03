@@ -48,9 +48,7 @@ interface JobScrapingResponse {
 const jobSearchSchema = z.object({
   keyword: z.string().min(1, "Job keyword is required"),
   location: z.string().min(1, "Location is required"),
-  workType: z.enum(["1", "2", "3"], {
-    required_error: "Please select a work type",
-  }),
+  workType: z.string().min(1, "Please select a work type"),
 });
 
 type JobSearchFormData = z.infer<typeof jobSearchSchema>;
@@ -282,19 +280,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
   };
 
   const handleSubmit = (data: JobSearchFormData) => {
-    console.log('Form submitted with data:', data);
-    console.log('Form errors:', form.formState.errors);
-    
-    // Validate all fields are filled
-    if (!data.keyword || !data.location || !data.workType) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields",
-        variant: "destructive"
-      });
-      return;
-    }
-    
+    // The form data is already validated by react-hook-form + zod
     scrapeMutation.mutate({ 
       keyword: data.keyword,
       location: data.location,
@@ -519,7 +505,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
                   <Globe className="h-4 w-4 text-primary" />
                   Work Type
                 </FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger className="glass-input h-12 text-base" disabled={isProcessing}>
                       <SelectValue placeholder="Select work type" />
