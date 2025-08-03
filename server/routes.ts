@@ -47,6 +47,30 @@ async function refreshGoogleToken(refreshToken: string): Promise<{ access_token:
 const upload = multer({ storage: multer.memoryStorage() });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // CORS configuration for production
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    const allowedOrigins = [
+      'https://service-genie-ashutoshlathrep.replit.app',
+      'https://gigfloww.com',
+      'http://localhost:5000',
+      'http://localhost:3000'
+    ];
+    
+    if (origin && allowedOrigins.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    }
+    
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(200);
+    }
+    
+    next();
+  });
+  
   // Session middleware
   app.set("trust proxy", 1);
   app.use(getSession());

@@ -45,11 +45,8 @@ export default function AuthCallback() {
               // Session verified, redirect
               window.location.href = '/';
             } else {
-              console.error('Session not ready after sync, retrying...');
-              // Session not ready yet, try again
-              setTimeout(() => {
-                window.location.href = '/';
-              }, 1000);
+              // Force a hard reload to ensure cookies are picked up
+              window.location.href = '/';
             }
           } else {
             const error = await response.text();
