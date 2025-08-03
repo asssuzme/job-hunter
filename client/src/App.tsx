@@ -69,8 +69,15 @@ function Router() {
 }
 
 function AppContent() {
-  // No need for auth state listener here - it's causing infinite loops
-  // The auth callback page handles the authentication
+  // Refresh auth state when window gains focus
+  useEffect(() => {
+    const handleFocus = () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
 
   return (
     <TooltipProvider>

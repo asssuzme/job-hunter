@@ -33,10 +33,23 @@ export default function AuthCallback() {
           });
           
           if (response.ok) {
-            // Success! Redirect to home
-            window.location.href = '/';
+            // Success! Verify the session is created before redirect
+            const authCheckResponse = await fetch('/api/auth/user', {
+              credentials: 'include'
+            });
+            
+            if (authCheckResponse.ok) {
+              // Session verified, redirect
+              window.location.replace('/');
+            } else {
+              // Session not ready yet, try again
+              setTimeout(() => {
+                window.location.replace('/');
+              }, 500);
+            }
           } else {
-            throw new Error('Failed to sync session with backend');
+            const error = await response.text();
+            throw new Error(`Failed to sync session with backend: ${error}`);
           }
         } else {
           // No session, redirect to home
