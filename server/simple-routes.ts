@@ -352,6 +352,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // === JOB SCRAPING ROUTES ===
   
+  // Scrape job endpoint
+  app.post("/api/scrape-job", requireAuth, async (req, res) => {
+    const { linkedinUrl, resumeText } = req.body;
+    
+    if (!linkedinUrl) {
+      return res.status(400).json({ error: 'LinkedIn URL is required' });
+    }
+
+    // Create job scraping request
+    const [request] = await db
+      .insert(jobScrapingRequests)
+      .values({
+        userId: req.user!.id,
+        linkedinUrl,
+        resumeText,
+        status: 'pending',
+      })
+      .returning();
+
+    // For now, simulate processing by marking as completed after a delay
+    setTimeout(async () => {
+      await db
+        .update(jobScrapingRequests)
+        .set({ 
+          status: 'completed',
+          results: { 
+            message: 'Job scraping completed successfully!',
+            jobsFound: 5,
+            enrichedResults: {
+              totalCount: 5,
+              canApplyCount: 3
+            }
+          },
+          completedAt: new Date()
+        })
+        .where(eq(jobScrapingRequests.id, request.id));
+    }, 2000);
+    
+    res.json({ requestId: request.id });
+  });
+
+  // Get scraping status
+  app.get("/api/scrape-job/status/:requestId", requireAuth, async (req, res) => {
+    const { requestId } = req.params;
+    
+    const [request] = await db
+      .select()
+      .from(jobScrapingRequests)
+      .where(
+        and(
+          eq(jobScrapingRequests.id, requestId),
+          eq(jobScrapingRequests.userId, req.user!.id)
+        )
+      )
+      .limit(1);
+
+    if (!request) {
+      return res.status(404).json({ error: 'Request not found' });
+    }
+
+    res.json({
+      id: request.id,
+      status: request.status,
+      results: request.results,
+      enrichedResults: request.results?.enrichedResults || null,
+      error: request.errorMessage,
+    });
+  });
+  
   // Generate LinkedIn URL from search parameters
   app.post("/api/generate-linkedin-url", requireAuth, async (req, res) => {
     const { keyword, location, workType } = req.body;
@@ -401,31 +470,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  app.get("/api/job-scraping/status/:requestId", requireAuth, async (req, res) => {
-    const { requestId } = req.params;
-    
-    const [request] = await db
-      .select()
-      .from(jobScrapingRequests)
-      .where(
-        and(
-          eq(jobScrapingRequests.id, requestId),
-          eq(jobScrapingRequests.userId, req.user!.id)
-        )
-      )
-      .limit(1);
 
-    if (!request) {
-      return res.status(404).json({ error: 'Request not found' });
-    }
-
-    res.json({
-      id: request.id,
-      status: request.status,
-      results: request.results,
-      error: request.errorMessage,
-    });
-  });
 
   // === EMAIL ROUTES ===
   
