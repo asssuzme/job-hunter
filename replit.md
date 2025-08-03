@@ -18,6 +18,8 @@ Preferred communication style: Simple, everyday language.
   - Updated email composer modal with unlink button for connected Gmail accounts
   - Modified email sending logic to check both token validity and active status
   - Users can now unlink and relink Gmail accounts anytime without re-authorization
+  - Created Privacy Policy and Terms of Service pages for Google OAuth verification compliance
+  - Fixed white screen issue after login caused by incorrect component imports
 
 - **2025-08-03**: Fixed critical authentication issues and implemented Gmail OAuth integration:
   - Resolved database foreign key constraint violation by updating user upsert logic to preserve existing user IDs
