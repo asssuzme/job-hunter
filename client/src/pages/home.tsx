@@ -22,7 +22,12 @@ import {
   ArrowUpRight,
   Sparkles,
   Briefcase,
-  Lock
+  Lock,
+  XCircle,
+  Link2,
+  MapPin,
+  Unlock,
+  AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatCardSkeleton, Spinner } from "@/components/ui/loading-animations";
@@ -217,11 +222,16 @@ export default function Home() {
         >
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <Clock className="h-6 w-6 text-primary" />
-              <h2 className="text-xl font-semibold">Recent Searches</h2>
+              <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500/10 to-purple-500/10">
+                <Clock className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold">Recent Searches</h2>
+                <p className="text-sm text-muted-foreground">Your job search history</p>
+              </div>
             </div>
-            <Badge variant="outline" className="text-xs">
-              {stats?.recentSearches?.length || 0} total
+            <Badge variant="outline" className="text-xs px-3 py-1 font-medium">
+              {stats?.recentSearches?.length || 0} searches
             </Badge>
           </div>
 
@@ -231,38 +241,77 @@ export default function Home() {
             </div>
           ) : stats?.recentSearches && stats.recentSearches.length > 0 ? (
             <div className="space-y-4">
-              {stats.recentSearches.map((search, index) => (
-                <motion.div
-                  key={search.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1, duration: 0.3 }}
-                  whileHover={{ x: 4 }}
-                  className="glass-card p-4 cursor-pointer group"
-                  onClick={() => setLocation(`/results/${search.id}`)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <Badge
-                          variant={
-                            search.status === 'completed' ? 'default' :
-                            search.status === 'failed' ? 'destructive' :
-                            'secondary'
-                          }
-                        >
-                          {search.status}
-                        </Badge>
-                        <span className="text-sm font-medium">
-                          Search #{search.id.slice(0, 8)}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {format(new Date(search.createdAt), 'MMM dd, HH:mm')}
-                        </span>
+              {stats.recentSearches.map((search, index) => {
+                const isCompleted = search.status === 'completed';
+                const isFailed = search.status === 'failed';
+                const isCancelled = search.status === 'cancelled';
+                
+                return (
+                  <motion.div
+                    key={search.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1, duration: 0.3 }}
+                    whileHover={{ scale: 1.02, x: 4 }}
+                    className={`
+                      relative overflow-hidden rounded-xl border cursor-pointer group transition-all duration-300
+                      ${isCompleted ? 'border-green-500/20 bg-gradient-to-r from-green-500/5 to-emerald-500/5 hover:from-green-500/10 hover:to-emerald-500/10' :
+                        isFailed ? 'border-red-500/20 bg-gradient-to-r from-red-500/5 to-pink-500/5 hover:from-red-500/10 hover:to-pink-500/10' :
+                        isCancelled ? 'border-gray-500/20 bg-gradient-to-r from-gray-500/5 to-slate-500/5 hover:from-gray-500/10 hover:to-slate-500/10' :
+                        'border-border bg-gradient-to-r from-blue-500/5 to-purple-500/5 hover:from-blue-500/10 hover:to-purple-500/10'}
+                    `}
+                    onClick={() => setLocation(`/results/${search.id}`)}
+                  >
+                    <div className="p-5">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          {/* Status Icon */}
+                          <div className={`
+                            p-2 rounded-full
+                            ${isCompleted ? 'bg-green-500/10' :
+                              isFailed ? 'bg-red-500/10' :
+                              isCancelled ? 'bg-gray-500/10' :
+                              'bg-blue-500/10'}
+                          `}>
+                            {isCompleted ? <CheckCircle className="h-5 w-5 text-green-500" /> :
+                             isFailed ? <XCircle className="h-5 w-5 text-red-500" /> :
+                             isCancelled ? <AlertCircle className="h-5 w-5 text-gray-500" /> :
+                             <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />}
+                          </div>
+                          
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-sm">
+                                Search #{search.id.slice(0, 8)}
+                              </span>
+                              <Badge
+                                variant={
+                                  isCompleted ? 'default' :
+                                  isFailed ? 'destructive' :
+                                  'secondary'
+                                }
+                                className="text-xs"
+                              >
+                                {search.status}
+                              </Badge>
+                            </div>
+                            <span className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                              <Calendar className="h-3 w-3" />
+                              {format(new Date(search.createdAt), 'MMM dd, yyyy at HH:mm')}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                       </div>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {search.linkedinUrl}
-                      </p>
+                      
+                      {/* LinkedIn URL with icon */}
+                      <div className="flex items-center gap-2 mb-3">
+                        <Link2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <p className="text-sm text-muted-foreground truncate">
+                          {search.linkedinUrl.replace('https://www.linkedin.com/jobs/search?', '')}
+                        </p>
+                      </div>
                       {search.status === 'completed' && search.enrichedResults ? (
                         (() => {
                           const enrichedResults = search.enrichedResults as any;
@@ -279,38 +328,58 @@ export default function Home() {
                           }
                           const freeJobs = enrichedResults.freeJobs || enrichedResults.canApplyCount || 0;
                           const lockedJobs = enrichedResults.lockedJobs || (fakeTotalJobs - freeJobs);
+                          const unlockedPercentage = (freeJobs / fakeTotalJobs) * 100;
+                          
                           return (
-                            <div className="flex items-center gap-4 mt-2">
-                              <div className="flex items-center gap-1 text-xs">
-                                <Briefcase className="h-3 w-3" />
-                                <span>{fakeTotalJobs.toLocaleString()} jobs</span>
+                            <div className="space-y-3">
+                              {/* Progress Bar */}
+                              <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                <motion.div 
+                                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full"
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${unlockedPercentage}%` }}
+                                  transition={{ delay: 0.5, duration: 1, ease: "easeOut" }}
+                                />
                               </div>
-                              <div className="flex items-center gap-1 text-xs text-green-600">
-                                <Users className="h-3 w-3" />
-                                <span>{freeJobs} with contacts</span>
-                              </div>
-                              {lockedJobs > 0 && (
-                                <div className="flex items-center gap-1 text-xs text-amber-600">
-                                  <Lock className="h-3 w-3" />
-                                  <span>{lockedJobs} locked</span>
+                              
+                              {/* Job Stats */}
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                  <div className="flex items-center gap-1.5">
+                                    <div className="p-1 rounded bg-blue-500/10">
+                                      <Briefcase className="h-3.5 w-3.5 text-blue-500" />
+                                    </div>
+                                    <span className="text-xs font-medium">{fakeTotalJobs.toLocaleString()} total</span>
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
+                                    <div className="p-1 rounded bg-green-500/10">
+                                      <Unlock className="h-3.5 w-3.5 text-green-500" />
+                                    </div>
+                                    <span className="text-xs font-medium text-green-600 dark:text-green-400">{freeJobs} unlocked</span>
+                                  </div>
+                                  {lockedJobs > 0 && (
+                                    <div className="flex items-center gap-1.5">
+                                      <div className="p-1 rounded bg-orange-500/10">
+                                        <Lock className="h-3.5 w-3.5 text-orange-500" />
+                                      </div>
+                                      <span className="text-xs font-medium text-orange-600 dark:text-orange-400">{lockedJobs} locked</span>
+                                    </div>
+                                  )}
                                 </div>
-                              )}
+                              </div>
                             </div>
                           );
                         })()
+                      ) : search.status === 'processing' ? (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          <span>Processing your search...</span>
+                        </div>
                       ) : null}
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Eye className="h-4 w-4 mr-2" />
-                      View
-                    </Button>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-12">
