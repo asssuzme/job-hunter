@@ -4,8 +4,6 @@ import { supabase } from '@/lib/supabase';
 import { Loader2 } from 'lucide-react';
 import { GridLoader } from '@/components/ui/loading-animations';
 import { motion } from 'framer-motion';
-import { setAuthToken } from '@/lib/auth-token';
-import { queryClient } from '@/lib/queryClient';
 
 export default function AuthCallback() {
   const [, setLocation] = useLocation();
@@ -24,7 +22,7 @@ export default function AuthCallback() {
           const response = await fetch('/api/auth/supabase/callback', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-
+            credentials: 'include',
             body: JSON.stringify({
               userId: session.user.id,
               email: session.user.email,
@@ -35,19 +33,20 @@ export default function AuthCallback() {
           });
           
           if (response.ok) {
-            const data = await response.json();
+            // Success! Verify the session is created before redirect
+            // Add a small delay to ensure session is saved
+            await new Promise(resolve => setTimeout(resolve, 100));
             
-            if (data.token) {
-              // Store the JWT token
-              setAuthToken(data.token);
-              
-              // Invalidate all queries to refresh with new auth
-              queryClient.invalidateQueries();
-              
-              // Redirect to home
+            const authCheckResponse = await fetch('/api/auth/user', {
+              credentials: 'include'
+            });
+            
+            if (authCheckResponse.ok) {
+              // Session verified, redirect
               window.location.href = '/';
             } else {
-              throw new Error('No token received');
+              // Force a hard reload to ensure cookies are picked up
+              window.location.href = '/';
             }
           } else {
             const error = await response.text();
