@@ -19,6 +19,13 @@ declare global {
   }
 }
 
+// Add session data interface
+declare module 'express-session' {
+  interface SessionData {
+    userId?: string;
+  }
+}
+
 const upload = multer({ storage: multer.memoryStorage() });
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const mailService = new MailService();
@@ -80,22 +87,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Get current user
   app.get("/api/auth/user", async (req, res) => {
+    console.log('Auth check - Session ID:', req.sessionID);
+    console.log('Auth check - User ID:', req.session.userId);
+    
     if (!req.session.userId) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
     
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, req.session.userId))
-      .limit(1);
-    
-    if (!user) {
-      req.session.destroy(() => {});
-      return res.status(401).json({ message: 'Unauthorized' });
+    try {
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, req.session.userId))
+        .limit(1);
+      
+      if (!user) {
+        console.log('No user found for ID:', req.session.userId);
+        req.session.destroy(() => {});
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+      
+      console.log('User found:', user.email);
+      res.json(user);
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      return res.status(500).json({ message: 'Internal server error' });
     }
-    
-    res.json(user);
   });
 
   // Google OAuth login
@@ -106,17 +123,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Google OAuth callback
   app.get('/api/auth/google/callback',
     passport.authenticate('google', { failureRedirect: '/' }),
-    (req, res) => {
-      // Successful authentication
-      req.session.userId = (req.user as any).id;
-      req.session.save((err) => {
-        if (err) {
-          console.error('Session save error:', err);
-          return res.redirect('/?error=session_error');
+    async (req, res) => {
+      try {
+        // Successful authentication
+        const user = req.user as any;
+        if (!user || !user.id) {
+          console.error('No user or user ID after authentication');
+          return res.redirect('/?error=no_user');
         }
+        
+        req.session.userId = user.id;
+        console.log('Setting session userId:', user.id);
+        
+        // Force session save and wait for it
+        await new Promise<void>((resolve, reject) => {
+          req.session.save((err) => {
+            if (err) {
+              console.error('Session save error:', err);
+              reject(err);
+            } else {
+              console.log('Session saved successfully');
+              resolve();
+            }
+          });
+        });
+        
+        // Add a small delay to ensure session is propagated
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         // Redirect to frontend
         res.redirect('/');
-      });
+      } catch (error) {
+        console.error('Auth callback error:', error);
+        res.redirect('/?error=session_error');
+      }
     }
   );
 

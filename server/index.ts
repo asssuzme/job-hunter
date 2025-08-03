@@ -14,28 +14,23 @@ app.set("trust proxy", 1);
 const isProduction = process.env.REPL_SLUG || 
                     (typeof process.env.REPLIT_DOMAINS !== 'undefined');
 
-// Use memory store for simplicity
+// Use default memory store for session persistence
 app.use(
   session({
     secret: process.env.SESSION_SECRET || 'your-secret-key-here',
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: isProduction,
+      secure: isProduction ? true : false,
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       sameSite: isProduction ? 'none' : 'lax',
       // Remove domain restriction for Replit
     },
   })
 );
 
-// Extend session types
-declare module 'express-session' {
-  interface SessionData {
-    userId?: string;
-  }
-}
+
 
 app.use((req, res, next) => {
   const start = Date.now();

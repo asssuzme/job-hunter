@@ -282,6 +282,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
   };
 
   const handleSubmit = (data: JobSearchFormData) => {
+    console.log('Form submitted with data:', data);
     scrapeMutation.mutate({ 
       keyword: data.keyword,
       location: data.location,
