@@ -25,8 +25,9 @@ export function getSession() {
   // Use memory store for now
   return session({
     secret: process.env.SESSION_SECRET || "your-secret-key-here",
-    resave: false,
+    resave: true, // Force session saves to prevent loss
     saveUninitialized: false,
+    rolling: true, // Reset expiry on activity
     name: 'autoapply.sid', // Custom session name
     cookie: {
       httpOnly: true,

@@ -72,15 +72,14 @@ function AppContent() {
   // Monitor Supabase auth state changes
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      // Remove console.log in production
-      
       if (event === 'SIGNED_OUT') {
         // Clear the query cache when user signs out
         queryClient.clear();
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        // Refresh user data when sign in or token refresh
+      } else if (event === 'SIGNED_IN') {
+        // Only refresh on actual sign in, not token refresh
         queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       }
+      // Don't invalidate on TOKEN_REFRESHED to prevent logout issues
     });
 
     return () => subscription.unsubscribe();
