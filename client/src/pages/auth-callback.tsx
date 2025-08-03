@@ -34,18 +34,22 @@ export default function AuthCallback() {
           
           if (response.ok) {
             // Success! Verify the session is created before redirect
+            // Add a small delay to ensure session is saved
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
             const authCheckResponse = await fetch('/api/auth/user', {
               credentials: 'include'
             });
             
             if (authCheckResponse.ok) {
               // Session verified, redirect
-              window.location.replace('/');
+              window.location.href = '/';
             } else {
+              console.error('Session not ready after sync, retrying...');
               // Session not ready yet, try again
               setTimeout(() => {
-                window.location.replace('/');
-              }, 500);
+                window.location.href = '/';
+              }, 1000);
             }
           } else {
             const error = await response.text();

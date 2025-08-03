@@ -56,13 +56,22 @@ export function setupSupabaseAuth(app: Express) {
       authReq.session.googleAccessToken = accessToken;
       authReq.session.googleRefreshToken = refreshToken;
 
-      // Save session
+      // Save session explicitly
       authReq.session.save((err) => {
         if (err) {
           console.error('Error saving session:', err);
           return res.status(500).json({ error: 'Failed to save session' });
         }
-        res.json({ success: true });
+        
+        // Debug log for production
+        console.log('Session saved successfully for user:', user.id);
+        console.log('Session cookie settings:', {
+          secure: req.secure,
+          sameSite: req.session.cookie.sameSite,
+          httpOnly: req.session.cookie.httpOnly
+        });
+        
+        res.json({ success: true, userId: user.id });
       });
     } catch (error) {
       console.error('Error in Supabase callback:', error);

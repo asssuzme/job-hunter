@@ -69,14 +69,21 @@ function Router() {
 }
 
 function AppContent() {
-  // Refresh auth state when window gains focus
+  // Monitor Supabase auth state changes
   useEffect(() => {
-    const handleFocus = () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-    };
-    
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // Remove console.log in production
+      
+      if (event === 'SIGNED_OUT') {
+        // Clear the query cache when user signs out
+        queryClient.clear();
+      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        // Refresh user data when sign in or token refresh
+        queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   return (

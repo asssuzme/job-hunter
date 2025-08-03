@@ -25,11 +25,12 @@ export function getSession() {
     secret: process.env.SESSION_SECRET || "your-secret-key-here",
     resave: false,
     saveUninitialized: false,
+    name: 'autoapply.sid', // Custom session name
     cookie: {
       httpOnly: true,
-      secure: false, // Allow non-secure cookies for development
+      secure: isProduction, // Use secure cookies in production
       maxAge: sessionTtl,
-      sameSite: "lax",
+      sameSite: isProduction ? "none" : "lax", // 'none' for cross-site in production
       domain: undefined, // Let browser handle domain
       path: '/' // Ensure cookie is available on all paths
     },
