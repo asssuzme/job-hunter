@@ -307,6 +307,16 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
   };
 
   const handleSubmit = (data: JobSearchFormData) => {
+    // Check if resume is required (for first-time users)
+    if (!hasExistingResume && !resumeText) {
+      toast({
+        title: "Resume Required",
+        description: "Please upload your resume to start your first job search.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // The form data is already validated by react-hook-form + zod
     scrapeMutation.mutate({ 
       keyword: data.keyword,
@@ -955,7 +965,10 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
           >
             <label className="text-sm font-medium flex items-center gap-2 mb-2">
               <FileText className="h-4 w-4 text-primary" />
-              Resume {hasExistingResume ? '' : '(Optional)'}
+              Resume {hasExistingResume ? '' : '(Required)'}
+              {!hasExistingResume && (
+                <span className="text-red-500 text-xs">*</span>
+              )}
             </label>
             
             {isLoadingResume ? (
@@ -995,7 +1008,9 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
               </div>
             ) : (
               // Show upload interface for new users
-              <div className="glass-card p-4 md:p-6 border-dashed border-2 border-primary/20 hover:border-primary/40 transition-all cursor-pointer group min-h-[120px] flex items-center">
+              <div className={`glass-card p-4 md:p-6 border-dashed border-2 transition-all cursor-pointer group min-h-[120px] flex items-center ${
+                !resumeText ? 'border-red-500/30 hover:border-red-500/50' : 'border-primary/20 hover:border-primary/40'
+              }`}>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -1016,7 +1031,10 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
                   <div className="text-center">
                     <p className="font-medium">Drop your resume here</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Supports .txt and .pdf files - will be saved to your account
+                      <span className="text-red-500">Required for first search</span> • Supports .txt and .pdf files
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Will be saved to your account for future searches
                     </p>
                   </div>
                 </button>
@@ -1027,14 +1045,23 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
           {/* Submit Button */}
           <Button
             type="submit"
-            disabled={isProcessing}
-            className="btn-primary w-full h-12 text-base"
+            disabled={isProcessing || (!hasExistingResume && !resumeText)}
+            className={`w-full h-12 text-base ${
+              (!hasExistingResume && !resumeText) 
+                ? 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed' 
+                : 'btn-primary'
+            }`}
             size="lg"
           >
             {isProcessing ? (
               <>
                 <DotsLoader className="mr-2" />
                 Processing...
+              </>
+            ) : (!hasExistingResume && !resumeText) ? (
+              <>
+                <Upload className="h-5 w-5 mr-2" />
+                Upload Resume to Continue
               </>
             ) : (
               <>
