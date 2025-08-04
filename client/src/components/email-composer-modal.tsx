@@ -262,7 +262,7 @@ export function EmailComposerModal({
               value={emailContent}
               onChange={(e) => setEmailContent(e.target.value)}
               placeholder="Your email content..."
-              className="min-h-[400px] font-mono text-sm"
+              className="min-h-[200px] md:min-h-[400px] font-mono text-xs md:text-sm"
               disabled={isGeneratingEmail}
             />
           </div>
@@ -352,31 +352,31 @@ export function EmailComposerModal({
         
         {/* Gmail Authorization Prompt */}
         {showGmailAuth && (
-          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center rounded-lg">
-            <div className="bg-card p-6 rounded-lg shadow-lg max-w-md w-full mx-4 border">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                  <Mail className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center rounded-lg p-4">
+            <div className="bg-card p-4 md:p-6 rounded-lg shadow-lg max-w-md w-full border">
+              <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-4">
+                <div className="p-2 md:p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                  <Mail className="h-5 w-5 md:h-6 md:w-6 text-blue-600 dark:text-blue-400" />
                 </div>
-                <h3 className="text-lg font-semibold">Enable Gmail Sending</h3>
+                <h3 className="text-base md:text-lg font-semibold">Enable Gmail Sending</h3>
               </div>
               
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">
                 To send emails directly from Gmail, we need permission to send emails on your behalf. 
                 You can use any Gmail account - it doesn't have to be the same one you signed in with.
               </p>
               
-              <div className="bg-muted/50 p-3 rounded-md mb-4">
+              <div className="bg-muted/50 p-2 md:p-3 rounded-md mb-3 md:mb-4">
                 <p className="text-xs text-muted-foreground">
                   <strong>Note:</strong> We only request permission to send emails. 
                   We cannot read your existing emails or access your personal data.
                 </p>
-                <p className="text-xs text-muted-foreground mt-2">
+                <p className="text-xs text-muted-foreground mt-1 md:mt-2">
                   <strong>Different account:</strong> You can authorize any Gmail account, not just your login account.
                 </p>
               </div>
               
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -389,14 +389,14 @@ export function EmailComposerModal({
                       description: "Sending email through your default email app",
                     });
                   }}
-                  className="flex-1"
+                  className="flex-1 h-10"
                 >
                   Use Email App
                 </Button>
                 <Button
                   onClick={() => authorizeGmailMutation.mutate()}
                   disabled={authorizeGmailMutation.isPending}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 h-10"
                 >
                   <Mail className="h-4 w-4 mr-2" />
                   Authorize Gmail

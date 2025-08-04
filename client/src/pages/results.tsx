@@ -889,39 +889,39 @@ export default function Results() {
 
       {/* Pro Plan Purchase Modal */}
       <Dialog open={showProPlanModal} onOpenChange={setShowProPlanModal}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="max-w-[95vw] sm:max-w-md p-4 md:p-6">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">Upgrade to Pro Plan</DialogTitle>
-            <DialogDescription className="space-y-4 pt-4">
-              <div className="text-lg">
+            <DialogTitle className="text-xl md:text-2xl font-bold">Upgrade to Pro Plan</DialogTitle>
+            <DialogDescription className="space-y-3 md:space-y-4 pt-3 md:pt-4">
+              <div className="text-base md:text-lg">
                 Unlock access to <span className="font-semibold text-primary">1000 jobs</span> with hidden contact information
               </div>
               
-              <div className="bg-primary/10 p-4 rounded-lg space-y-2">
-                <h4 className="font-semibold text-lg">Pro Plan Benefits:</h4>
-                <ul className="space-y-1 text-sm">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                    Access all job postings without visible contacts
+              <div className="bg-primary/10 p-3 md:p-4 rounded-lg space-y-2">
+                <h4 className="font-semibold text-base md:text-lg">Pro Plan Benefits:</h4>
+                <ul className="space-y-1 text-xs md:text-sm">
+                  <li className="flex items-start md:items-center gap-2">
+                    <CheckCircle className="h-3 w-3 md:h-4 md:w-4 text-green-600 flex-shrink-0 mt-0.5 md:mt-0" />
+                    <span>Access all job postings without visible contacts</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                    Advanced AI-powered contact discovery
+                  <li className="flex items-start md:items-center gap-2">
+                    <CheckCircle className="h-3 w-3 md:h-4 md:w-4 text-green-600 flex-shrink-0 mt-0.5 md:mt-0" />
+                    <span>Advanced AI-powered contact discovery</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                    Priority email generation
+                  <li className="flex items-start md:items-center gap-2">
+                    <CheckCircle className="h-3 w-3 md:h-4 md:w-4 text-green-600 flex-shrink-0 mt-0.5 md:mt-0" />
+                    <span>Priority email generation</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                    Unlimited job applications
+                  <li className="flex items-start md:items-center gap-2">
+                    <CheckCircle className="h-3 w-3 md:h-4 md:w-4 text-green-600 flex-shrink-0 mt-0.5 md:mt-0" />
+                    <span>Unlimited job applications</span>
                   </li>
                 </ul>
               </div>
 
-              <div className="text-center space-y-4">
-                <div className="text-3xl font-bold">
-                  ₹129<span className="text-lg font-normal text-muted-foreground">/month</span>
+              <div className="text-center space-y-3 md:space-y-4">
+                <div className="text-2xl md:text-3xl font-bold">
+                  ₹129<span className="text-base md:text-lg font-normal text-muted-foreground">/month</span>
                 </div>
                 
                 <Button 

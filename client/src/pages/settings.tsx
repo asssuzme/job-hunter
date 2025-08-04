@@ -34,22 +34,22 @@ export default function Settings() {
         className="space-y-6"
       >
         {/* Header */}
-        <div className="glass-card p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold mb-2">Settings</h1>
-              <p className="text-muted-foreground">
+        <div className="glass-card p-4 md:p-6">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1">
+              <h1 className="text-xl md:text-2xl font-bold mb-1 md:mb-2">Settings</h1>
+              <p className="text-sm md:text-base text-muted-foreground">
                 Manage your account and application preferences
               </p>
             </div>
-            <SettingsIcon className="h-8 w-8 text-primary" />
+            <SettingsIcon className="h-6 w-6 md:h-8 md:w-8 text-primary flex-shrink-0" />
           </div>
         </div>
 
         {/* Profile Settings */}
-        <Card className="glass-card p-6">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <User className="h-5 w-5 text-primary" />
+        <Card className="glass-card p-4 md:p-6">
+          <h3 className="text-base md:text-lg font-semibold mb-4 flex items-center gap-2">
+            <User className="h-4 w-4 md:h-5 md:w-5 text-primary" />
             Profile Information
           </h3>
           <div className="space-y-4">
@@ -85,74 +85,74 @@ export default function Settings() {
         </Card>
 
         {/* Notification Settings */}
-        <Card className="glass-card p-6">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Bell className="h-5 w-5 text-primary" />
+        <Card className="glass-card p-4 md:p-6">
+          <h3 className="text-base md:text-lg font-semibold mb-4 flex items-center gap-2">
+            <Bell className="h-4 w-4 md:h-5 md:w-5 text-primary" />
             Notification Preferences
           </h3>
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Email Notifications</p>
-                <p className="text-sm text-muted-foreground">
+            <div className="flex items-start md:items-center justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm md:text-base font-medium">Email Notifications</p>
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Receive updates about your job applications
                 </p>
               </div>
-              <Switch defaultChecked />
+              <Switch defaultChecked className="flex-shrink-0" />
             </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Weekly Summary</p>
-                <p className="text-sm text-muted-foreground">
+            <div className="flex items-start md:items-center justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm md:text-base font-medium">Weekly Summary</p>
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Get a weekly summary of your job search activity
                 </p>
               </div>
-              <Switch defaultChecked />
+              <Switch defaultChecked className="flex-shrink-0" />
             </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">New Features</p>
-                <p className="text-sm text-muted-foreground">
+            <div className="flex items-start md:items-center justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm md:text-base font-medium">New Features</p>
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Be notified about new features and updates
                 </p>
               </div>
-              <Switch />
+              <Switch className="flex-shrink-0" />
             </div>
           </div>
         </Card>
 
         {/* Privacy Settings */}
-        <Card className="glass-card p-6">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Shield className="h-5 w-5 text-primary" />
+        <Card className="glass-card p-4 md:p-6">
+          <h3 className="text-base md:text-lg font-semibold mb-4 flex items-center gap-2">
+            <Shield className="h-4 w-4 md:h-5 md:w-5 text-primary" />
             Privacy & Security
           </h3>
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Profile Visibility</p>
-                <p className="text-sm text-muted-foreground">
+            <div className="flex items-start md:items-center justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm md:text-base font-medium">Profile Visibility</p>
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Make your profile visible to recruiters
                 </p>
               </div>
-              <Switch />
+              <Switch className="flex-shrink-0" />
             </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Data Sharing</p>
-                <p className="text-sm text-muted-foreground">
+            <div className="flex items-start md:items-center justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm md:text-base font-medium">Data Sharing</p>
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Share anonymous data to improve our service
                 </p>
               </div>
-              <Switch defaultChecked />
+              <Switch defaultChecked className="flex-shrink-0" />
             </div>
           </div>
         </Card>
 
         {/* Regional Settings */}
-        <Card className="glass-card p-6">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Globe className="h-5 w-5 text-primary" />
+        <Card className="glass-card p-4 md:p-6">
+          <h3 className="text-base md:text-lg font-semibold mb-4 flex items-center gap-2">
+            <Globe className="h-4 w-4 md:h-5 md:w-5 text-primary" />
             Regional Settings
           </h3>
           <div className="space-y-4">

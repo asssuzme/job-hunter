@@ -63,76 +63,76 @@ export default function Analytics() {
         className="space-y-6"
       >
         {/* Header */}
-        <div className="glass-card p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold mb-2">Analytics Dashboard</h1>
-              <p className="text-muted-foreground">
+        <div className="glass-card p-4 md:p-6">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1">
+              <h1 className="text-xl md:text-2xl font-bold mb-1 md:mb-2">Analytics Dashboard</h1>
+              <p className="text-sm md:text-base text-muted-foreground">
                 Track your job search performance and insights
               </p>
             </div>
-            <BarChart3 className="h-8 w-8 text-primary" />
+            <BarChart3 className="h-6 w-6 md:h-8 md:w-8 text-primary flex-shrink-0" />
           </div>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1 }}
-            className="glass-card p-6"
+            className="glass-card p-4 md:p-6"
           >
-            <div className="flex items-center justify-between mb-4">
-              <Mail className="h-5 w-5 text-primary" />
-              <span className="text-2xl font-bold">{analyticsData.totalApplications}</span>
+            <div className="flex items-center justify-between mb-2 md:mb-4">
+              <Mail className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+              <span className="text-xl md:text-2xl font-bold">{analyticsData.totalApplications}</span>
             </div>
-            <p className="text-sm text-muted-foreground">Total Applications</p>
+            <p className="text-xs md:text-sm text-muted-foreground">Total Applications</p>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
-            className="glass-card p-6"
+            className="glass-card p-4 md:p-6"
           >
-            <div className="flex items-center justify-between mb-4">
-              <TrendingUp className="h-5 w-5 text-green-600" />
-              <span className="text-2xl font-bold">{analyticsData.responseRate}%</span>
+            <div className="flex items-center justify-between mb-2 md:mb-4">
+              <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
+              <span className="text-xl md:text-2xl font-bold">{analyticsData.responseRate}%</span>
             </div>
-            <p className="text-sm text-muted-foreground">Response Rate</p>
+            <p className="text-xs md:text-sm text-muted-foreground">Response Rate</p>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 }}
-            className="glass-card p-6"
+            className="glass-card p-4 md:p-6"
           >
-            <div className="flex items-center justify-between mb-4">
-              <Calendar className="h-5 w-5 text-blue-600" />
-              <span className="text-2xl font-bold">{analyticsData.averageResponseTime}d</span>
+            <div className="flex items-center justify-between mb-2 md:mb-4">
+              <Calendar className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
+              <span className="text-xl md:text-2xl font-bold">{analyticsData.averageResponseTime}d</span>
             </div>
-            <p className="text-sm text-muted-foreground">Avg Response Time</p>
+            <p className="text-xs md:text-sm text-muted-foreground">Avg Response Time</p>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.4 }}
-            className="glass-card p-6"
+            className="glass-card p-4 md:p-6"
           >
-            <div className="flex items-center justify-between mb-4">
-              <CheckCircle className="h-5 w-5 text-accent" />
-              <span className="text-2xl font-bold">{analyticsData.interviewsScheduled}</span>
+            <div className="flex items-center justify-between mb-2 md:mb-4">
+              <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-accent" />
+              <span className="text-xl md:text-2xl font-bold">{analyticsData.interviewsScheduled}</span>
             </div>
-            <p className="text-sm text-muted-foreground">Interviews</p>
+            <p className="text-xs md:text-sm text-muted-foreground">Interviews</p>
           </motion.div>
         </div>
 
         {/* Weekly Applications Chart */}
-        <Card className="glass-card p-6">
-          <h3 className="text-lg font-semibold mb-4">Weekly Application Trend</h3>
+        <Card className="glass-card p-4 md:p-6">
+          <h3 className="text-base md:text-lg font-semibold mb-4">Weekly Application Trend</h3>
           <div className="space-y-4">
             {analyticsData.weeklyApplications.map((week, index) => (
               <motion.div
@@ -156,9 +156,9 @@ export default function Analytics() {
         </Card>
 
         {/* Insights */}
-        <Card className="glass-card p-6">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Target className="h-5 w-5 text-primary" />
+        <Card className="glass-card p-4 md:p-6">
+          <h3 className="text-base md:text-lg font-semibold mb-4 flex items-center gap-2">
+            <Target className="h-4 w-4 md:h-5 md:w-5 text-primary" />
             Key Insights
           </h3>
           <div className="space-y-3">

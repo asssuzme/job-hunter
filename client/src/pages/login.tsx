@@ -8,22 +8,22 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden p-4">
       {/* Animated background */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-        <div className="absolute top-20 left-20 w-72 h-72 bg-purple-300 rounded-full opacity-20 blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-blue-300 rounded-full opacity-20 blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute top-10 left-10 md:top-20 md:left-20 w-48 md:w-72 h-48 md:h-72 bg-purple-300 rounded-full opacity-20 blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-10 right-10 md:bottom-20 md:right-20 w-56 md:w-96 h-56 md:h-96 bg-blue-300 rounded-full opacity-20 blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
       </div>
       
-      <div className="relative z-10 max-w-md w-full space-y-8 animate-fade-in">
+      <div className="relative z-10 max-w-md w-full space-y-6 md:space-y-8 animate-fade-in">
         <div className="text-center">
           <div className="flex justify-center mb-4">
             <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-lg">
-              <Briefcase className="h-10 w-10 text-white" />
+              <Briefcase className="h-8 md:h-10 w-8 md:w-10 text-white" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold gradient-text">autoapply.ai</h1>
-          <p className="mt-2 text-gray-600 flex items-center justify-center gap-2">
+          <h1 className="text-3xl md:text-4xl font-bold gradient-text">autoapply.ai</h1>
+          <p className="mt-2 text-sm md:text-base text-gray-600 flex items-center justify-center gap-2">
             <Sparkles className="h-4 w-4 text-yellow-500" />
             AI-powered job search automation
           </p>
@@ -55,18 +55,18 @@ export default function Login() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 text-center text-xs text-muted-foreground">
-              <div className="p-2">
-                <div className="font-semibold text-primary">Smart Scraping</div>
-                <div>LinkedIn Jobs</div>
+            <div className="grid grid-cols-3 gap-1 md:gap-2 text-center text-xs text-muted-foreground">
+              <div className="p-1 md:p-2">
+                <div className="font-semibold text-primary text-[10px] md:text-xs">Smart Scraping</div>
+                <div className="text-[9px] md:text-xs">LinkedIn Jobs</div>
               </div>
-              <div className="p-2 border-x">
-                <div className="font-semibold text-primary">AI Filtering</div>
-                <div>Quality Leads</div>
+              <div className="p-1 md:p-2 border-x">
+                <div className="font-semibold text-primary text-[10px] md:text-xs">AI Filtering</div>
+                <div className="text-[9px] md:text-xs">Quality Leads</div>
               </div>
-              <div className="p-2">
-                <div className="font-semibold text-primary">Auto Email</div>
-                <div>Personalized</div>
+              <div className="p-1 md:p-2">
+                <div className="font-semibold text-primary text-[10px] md:text-xs">Auto Email</div>
+                <div className="text-[9px] md:text-xs">Personalized</div>
               </div>
             </div>
 
