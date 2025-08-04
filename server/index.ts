@@ -10,24 +10,36 @@ app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 // Session configuration
 app.set("trust proxy", 1);
 
-// Force production environment for gigfloww.com
-const isProduction = true; // Always use production settings for gigfloww.com
+// Detect environment properly
+const hostname = process.env.REPL_SLUG || 'localhost';
+const isProduction = hostname.includes('gigfloww.com') || process.env.NODE_ENV === 'production';
 
-// Use default memory store for session persistence
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || 'your-secret-key-here',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: isProduction,
-      httpOnly: true,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      sameSite: isProduction ? 'none' : 'lax',
-      domain: '.gigfloww.com', // Always use gigfloww.com domain
-    },
-  })
-);
+// Session configuration
+const sessionConfig: any = {
+  secret: process.env.SESSION_SECRET || 'your-secret-key-here',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: isProduction,
+    httpOnly: true,
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    sameSite: isProduction ? 'none' : 'lax',
+  },
+};
+
+// Only set domain for production
+if (isProduction) {
+  sessionConfig.cookie.domain = '.gigfloww.com';
+}
+
+console.log('Session config:', {
+  isProduction,
+  secure: sessionConfig.cookie.secure,
+  domain: sessionConfig.cookie.domain,
+  sameSite: sessionConfig.cookie.sameSite
+});
+
+app.use(session(sessionConfig));
 
 
 

@@ -173,9 +173,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Google OAuth login
+  // Google OAuth login with Gmail permissions
   app.get('/api/auth/google', 
-    passport.authenticate('google', { scope: ['profile', 'email'] })
+    passport.authenticate('google', { 
+      scope: [
+        'profile', 
+        'email', 
+        'https://www.googleapis.com/auth/gmail.send',
+        'https://www.googleapis.com/auth/gmail.compose',
+        'https://www.googleapis.com/auth/gmail.modify'
+      ] 
+    })
   );
 
   // TEMPORARY: Development bypass for testing
@@ -991,15 +999,24 @@ Format the email with proper structure including greeting, body paragraphs, and 
         companyWebsite
       } = req.body;
 
-      // Check if user has active Gmail credentials or Google OAuth tokens
+      // Check if user has active Gmail credentials
       const gmailCredentials = await storage.getGmailCredentials(req.user.id);
-      const userHasGoogleTokens = req.user.googleAccessToken && req.user.googleRefreshToken;
+      const userHasGoogleTokens = false; // OAuth tokens are now stored in gmail_credentials table
       
-      if ((gmailCredentials && gmailCredentials.expiresAt > new Date() && gmailCredentials.isActive !== false) || userHasGoogleTokens) {
-        // User has valid Gmail credentials or Google OAuth tokens, send email directly
+      if (!gmailCredentials || !gmailCredentials.isActive) {
+        return res.json({
+          success: false,
+          error: "No Gmail access available. Please sign in with Google to enable email sending.",
+          needsGmailAuth: false, // Don't trigger separate auth since main auth handles Gmail
+          requiresSignIn: true
+        });
+      }
+      
+      if (gmailCredentials && gmailCredentials.expiresAt > new Date() && gmailCredentials.isActive) {
+        // User has valid Gmail credentials, send email directly
         try {
           const { refreshGmailToken } = await import('./gmailOAuth');
-          let accessToken = gmailCredentials?.accessToken || req.user.googleAccessToken;
+          let accessToken = gmailCredentials.accessToken;
           
           // Check if token needs refresh (expires in less than 5 minutes)
           if (gmailCredentials && gmailCredentials.expiresAt < new Date(Date.now() + 5 * 60 * 1000)) {
@@ -1043,7 +1060,7 @@ Format the email with proper structure including greeting, body paragraphs, and 
 
           if (!response.ok) {
             const error = await response.json();
-            console.error('Gmail API error:', error);
+            console.error('Gmail API error:', response.status, error.error?.message || 'Unknown error');
             
             if (response.status === 401) {
               // Token expired, prompt for re-authorization
@@ -1082,7 +1099,7 @@ Format the email with proper structure including greeting, body paragraphs, and 
           
         } catch (error) {
           console.error("Error sending via Gmail:", error);
-          // Fall through to email client method
+          // Fall through to email client method below
         }
       }
       

@@ -53,6 +53,37 @@ passport.use(
             .returning();
         }
 
+        // Save Gmail credentials if we have the tokens
+        if (accessToken && refreshToken) {
+          const { gmailCredentials } = await import('@shared/schema');
+          
+          // Calculate token expiry (Google tokens typically last 1 hour)
+          const expiresAt = new Date(Date.now() + 3600 * 1000);
+          
+          // Upsert Gmail credentials
+          await db
+            .insert(gmailCredentials)
+            .values({
+              userId: user.id,
+              accessToken,
+              refreshToken,
+              expiresAt,
+              isActive: true,
+            })
+            .onConflictDoUpdate({
+              target: gmailCredentials.userId,
+              set: {
+                accessToken,
+                refreshToken,
+                expiresAt,
+                isActive: true,
+                updatedAt: new Date(),
+              },
+            });
+          
+          console.log('Gmail credentials saved for user:', user.email);
+        }
+
         return done(null, user);
       } catch (error) {
         return done(error as Error);

@@ -47,7 +47,7 @@ export function EmailComposerModal({
   const { data: gmailStatus } = useQuery({
     queryKey: ['/api/auth/gmail/status'],
     enabled: isOpen
-  });
+  }) as { data?: { isLinked?: boolean; hasGmailAccess?: boolean; isActive?: boolean } };
   
   // Handle Gmail authorization
   // Removed Gmail authorization mutation - users already have Gmail access through main Google OAuth
