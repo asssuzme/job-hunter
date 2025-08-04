@@ -215,37 +215,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     })(req, res, next);
   });
 
-  // Separate Gmail authorization for email sending - use same callback URL
-  app.get('/api/auth/gmail/authorize', isAuthenticated, async (req, res) => {
+  // Gmail authorization using Passport with Gmail scope
+  app.get('/api/auth/gmail/authorize', isAuthenticated, (req, res, next) => {
     console.log('Gmail authorization request from user:', (req.user as any)?.email);
     
-    try {
-      // Import google-auth-library dynamically
-      const { OAuth2Client } = await import('google-auth-library');
-      const oauth2Client = new OAuth2Client(
-        process.env.GOOGLE_CLIENT_ID,
-        process.env.GOOGLE_CLIENT_SECRET,
-        (process.env.NODE_ENV === 'production' || process.env.REPL_SLUG === 'workspace')
-          ? 'https://gigfloww.com/api/auth/google/callback'
-          : 'http://localhost:5000/api/auth/google/callback'
-      );
-
-      const authUrl = oauth2Client.generateAuthUrl({
-        access_type: 'offline',
-        scope: ['https://www.googleapis.com/auth/gmail.send'],
-        prompt: 'consent',
-        state: JSON.stringify({ 
-          type: 'gmail_auth',
-          userId: (req.user as any).id 
-        })
-      });
-
-      console.log('Redirecting to Gmail auth URL:', authUrl);
-      res.redirect(authUrl);
-    } catch (error) {
-      console.error('Error creating Gmail auth URL:', error);
-      res.status(500).json({ message: 'Failed to create Gmail authorization URL' });
-    }
+    // Store the current user ID in session for later retrieval
+    req.session.gmailAuthUserId = (req.user as any).id;
+    
+    passport.authenticate('google', { 
+      scope: ['https://www.googleapis.com/auth/gmail.send'],
+      accessType: 'offline',
+      prompt: 'consent',
+      state: 'gmail_auth'
+    })(req, res, next);
   });
 
 
@@ -344,65 +326,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if this is a Gmail authorization request
-      let isGmailAuth = false;
+      const isGmailAuth = req.query.state === 'gmail_auth';
       let userId = req.user.id;
       
-      if (req.query.state) {
-        try {
-          const stateData = JSON.parse(req.query.state as string);
-          if (stateData.type === 'gmail_auth') {
-            isGmailAuth = true;
-            userId = stateData.userId;
-            console.log('This is a Gmail authorization for user:', userId);
-          }
-        } catch (e) {
-          console.log('Could not parse state, treating as regular auth');
-        }
+      if (isGmailAuth && req.session.gmailAuthUserId) {
+        userId = req.session.gmailAuthUserId;
+        console.log('This is a Gmail authorization for user:', userId);
       }
 
       if (isGmailAuth) {
-        // Handle Gmail authorization - save Gmail tokens
+        // Handle Gmail authorization - extract tokens and save them
         try {
-          const { OAuth2Client } = await import('google-auth-library');
-          const oauth2Client = new OAuth2Client(
-            process.env.GOOGLE_CLIENT_ID,
-            process.env.GOOGLE_CLIENT_SECRET,
-            (process.env.NODE_ENV === 'production' || process.env.REPL_SLUG === 'workspace')
-              ? 'https://gigfloww.com/api/auth/google/callback'
-              : 'http://localhost:5000/api/auth/google/callback'
-          );
+          // Get the OAuth tokens from the Passport callback
+          const accessToken = (req as any).authInfo?.accessToken || (req.user as any).accessToken;
+          const refreshToken = (req as any).authInfo?.refreshToken || (req.user as any).refreshToken;
+          
+          console.log('Gmail tokens from callback:', { hasAccess: !!accessToken, hasRefresh: !!refreshToken });
+          
+          if (accessToken) {
+            const { gmailCredentials } = await import('@shared/schema');
+            const expiresAt = new Date(Date.now() + 3600 * 1000); // 1 hour
 
-          // Exchange code for tokens
-          const { tokens } = await oauth2Client.getToken(req.query.code as string);
-          console.log('Gmail tokens received:', { hasAccess: !!tokens.access_token, hasRefresh: !!tokens.refresh_token });
-
-          // Save Gmail credentials
-          const { gmailCredentials } = await import('@shared/schema');
-          const expiresAt = new Date(Date.now() + (tokens.expiry_date || Date.now() + 3600 * 1000));
-
-          await db.insert(gmailCredentials)
-            .values({
-              userId,
-              accessToken: tokens.access_token!,
-              refreshToken: tokens.refresh_token!,
-              expiresAt,
-              isActive: true,
-            })
-            .onConflictDoUpdate({
-              target: gmailCredentials.userId,
-              set: {
-                accessToken: tokens.access_token!,
-                refreshToken: tokens.refresh_token || undefined,
+            await db.insert(gmailCredentials)
+              .values({
+                userId,
+                accessToken,
+                refreshToken: refreshToken || '',
                 expiresAt,
                 isActive: true,
-                updatedAt: new Date(),
-              },
-            });
+              })
+              .onConflictDoUpdate({
+                target: gmailCredentials.userId,
+                set: {
+                  accessToken,
+                  refreshToken: refreshToken || undefined,
+                  expiresAt,
+                  isActive: true,
+                  updatedAt: new Date(),
+                },
+              });
 
-          console.log('Gmail credentials saved for user:', userId);
-          return res.redirect('/?gmail_auth=success');
+            console.log('Gmail credentials saved for user:', userId);
+            delete req.session.gmailAuthUserId; // Clean up
+            return res.redirect('/?gmail_auth=success');
+          } else {
+            console.error('No access token found in Gmail callback');
+            return res.redirect('/?error=no_gmail_token');
+          }
         } catch (error) {
-          console.error('Gmail token exchange error:', error);
+          console.error('Gmail token save error:', error);
           return res.redirect('/?error=gmail_callback_failed');
         }
       } else {

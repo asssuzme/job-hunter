@@ -58,8 +58,9 @@ passport.use(
             .returning();
         }
 
-        // Don't save Gmail credentials here - only basic auth
-        console.log('User authenticated with basic scope:', user.email);
+        console.log('User authenticated with scope, checking for Gmail tokens');
+        console.log('Has access token:', !!accessToken);
+        console.log('Has refresh token:', !!refreshToken);
 
         return done(null, user);
       } catch (error) {
