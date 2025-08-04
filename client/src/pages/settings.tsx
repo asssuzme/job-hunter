@@ -1,19 +1,87 @@
 import { motion } from "framer-motion";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { useAuth } from "@/hooks/useAuth";
-import { Settings as SettingsIcon, User, Bell, Shield, Globe, Save } from "lucide-react";
+import { Settings as SettingsIcon, User as UserIcon, Bell, Shield, Globe, Save, FileText, Upload } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { useState, useRef } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import type { User } from "@shared/schema";
 
 export default function Settings() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [isUploadingResume, setIsUploadingResume] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
 
   if (!user) return null;
+
+  // Type assertion for proper typing
+  const typedUser = user as User;
+
+  const uploadResumeMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const endpoint = file.type === 'application/pdf' ? '/api/parse-pdf' : '/api/upload-resume';
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to upload resume');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Resume updated",
+        description: "Your resume has been successfully updated",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      setIsUploadingResume(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Upload failed",
+        description: error.message || "Failed to upload resume. Please try again.",
+        variant: "destructive",
+      });
+      setIsUploadingResume(false);
+    }
+  });
+
+  const handleResumeUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Check file type
+    const validTypes = ['text/plain', 'application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a .txt, .pdf, .jpg, .jpeg, .png, or .webp file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploadingResume(true);
+    
+    // All file types go through the same endpoint
+    uploadResumeMutation.mutate(file);
+  };
 
   const handleSave = () => {
     toast({
@@ -49,7 +117,7 @@ export default function Settings() {
         {/* Profile Settings */}
         <Card className="glass-card p-4 md:p-6">
           <h3 className="text-base md:text-lg font-semibold mb-4 flex items-center gap-2">
-            <User className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+            <UserIcon className="h-4 w-4 md:h-5 md:w-5 text-primary" />
             Profile Information
           </h3>
           <div className="space-y-4">
@@ -58,7 +126,7 @@ export default function Settings() {
                 <Label htmlFor="firstName">First Name</Label>
                 <Input
                   id="firstName"
-                  defaultValue={user.firstName || ""}
+                  defaultValue={typedUser.firstName || ""}
                   className="glass-input"
                 />
               </div>
@@ -66,7 +134,7 @@ export default function Settings() {
                 <Label htmlFor="lastName">Last Name</Label>
                 <Input
                   id="lastName"
-                  defaultValue={user.lastName || ""}
+                  defaultValue={typedUser.lastName || ""}
                   className="glass-input"
                 />
               </div>
@@ -76,10 +144,66 @@ export default function Settings() {
               <Input
                 id="email"
                 type="email"
-                defaultValue={user.email || ""}
+                defaultValue={typedUser.email || ""}
                 className="glass-input"
                 disabled
               />
+            </div>
+          </div>
+        </Card>
+
+        {/* Resume Management */}
+        <Card className="glass-card p-4 md:p-6">
+          <h3 className="text-base md:text-lg font-semibold mb-4 flex items-center gap-2">
+            <FileText className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+            Resume Management
+          </h3>
+          <div className="space-y-4">
+            <div className="p-4 bg-muted/50 rounded-lg">
+              <p className="text-sm mb-3">
+                {typedUser.resumeText ? "Your resume is uploaded and ready." : "No resume uploaded yet."}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploadingResume}
+                  className="flex-1"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  {typedUser.resumeText ? "Update Resume" : "Upload Resume"}
+                </Button>
+                {typedUser.resumeText && (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const text = typedUser.resumeText || "";
+                      const blob = new Blob([text], { type: 'text/plain' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = 'my-resume.txt';
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      URL.revokeObjectURL(url);
+                    }}
+                  >
+                    Download Current Resume
+                  </Button>
+                )}
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".txt,.pdf,.jpg,.jpeg,.png,.webp"
+                onChange={handleResumeUpload}
+                className="hidden"
+              />
+              <p className="text-xs text-muted-foreground mt-3">
+                Accepts .txt, .pdf, .jpg, .jpeg, .png, and .webp files. 
+                We use AI to extract text from image resumes.
+              </p>
             </div>
           </div>
         </Card>

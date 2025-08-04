@@ -17,11 +17,11 @@ export function ResumeUpload({ onResumeTextChange }: ResumeUploadProps) {
     if (!file) return;
 
     // Check file type
-    const validTypes = ['text/plain', 'application/pdf'];
+    const validTypes = ['text/plain', 'application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!validTypes.includes(file.type)) {
       toast({
         title: "Invalid file type",
-        description: "Please upload a .txt or .pdf file",
+        description: "Please upload a .txt, .pdf, .jpg, .jpeg, .png, or .webp file",
         variant: "destructive",
       });
       return;
@@ -37,19 +37,21 @@ export function ResumeUpload({ onResumeTextChange }: ResumeUploadProps) {
         // Clean the text to remove null bytes and other invalid characters
         const cleanedText = text.replace(/\0/g, '').trim();
         onResumeTextChange(cleanedText);
-      } else if (file.type === 'application/pdf') {
-        // Handle PDF files by sending to server for parsing
+      } else if (file.type === 'application/pdf' || file.type.startsWith('image/')) {
+        // Handle PDF and image files by sending to server for parsing
         const formData = new FormData();
         formData.append('file', file);
         
-        const response = await fetch('/api/parse-pdf', {
+        const endpoint = file.type === 'application/pdf' ? '/api/parse-pdf' : '/api/upload-resume';
+        const response = await fetch(endpoint, {
           method: 'POST',
           body: formData,
           credentials: 'include'
         });
         
         if (!response.ok) {
-          throw new Error('Failed to parse PDF');
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to process file');
         }
         
         const { text } = await response.json();
@@ -57,7 +59,7 @@ export function ResumeUpload({ onResumeTextChange }: ResumeUploadProps) {
       } else {
         toast({
           title: "File format not supported",
-          description: "Only .txt and .pdf files are supported.",
+          description: "Only .txt, .pdf, .jpg, .jpeg, .png, and .webp files are supported.",
           variant: "destructive",
         });
         setFileName(null);
@@ -115,14 +117,14 @@ export function ResumeUpload({ onResumeTextChange }: ResumeUploadProps) {
               <input
                 id="resume-upload"
                 type="file"
-                accept=".txt,.pdf"
+                accept=".txt,.pdf,.jpg,.jpeg,.png,.webp"
                 onChange={handleFileUpload}
                 className="sr-only"
                 disabled={isProcessing}
               />
             </label>
             <p className="text-xs text-gray-500 mt-2">
-              Accepts .txt and .pdf files (no size limit)
+              Accepts .txt, .pdf, .jpg, .jpeg, .png, and .webp files
             </p>
             <Button
               variant="outline"

@@ -986,6 +986,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Clean the text to remove null bytes and other invalid characters
       const cleanedText = data.text.replace(/\0/g, '').trim();
       
+      // Save the resume to the user's database record
+      const userId = req.user?.id;
+      console.log("Parse PDF - User ID:", userId);
+      
+      if (userId) {
+        console.log("Saving resume to database for user:", userId);
+        await storage.updateUserResume(userId, cleanedText, req.file.originalname);
+      } else {
+        console.log("No user ID found, resume not saved to database");
+      }
+      
       res.json({ text: cleanedText });
     } catch (error) {
       console.error("Error parsing PDF:", error);
