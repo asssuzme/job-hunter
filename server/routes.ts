@@ -216,19 +216,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Google OAuth login - basic authentication only
-  app.get('/api/auth/google', (req, res, next) => {
-    console.log('Google OAuth request from:', req.get('host'));
+  app.get('/api/auth/google', 
     passport.authenticate('google', { 
-      scope: ['profile', 'email'],
-      // Force HTTPS in production
-      callbackURL: req.get('host')?.includes('gigfloww.com') 
-        ? 'https://gigfloww.com/api/auth/google/callback'
-        : undefined
-    })(req, res, next);
-  });
+      scope: ['profile', 'email'] 
+    })
+  );
 
   // Separate Gmail authorization endpoint - only for sending emails
   app.get('/api/auth/gmail/authorize', isAuthenticated, (req, res, next) => {
+    // Add error handling and logging
     console.log('Gmail auth request from:', req.get('host'));
     console.log('User:', (req.user as any)?.email);
     
@@ -237,10 +233,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       accessType: 'offline',
       prompt: 'consent',
       state: 'gmail_auth',
-      // Force HTTPS callback for production
-      callbackURL: req.get('host')?.includes('gigfloww.com') 
-        ? 'https://gigfloww.com/api/auth/google/callback'
-        : undefined,
       failureRedirect: '/error?type=gmail_auth_failed'
     })(req, res, next);
   });
