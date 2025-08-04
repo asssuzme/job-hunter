@@ -1,71 +1,44 @@
-# Production OAuth "invalid_credentials" Fix
+# Production OAuth Fix - Final
 
-## Problem
-Users get "invalid_credentials" error when trying to authorize Gmail sending on gigfloww.com.
+## Issue Identified
+Environment detection was incorrect - production environment shows `NODE_ENV: "production"` and `REPL_SLUG: "workspace"`, but my logic required both REPLIT_DOMAIN to include gigfloww.com AND NODE_ENV to be production.
 
 ## Root Cause
-The Google OAuth 2.0 application configuration is missing required settings for the production domain.
+```typescript
+// WRONG - Too restrictive
+const isProduction = process.env.NODE_ENV === 'production' && 
+                     (process.env.REPLIT_DOMAIN?.includes('gigfloww.com') || 
+                      process.env.REPL_SLUG?.includes('gigfloww.com'));
 
-## Solution Steps
-
-### 1. Go to Google Cloud Console
-1. Visit: https://console.cloud.google.com/
-2. Select your project
-3. Go to **APIs & Services** → **Credentials**
-
-### 2. Find Your OAuth 2.0 Client
-- Look for the OAuth 2.0 Client ID that matches your `GOOGLE_CLIENT_ID`
-- Click the **pencil icon** to edit it
-
-### 3. Add Required Authorized JavaScript Origins
-In the "Authorized JavaScript origins" section, add:
-```
-https://gigfloww.com
-http://localhost:5000
+// CORRECT - Matches actual environment
+const isProduction = process.env.NODE_ENV === 'production' || 
+                     process.env.REPL_SLUG === 'workspace';
 ```
 
-### 4. Add Required Authorized Redirect URIs  
-In the "Authorized redirect URIs" section, add:
+## Fix Applied
+1. **Updated environment detection**: Now correctly identifies production
+2. **Updated OAuth callback URL**: Uses correct production callback
+3. **Session configuration**: Will now use secure cookies for production
+
+## Expected Behavior After Fix
+When you test on https://gigfloww.com:
+
+1. **OAuth initiation** should show production environment in logs
+2. **Session cookies** should be secure (sameSite: 'lax', secure: true)
+3. **OAuth callback** should redirect to correct URL
+4. **Session persistence** should work after login
+
+## Test Steps
+1. Go to: https://gigfloww.com
+2. Click "Sign in with Google"
+3. Complete OAuth flow
+4. Should stay logged in and be able to authorize Gmail
+
+## Logs to Watch For
 ```
-https://gigfloww.com/api/auth/google/callback
-http://localhost:5000/api/auth/google/callback
+Session config: { isProduction: true, ... }
+OAuth initiation from host: gigfloww.com
+Environment: { nodeEnv: "production", replSlug: "workspace" }
 ```
 
-### 5. Verify OAuth Consent Screen
-Go to **APIs & Services** → **OAuth consent screen**:
-- **App name**: Set to "AutoApply.AI" or "GigFloww"
-- **User support email**: Set to team@gigfloww.com
-- **Developer contact information**: Set to team@gigfloww.com
-- **Authorized domains**: Add `gigfloww.com`
-
-### 6. Enable Required APIs
-Go to **APIs & Services** → **Library** and enable:
-- **Google+ API** (for profile info)
-- **Gmail API** (for sending emails)
-
-### 7. Test Configuration
-Visit: `https://gigfloww.com/api/oauth-debug` to see current configuration.
-
-## Common Issues
-
-### Issue: "redirect_uri_mismatch"
-- **Cause**: Missing redirect URI in OAuth configuration
-- **Fix**: Add exact callback URL to "Authorized redirect URIs"
-
-### Issue: "invalid_client"
-- **Cause**: Wrong Client ID or Client Secret
-- **Fix**: Verify environment variables match OAuth app
-
-### Issue: "access_denied"
-- **Cause**: User clicked "Cancel" or app not verified
-- **Fix**: Complete OAuth consent screen verification
-
-## Verification
-After making changes:
-1. Wait 5-10 minutes for Google to propagate changes
-2. Test Gmail authorization flow on gigfloww.com
-3. Check browser developer console for any errors
-4. Use the diagnostic endpoint to verify configuration
-
-## Temporary Workaround
-If OAuth can't be fixed immediately, users can use the "Use Email App" button to send emails through their default email client.
+This should now properly detect production and use secure session settings.

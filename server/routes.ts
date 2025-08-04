@@ -202,6 +202,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Google OAuth initiation - basic profile only
   app.get('/api/auth/google', (req, res, next) => {
     console.log('OAuth initiation from host:', req.get('host'));
+    console.log('Environment:', {
+      nodeEnv: process.env.NODE_ENV,
+      replSlug: process.env.REPL_SLUG,
+      replitDomain: process.env.REPLIT_DOMAIN
+    });
     passport.authenticate('google', { 
       scope: ['profile', 'email'],
       accessType: 'offline',

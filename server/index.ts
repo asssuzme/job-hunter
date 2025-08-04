@@ -12,9 +12,9 @@ app.set("trust proxy", 1);
 
 // Detect environment properly for gigfloww.com
 const hostname = process.env.REPL_SLUG || 'localhost';
+// Only consider production when actually deployed to gigfloww.com domain
 const isProduction = process.env.NODE_ENV === 'production' || 
-                     process.env.REPL_SLUG === 'workspace' || // This is the production repl
-                     false;
+                     process.env.REPL_SLUG === 'workspace';
 
 // Session configuration - simpler for production compatibility
 const sessionConfig: any = {
@@ -38,6 +38,7 @@ console.log('Session config:', {
   hostname,
   replSlug: process.env.REPL_SLUG,
   replitDomain: process.env.REPLIT_DOMAIN,
+  nodeEnv: process.env.NODE_ENV,
   secure: sessionConfig.cookie.secure,
   domain: sessionConfig.cookie.domain,
   sameSite: sessionConfig.cookie.sameSite
