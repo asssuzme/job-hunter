@@ -216,27 +216,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Separate Gmail authorization for email sending
-  app.get('/api/auth/gmail/authorize', isAuthenticated, (req, res) => {
+  app.get('/api/auth/gmail/authorize', isAuthenticated, async (req, res) => {
     console.log('Gmail authorization request from user:', (req.user as any)?.email);
     
-    // Create a new OAuth URL specifically for Gmail sending
-    const { OAuth2Client } = require('google-auth-library');
-    const oauth2Client = new OAuth2Client(
-      process.env.GOOGLE_CLIENT_ID,
-      process.env.GOOGLE_CLIENT_SECRET,
-      (process.env.NODE_ENV === 'production' || process.env.REPL_SLUG === 'workspace')
-        ? 'https://gigfloww.com/api/auth/gmail/callback'
-        : 'http://localhost:5000/api/auth/gmail/callback'
-    );
+    try {
+      // Import google-auth-library dynamically
+      const { OAuth2Client } = await import('google-auth-library');
+      const oauth2Client = new OAuth2Client(
+        process.env.GOOGLE_CLIENT_ID,
+        process.env.GOOGLE_CLIENT_SECRET,
+        (process.env.NODE_ENV === 'production' || process.env.REPL_SLUG === 'workspace')
+          ? 'https://gigfloww.com/api/auth/gmail/callback'
+          : 'http://localhost:5000/api/auth/gmail/callback'
+      );
 
-    const authUrl = oauth2Client.generateAuthUrl({
-      access_type: 'offline',
-      scope: ['https://www.googleapis.com/auth/gmail.send'],
-      prompt: 'consent',
-      state: JSON.stringify({ userId: (req.user as any).id })
-    });
+      const authUrl = oauth2Client.generateAuthUrl({
+        access_type: 'offline',
+        scope: ['https://www.googleapis.com/auth/gmail.send'],
+        prompt: 'consent',
+        state: JSON.stringify({ userId: (req.user as any).id })
+      });
 
-    res.redirect(authUrl);
+      console.log('Redirecting to Gmail auth URL:', authUrl);
+      res.redirect(authUrl);
+    } catch (error) {
+      console.error('Error creating Gmail auth URL:', error);
+      res.status(500).json({ message: 'Failed to create Gmail authorization URL' });
+    }
   });
 
   // Gmail OAuth callback - separate from main auth
@@ -249,7 +255,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.redirect('/?error=gmail_auth_failed');
       }
 
-      const { OAuth2Client } = require('google-auth-library');
+      const { OAuth2Client } = await import('google-auth-library');
       const oauth2Client = new OAuth2Client(
         process.env.GOOGLE_CLIENT_ID,
         process.env.GOOGLE_CLIENT_SECRET,
