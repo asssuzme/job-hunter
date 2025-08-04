@@ -2278,7 +2278,16 @@ async function processJobScraping(requestId: string) {
         jobPosterProfileUrl: jobPosterProfileUrl,
         hasJobPosterName: !!jobPosterName,
         jobPosterName: jobPosterName,
-        availableFields: Object.keys(item)
+        availableFields: Object.keys(item),
+        // Debug: check date-related fields
+        postedDate: item.postedDate,
+        datePosted: item.datePosted,
+        postDate: item.postDate,
+        date: item.date,
+        publishedAt: item.publishedAt,
+        createdAt: item.createdAt,
+        timestamp: item.timestamp,
+        publishedDate: item.publishedDate
       });
 
       const job = {
@@ -2292,7 +2301,19 @@ async function processJobScraping(requestId: string) {
         },
         location: item.location || "N/A",
         workType: item.employmentType || item.workType || "N/A",
-        postedDate: item.postedDate || item.datePosted || "N/A",
+        postedDate: item.postedDate || 
+                   item.datePosted || 
+                   item.postDate || 
+                   item.date || 
+                   item.publishedAt || 
+                   item.publishedDate || 
+                   item.datePublished || 
+                   item.createdAt || 
+                   item.timestamp || 
+                   item.postedAt || 
+                   item.postedTime || 
+                   item.timePosted || 
+                   null,
         applicants: item.applicants,
         description: item.description || item.jobDescription || "No description available",
         skills: item.skills || [],
