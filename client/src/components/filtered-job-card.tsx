@@ -21,6 +21,8 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
   const [companyProfile, setCompanyProfile] = useState<any>(null);
   const [generatedEmail, setGeneratedEmail] = useState<string>("");
   const [isGeneratingEmail, setIsGeneratingEmail] = useState(false);
+  const [applyStep, setApplyStep] = useState<'idle' | 'checking-gmail' | 'scraping-company' | 'generating-email' | 'ready'>('idle');
+  const [showLoadingModal, setShowLoadingModal] = useState(false);
 
   // Check Gmail authorization status
   const { data: gmailStatus, refetch: refetchGmailStatus } = useQuery({
@@ -47,12 +49,9 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
 
   const generateApplicationEmail = async (companyData: any) => {
     setIsGeneratingEmail(true);
-    console.log("Starting email generation with company data:", companyData);
-    console.log("Resume text available:", !!resumeText);
+    setApplyStep('generating-email');
     
     try {
-      // For now, we'll use placeholder job poster data since we don't have it stored
-      // In a full implementation, this would come from the enriched job data
       const jobPosterData = {
         name: job.jobPosterName || "Hiring Manager",
         headline: job.jobPosterName ? `Professional at ${job.companyName}` : "",
@@ -68,26 +67,29 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
         resumeText: resumeText
       };
 
-      console.log("Email generation request body:", requestBody);
-
       const data = await apiRequest('/api/generate-email', {
         method: 'POST',
         body: JSON.stringify(requestBody)
       });
       
-      console.log("Email generation response:", data);
-      
       if (data.success) {
         setGeneratedEmail(data.email);
-        console.log("Email generated successfully");
-        // After email is generated, automatically show the composer
+        setApplyStep('ready');
+        // Close any loading modals
+        setShowCompanyModal(false);
+        setShowLoadingModal(false);
+        // Show the email composer with generated email
         setShowEmailComposer(true);
       } else {
         console.error("Email generation failed:", data.error);
+        setApplyStep('idle');
+        setShowLoadingModal(false);
         alert(`Email generation failed: ${data.error || 'Unknown error'}`);
       }
     } catch (error: any) {
       console.error("Error generating email:", error);
+      setApplyStep('idle');
+      setShowLoadingModal(false);
       alert(`Error generating email: ${error.message || 'Please check if you are logged in'}`);
     } finally {
       setIsGeneratingEmail(false);
@@ -96,38 +98,34 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
 
   const handleApplyClick = async () => {
     try {
-      // First check Gmail authorization status
+      // Step 1: Check Gmail authorization
+      setApplyStep('checking-gmail');
       const result = await refetchGmailStatus();
-      const status = result.data;
+      const status = result?.data;
       
       if (!status?.authorized || status?.needsRefresh) {
         // User needs Gmail authorization first
+        setApplyStep('idle');
         setShowGmailAuth(true);
-      } else {
-        // User has Gmail authorization, proceed with loading and auto-generation
-        
-        // Start loading immediately - this creates the "loading screen" effect
-        if (job.companyLinkedinUrl) {
-          setShowCompanyModal(true);
-          companyMutation.mutate(job.companyLinkedinUrl);
-        } else {
-          // Show loading state and generate email without company data
-          setIsGeneratingEmail(true);
-          await generateApplicationEmail(null);
-          // After email is generated, show the composer
-          setShowEmailComposer(true);
-        }
+        return;
       }
-    } catch (error) {
-      console.error('Error checking Gmail status:', error);
-      // If error checking status, proceed with loading and generation
+
+      // Step 2: Scrape company data if available
       if (job.companyLinkedinUrl) {
-        setShowCompanyModal(true);
+        setApplyStep('scraping-company');
+        setShowLoadingModal(true);
         companyMutation.mutate(job.companyLinkedinUrl);
       } else {
-        setIsGeneratingEmail(true);
+        // Step 3: Generate email directly
+        setApplyStep('generating-email');
+        setShowLoadingModal(true);
         await generateApplicationEmail(null);
       }
+    } catch (error) {
+      console.error('Error in apply flow:', error);
+      setApplyStep('idle');
+      // Fallback: show email composer with empty email
+      setShowEmailComposer(true);
     }
   };
 
@@ -138,13 +136,18 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
 
   const handleRegenerateEmail = () => {
     // Prevent multiple concurrent requests
-    if (isGeneratingEmail) {
+    if (isGeneratingEmail || applyStep !== 'idle') {
       console.log("Email generation already in progress");
       return;
     }
     
+    // Reset generated email and regenerate
+    setGeneratedEmail("");
+    setApplyStep('generating-email');
+    
     // Generate email immediately without delay
     if (job.companyLinkedinUrl && !companyProfile) {
+      setApplyStep('scraping-company');
       companyMutation.mutate(job.companyLinkedinUrl);
     } else {
       generateApplicationEmail(companyProfile);
@@ -234,9 +237,38 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
               size="sm" 
               className="tech-btn"
               onClick={handleApplyClick}
+              disabled={applyStep !== 'idle'}
             >
-              <Send className="h-3 w-3 mr-1" />
-              Generate Email
+              {applyStep === 'idle' && (
+                <>
+                  <Send className="h-3 w-3 mr-1" />
+                  Apply
+                </>
+              )}
+              {applyStep === 'checking-gmail' && (
+                <>
+                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  Checking Gmail...
+                </>
+              )}
+              {applyStep === 'scraping-company' && (
+                <>
+                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  Loading Company...
+                </>
+              )}
+              {applyStep === 'generating-email' && (
+                <>
+                  <Sparkles className="h-3 w-3 mr-1 animate-pulse" />
+                  Generating Email...
+                </>
+              )}
+              {applyStep === 'ready' && (
+                <>
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  Ready
+                </>
+              )}
             </Button>
           )}
         </div>
@@ -309,9 +341,38 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
                       size="sm" 
                       className="tech-btn"
                       onClick={handleApplyClick}
+                      disabled={applyStep !== 'idle'}
                     >
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Apply
+                      {applyStep === 'idle' && (
+                        <>
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Apply
+                        </>
+                      )}
+                      {applyStep === 'checking-gmail' && (
+                        <>
+                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                          Checking...
+                        </>
+                      )}
+                      {applyStep === 'scraping-company' && (
+                        <>
+                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                          Loading...
+                        </>
+                      )}
+                      {applyStep === 'generating-email' && (
+                        <>
+                          <Sparkles className="h-3 w-3 mr-1 animate-pulse" />
+                          Generating...
+                        </>
+                      )}
+                      {applyStep === 'ready' && (
+                        <>
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Ready
+                        </>
+                      )}
                     </Button>
                   )}
                   {job.emailVerificationStatus === 'catch-all' && (
@@ -320,9 +381,20 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
                       variant="outline"
                       className="border-yellow-600 text-yellow-600 hover:bg-yellow-500/10"
                       onClick={handleApplyClick}
+                      disabled={applyStep !== 'idle'}
                     >
-                      <Mail className="h-3 w-3 mr-1" />
-                      Risky Apply
+                      {applyStep === 'idle' && (
+                        <>
+                          <Mail className="h-3 w-3 mr-1" />
+                          Risky Apply
+                        </>
+                      )}
+                      {applyStep !== 'idle' && (
+                        <>
+                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                          Processing...
+                        </>
+                      )}
                     </Button>
                   )}
                   {job.emailVerificationStatus === 'error' && (
@@ -331,9 +403,20 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
                       variant="outline"
                       className="border-muted-foreground text-muted-foreground hover:bg-muted"
                       onClick={handleApplyClick}
+                      disabled={applyStep !== 'idle'}
                     >
-                      <Mail className="h-3 w-3 mr-1" />
-                      Generate Email
+                      {applyStep === 'idle' && (
+                        <>
+                          <Mail className="h-3 w-3 mr-1" />
+                          Generate Email
+                        </>
+                      )}
+                      {applyStep !== 'idle' && (
+                        <>
+                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                          Processing...
+                        </>
+                      )}
                     </Button>
                   )}
                 </div>
@@ -427,6 +510,62 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
               </Button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Loading Modal for Email Generation */}
+      {showLoadingModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white dark:bg-gray-900 rounded-2xl p-8 max-w-md mx-4 shadow-2xl border border-gray-200 dark:border-gray-700"
+          >
+            <div className="text-center space-y-6">
+              <div className="flex justify-center">
+                <div className="relative">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full"
+                  />
+                  <motion.div
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                    className="absolute inset-0 flex items-center justify-center"
+                  >
+                    {applyStep === 'scraping-company' && <Building className="w-6 h-6 text-primary" />}
+                    {applyStep === 'generating-email' && <Sparkles className="w-6 h-6 text-primary" />}
+                    {applyStep === 'checking-gmail' && <Mail className="w-6 h-6 text-primary" />}
+                  </motion.div>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  {applyStep === 'checking-gmail' && 'Verifying Gmail Access'}
+                  {applyStep === 'scraping-company' && 'Analyzing Company Profile'}
+                  {applyStep === 'generating-email' && 'Generating Personalized Email'}
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {applyStep === 'checking-gmail' && 'Checking your Gmail authorization status...'}
+                  {applyStep === 'scraping-company' && 'Gathering company insights to personalize your application...'}
+                  {applyStep === 'generating-email' && 'Creating a compelling email tailored to this opportunity...'}
+                </p>
+              </div>
+              
+              <div className="flex justify-center space-x-1">
+                {[0, 1, 2].map((i) => (
+                  <motion.div
+                    key={i}
+                    animate={{ y: [0, -8, 0] }}
+                    transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.2 }}
+                    className="w-2 h-2 bg-primary rounded-full"
+                  />
+                ))}
+              </div>
+            </div>
+          </motion.div>
         </div>
       )}
 
