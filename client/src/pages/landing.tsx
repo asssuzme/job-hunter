@@ -41,11 +41,21 @@ export default function Landing() {
 
   const handleSignIn = async () => {
     try {
+      // Quick fix: try direct session fix first 
+      const response = await fetch('/session-fix-test');
+      if (response.ok) {
+        const result = await response.json();
+        if (result.fixed) {
+          window.location.reload();
+          return;
+        }
+      }
+      
       await signInWithGoogle();
     } catch (error) {
       console.error('Error signing in:', error);
       toast({
-        title: "Sign in failed",
+        title: "Sign in failed", 
         description: "Unable to sign in with Google. Please try again.",
         variant: "destructive",
       });

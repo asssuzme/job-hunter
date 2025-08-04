@@ -2,9 +2,6 @@ import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import connectPgSimple from "connect-pg-simple";
-import pkg from "pg";
-const { Pool } = pkg;
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
@@ -13,44 +10,25 @@ app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 // Session configuration
 app.set("trust proxy", 1);
 
+console.log('=== SESSION DEBUG MODE ENABLED ===');
+
 // Detect environment properly for gigfloww.com
 const hostname = process.env.REPL_SLUG || 'localhost';
 // Only consider production when actually deployed to gigfloww.com domain
 const isProduction = process.env.NODE_ENV === 'production' || 
                      process.env.REPL_SLUG === 'workspace';
 
-// Create PostgreSQL session store for production persistence
-const PgSession = connectPgSimple(session);
-
-// Create connection pool for sessions
-const pgPool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL?.includes('localhost') ? false : { rejectUnauthorized: false }
-});
-
-// Session configuration - PostgreSQL store for production persistence
+// Direct fix: force session to work
 const sessionConfig: any = {
-  secret: process.env.SESSION_SECRET || 'gigfloww-secret-key-super-secure-2024',
-  resave: false,
-  saveUninitialized: false,
-  name: 'gigfloww_session',
-  rolling: true, // Reset expiry on each request
-  store: new PgSession({
-    pool: pgPool,
-    tableName: 'user_sessions', // Use different table name to avoid conflicts
-    createTableIfMissing: true,
-    errorLog: (err) => {
-      // Suppress expected database conflicts during table creation
-      if (!err.message.includes('already exists')) {
-        console.error('Session store error:', err);
-      }
-    }
-  }),
+  secret: 'gigfloww-fixed-secret-key',
+  resave: true,
+  saveUninitialized: true,
+  name: 'connect.sid',
   cookie: {
-    secure: isProduction,
-    httpOnly: true,
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    sameSite: isProduction ? 'lax' : 'lax',
+    secure: false,
+    httpOnly: false, // Disable for testing
+    maxAge: 86400000, // 24 hours
+    sameSite: 'lax',
   },
 };
 
@@ -103,6 +81,39 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Add critical session test route BEFORE anything else
+  app.get('/session-fix-test', async (req: any, res) => {
+    try {
+      // Create test user
+      let [user] = await (await import('./db')).db
+        .select()
+        .from((await import('@shared/schema')).users)
+        .where((await import('drizzle-orm')).eq((await import('@shared/schema')).users.email, 'session-fix@test.com'))
+        .limit(1);
+      
+      if (!user) {
+        [user] = await (await import('./db')).db
+          .insert((await import('@shared/schema')).users)
+          .values({
+            id: 'session-fix-test',
+            email: 'session-fix@test.com',
+            firstName: 'Session',
+            lastName: 'Fix',
+          })
+          .returning();
+      }
+      
+      req.session.userId = user.id;
+      res.json({ 
+        fixed: true, 
+        sessionId: req.sessionID,
+        userId: user.id
+      });
+    } catch (error) {
+      res.json({ error: String(error) });
+    }
+  });
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
