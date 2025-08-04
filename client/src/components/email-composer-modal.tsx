@@ -40,7 +40,7 @@ export function EmailComposerModal({
   const [subject, setSubject] = useState(`Application for ${jobTitle} position at ${companyName}`);
   const [copied, setCopied] = useState(false);
   const [localGenerating, setLocalGenerating] = useState(false);
-  const [showGmailAuth, setShowGmailAuth] = useState(false);
+  // Removed showGmailAuth state - users already have Gmail access through main Google OAuth
   const { toast } = useToast();
   
   // Check Gmail authorization status
@@ -50,24 +50,7 @@ export function EmailComposerModal({
   });
   
   // Handle Gmail authorization
-  const authorizeGmailMutation = useMutation({
-    mutationFn: async () => {
-      return await apiRequest('/api/auth/gmail/authorize');
-    },
-    onSuccess: (data) => {
-      if (data.authUrl) {
-        // Redirect to Google OAuth
-        window.location.href = data.authUrl;
-      }
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Authorization failed",
-        description: error.message || "Failed to start Gmail authorization",
-        variant: "destructive"
-      });
-    }
-  });
+  // Removed Gmail authorization mutation - users already have Gmail access through main Google OAuth
   
   // Handle Gmail unlink
   const unlinkGmailMutation = useMutation({
@@ -131,9 +114,6 @@ export function EmailComposerModal({
             description: `Your application has been sent to ${recipientEmail}`,
           });
           onClose();
-        } else if (data.needsGmailAuth) {
-          // User needs to authorize Gmail
-          setShowGmailAuth(true);
         } else {
           // Fall back to opening in email client
           if (data.gmailComposeUrl) {
@@ -330,52 +310,7 @@ export function EmailComposerModal({
         </DialogFooter>
         
         {/* Gmail Authorization Prompt */}
-        {showGmailAuth && (
-          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center rounded-lg">
-            <div className="bg-card p-6 rounded-lg shadow-lg max-w-md w-full mx-4 border">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                  <ShieldCheck className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <h3 className="text-lg font-semibold">Authorize Gmail Access</h3>
-              </div>
-              
-              <p className="text-sm text-muted-foreground mb-4">
-                To send emails directly from your Gmail account, you need to authorize access. 
-                This allows the application to send emails on your behalf.
-              </p>
-              
-              <div className="bg-muted/50 p-3 rounded-md mb-4">
-                <p className="text-xs text-muted-foreground">
-                  <strong>Note:</strong> You'll be redirected to Google to grant permission. 
-                  We'll only request access to send emails - we won't read your messages.
-                </p>
-              </div>
-              
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowGmailAuth(false)}
-                  className="flex-1"
-                >
-                  Skip for now
-                </Button>
-                <Button
-                  onClick={() => authorizeGmailMutation.mutate()}
-                  disabled={authorizeGmailMutation.isPending}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700"
-                >
-                  {authorizeGmailMutation.isPending ? (
-                    <Spinner className="mr-2" />
-                  ) : (
-                    <Mail className="h-4 w-4 mr-2" />
-                  )}
-                  Authorize Gmail
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Removed Gmail authorization UI - users already have Gmail access through main Google OAuth */}
       </DialogContent>
     </Dialog>
   );

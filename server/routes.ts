@@ -934,15 +934,18 @@ Format the email with proper structure including greeting, body paragraphs, and 
     }
   });
 
-  // Initiate Gmail OAuth flow
+  // Initiate Gmail OAuth flow - DEPRECATED: Users already have Gmail access through main OAuth
   app.get("/api/auth/gmail/authorize", isAuthenticated, async (req: any, res) => {
     try {
-      const { getGmailAuthUrl } = await import('./gmailOAuth');
-      const authUrl = getGmailAuthUrl(req.user.id, req);
-      res.json({ authUrl });
+      // Since users already have Gmail permissions through main Google OAuth, 
+      // we don't need a separate Gmail authorization flow
+      res.status(400).json({ 
+        error: "Separate Gmail authorization not needed",
+        message: "Users already have Gmail access through main Google OAuth"
+      });
     } catch (error) {
-      console.error("Error generating Gmail auth URL:", error);
-      res.status(500).json({ error: "Failed to generate authorization URL" });
+      console.error("Error with deprecated Gmail auth endpoint:", error);
+      res.status(500).json({ error: "Gmail authorization endpoint deprecated" });
     }
   });
 
