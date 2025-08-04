@@ -128,6 +128,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
   const [resumeText, setResumeText] = useState<string>("");
   const [resumeFileName, setResumeFileName] = useState<string>("");
   const [isLoadingResume, setIsLoadingResume] = useState(true);
+  const [hasExistingResume, setHasExistingResume] = useState(false);
   const [isAborted, setIsAborted] = useState(false);
   const abortRef = useRef(false); // Use ref for immediate abort tracking
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -148,20 +149,26 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
   useEffect(() => {
     const checkExistingResume = async () => {
       try {
-        const response = await fetch('/api/user/resume');
+        const response = await fetch('/api/user/resume', {
+          credentials: 'include'
+        });
         if (response.ok) {
           const data = await response.json();
           if (data.hasResume && data.resumeText) {
             setResumeText(data.resumeText);
             setResumeFileName(data.fileName || 'Saved Resume');
+            setHasExistingResume(true);
             toast({
               title: "Resume Loaded",
               description: "Your saved resume has been loaded automatically."
             });
+          } else {
+            setHasExistingResume(false);
           }
         }
       } catch (error) {
         console.error("Error checking for existing resume:", error);
+        setHasExistingResume(false);
       } finally {
         setIsLoadingResume(false);
       }
@@ -274,6 +281,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
       const response = await fetch('/api/upload-resume', {
         method: 'POST',
         body: formData,
+        credentials: 'include'
       });
 
       if (!response.ok) {
@@ -284,9 +292,10 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
       
       setResumeText(data.text);
       setResumeFileName(file.name);
+      setHasExistingResume(true); // Mark that user now has a resume
       toast({
-        title: "Resume Uploaded",
-        description: `${file.name} processed successfully`
+        title: "Resume Uploaded & Saved",
+        description: `${file.name} has been saved to your account. You won't need to upload it again.`
       });
     } catch (error: any) {
       toast({
@@ -937,7 +946,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
             )}
           />
 
-          {/* Resume Upload */}
+          {/* Resume Section - Different UI based on whether user has existing resume */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -946,45 +955,72 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
           >
             <label className="text-sm font-medium flex items-center gap-2 mb-2">
               <FileText className="h-4 w-4 text-primary" />
-              Resume (Optional)
+              Resume {hasExistingResume ? '' : '(Optional)'}
             </label>
-            <div className="glass-card p-4 md:p-6 border-dashed border-2 border-primary/20 hover:border-primary/40 transition-all cursor-pointer group min-h-[120px] flex items-center">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".txt,.pdf"
-                onChange={handleFileUpload}
-                className="hidden"
-                disabled={isProcessing}
-              />
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full flex flex-col items-center justify-center gap-3"
-                disabled={isProcessing}
-              >
-                <div className="p-3 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                  <Upload className="h-6 w-6 text-primary" />
+            
+            {isLoadingResume ? (
+              <div className="glass-card p-4 md:p-6 border border-primary/20 min-h-[120px] flex items-center justify-center">
+                <div className="flex items-center gap-3 text-muted-foreground">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span>Loading your saved resume...</span>
                 </div>
-                <div className="text-center">
-                  <p className="font-medium">
-                    {resumeFileName ? resumeFileName : isLoadingResume ? 'Loading saved resume...' : 'Drop your resume here'}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {resumeFileName ? 'Click to replace' : 'Supports .txt and .pdf files'}
-                  </p>
+              </div>
+            ) : hasExistingResume ? (
+              // Show existing resume info with link to settings to change
+              <div className="glass-card p-4 md:p-6 border border-green-500/20 bg-green-500/5 min-h-[120px] flex items-center">
+                <div className="w-full flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-full bg-green-500/10">
+                      <CheckCircle className="h-6 w-6 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-green-800 dark:text-green-200">
+                        {resumeFileName || 'Resume Loaded'}
+                      </p>
+                      <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                        Your saved resume will be used automatically
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open('/settings', '_blank')}
+                    className="text-xs border-green-500/30 text-green-700 dark:text-green-300 hover:bg-green-500/10"
+                  >
+                    Change in Settings
+                  </Button>
                 </div>
-              </button>
-            </div>
-            {(resumeFileName || (resumeText && !isLoadingResume)) && (
-              <motion.div
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="flex items-center gap-2 text-sm text-green-600"
-              >
-                <CheckCircle className="h-4 w-4" />
-                <span>{resumeFileName ? 'Resume uploaded successfully' : 'Using your saved resume'}</span>
-              </motion.div>
+              </div>
+            ) : (
+              // Show upload interface for new users
+              <div className="glass-card p-4 md:p-6 border-dashed border-2 border-primary/20 hover:border-primary/40 transition-all cursor-pointer group min-h-[120px] flex items-center">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".txt,.pdf"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  disabled={isProcessing}
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full flex flex-col items-center justify-center gap-3"
+                  disabled={isProcessing}
+                >
+                  <div className="p-3 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                    <Upload className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="text-center">
+                    <p className="font-medium">Drop your resume here</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Supports .txt and .pdf files - will be saved to your account
+                    </p>
+                  </div>
+                </button>
+              </div>
             )}
           </motion.div>
 

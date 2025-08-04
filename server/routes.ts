@@ -240,6 +240,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get user resume endpoint
+  app.get("/api/user/resume", isAuthenticated, async (req, res) => {
+    try {
+      const resume = await storage.getUserResume(req.user!.id);
+      if (resume && resume.resumeText) {
+        res.json({ 
+          hasResume: true, 
+          resumeText: resume.resumeText,
+          fileName: resume.resumeFileName || 'Saved Resume',
+          uploadedAt: resume.resumeUploadedAt
+        });
+      } else {
+        res.json({ hasResume: false });
+      }
+    } catch (error) {
+      console.error('Error fetching user resume:', error);
+      res.status(500).json({ error: 'Failed to fetch resume' });
+    }
+  });
+
   // Google OAuth initiation - includes Gmail scope from the start
   app.get('/api/auth/google', (req, res, next) => {
     console.log('OAuth initiation from host:', req.get('host'));
