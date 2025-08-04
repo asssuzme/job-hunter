@@ -4,14 +4,16 @@ import { db } from './db';
 import { users } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 
-// Configure Google OAuth strategy
+// Configure Google OAuth strategy  
 passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      // Dynamic callback URL based on request
-      callbackURL: '/api/auth/google/callback',
+      // Use full URL for production compatibility
+      callbackURL: process.env.NODE_ENV === 'production' || process.env.REPL_SLUG?.includes('gigfloww.com') 
+        ? 'https://gigfloww.com/api/auth/google/callback'
+        : 'http://localhost:5000/api/auth/google/callback',
     },
     async (accessToken, refreshToken, profile, done) => {
       try {

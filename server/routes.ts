@@ -181,14 +181,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   // Separate Gmail authorization endpoint - only for sending emails
-  app.get('/api/auth/gmail/authorize', isAuthenticated, 
+  app.get('/api/auth/gmail/authorize', isAuthenticated, (req, res, next) => {
+    // Add error handling and logging
+    console.log('Gmail auth request from:', req.get('host'));
+    console.log('User:', req.user?.email);
+    
     passport.authenticate('google', { 
       scope: ['https://www.googleapis.com/auth/gmail.send'],
       accessType: 'offline',
       prompt: 'consent',
-      state: 'gmail_auth' // To identify Gmail auth in callback
-    })
-  );
+      state: 'gmail_auth',
+      failureRedirect: '/error?type=gmail_auth_failed'
+    })(req, res, next);
+  });
 
   // TEMPORARY: Development bypass for testing
   app.get('/api/auth/dev-login', async (req, res) => {
@@ -225,9 +230,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Google OAuth callback - handles both basic auth and Gmail auth
-  app.get('/api/auth/google/callback',
-    passport.authenticate('google', { failureRedirect: '/login' }),
-    async (req: any, res) => {
+  app.get('/api/auth/google/callback', (req, res, next) => {
+    console.log('OAuth callback received from:', req.get('host'));
+    console.log('Query params:', req.query);
+    
+    passport.authenticate('google', { 
+      failureRedirect: '/error?type=oauth_failed',
+      failureFlash: true 
+    })(req, res, next);
+  }, async (req: any, res) => {
       if (req.user) {
         req.session.userId = req.user.id;
         await new Promise<void>((resolve) => {

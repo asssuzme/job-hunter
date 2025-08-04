@@ -363,15 +363,27 @@ export function EmailComposerModal({
                   <strong>Note:</strong> We only request permission to send emails. 
                   We cannot read your existing emails or access your personal data.
                 </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  <strong>Having issues?</strong> You can also copy the email and send it manually from your Gmail.
+                </p>
               </div>
               
               <div className="flex gap-2">
                 <Button
                   variant="outline"
-                  onClick={() => setShowGmailAuth(false)}
+                  onClick={() => {
+                    setShowGmailAuth(false);
+                    // Show mailto fallback
+                    const mailtoLink = `mailto:${recipientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailContent)}`;
+                    window.location.href = mailtoLink;
+                    toast({
+                      title: "Opening in email client",
+                      description: "Sending email through your default email app",
+                    });
+                  }}
                   className="flex-1"
                 >
-                  Skip for now
+                  Use Email App
                 </Button>
                 <Button
                   onClick={() => authorizeGmailMutation.mutate()}
