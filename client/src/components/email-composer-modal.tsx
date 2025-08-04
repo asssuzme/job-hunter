@@ -128,14 +128,34 @@ export function EmailComposerModal({
           });
           onClose();
         }
+      } else if (data.requiresSignIn) {
+        toast({
+          title: "Sign in with Google required",
+          description: "To send emails directly from Gmail, please sign in with your Google account first.",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Email not sent",
+          description: data.error || "Please try again or use the copy option",
+          variant: "destructive"
+        });
       }
     },
     onError: (error: any) => {
-      toast({
-        title: "Failed to send email",
-        description: error.message || "Please try again or use the copy option",
-        variant: "destructive"
-      });
+      if (error.requiresSignIn) {
+        toast({
+          title: "Sign in with Google required",
+          description: "To send emails directly from Gmail, please sign in with your Google account first.",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Failed to send email",
+          description: error.message || "Please try again or use the copy option",
+          variant: "destructive"
+        });
+      }
     }
   });
 

@@ -42,11 +42,14 @@ Preferred communication style: Simple, everyday language.
   - Extended cancel functionality to results page for viewing ongoing searches
   - Added X close button and Cancel Search button to results page loading animation
 
-- **2025-08-04**: Fixed Gmail OAuth redirect_uri_mismatch error:
+- **2025-08-04**: Fixed Gmail OAuth redirect_uri_mismatch error and email sending:
   - Eliminated duplicate Gmail authorization by recognizing users already have Gmail permissions through main Google OAuth
   - Removed separate Gmail OAuth flow that was causing redirect URI conflicts
-  - Updated email sending to use existing Google OAuth tokens (which include Gmail scope)
-  - Removed Gmail authorization UI from frontend since users already have access
+  - Updated Google OAuth to include Gmail scopes (send, compose, modify) automatically
+  - Modified Passport authentication to save Gmail tokens to database when users sign in with Google
+  - Fixed session persistence issues in development environment
+  - Updated email sending logic to use stored Gmail credentials from main Google sign-in
+  - Improved frontend error handling to guide users to sign in with Google for email functionality
   - All Gmail functionality now works through main Google sign-in without separate authorization
 
 - **2025-08-04**: Updated all contact email addresses site-wide to team@gigfloww.com:
