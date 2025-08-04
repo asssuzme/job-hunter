@@ -39,6 +39,12 @@ const sessionConfig: any = {
     pool: pgPool,
     tableName: 'user_sessions', // Use different table name to avoid conflicts
     createTableIfMissing: true,
+    errorLog: (err) => {
+      // Suppress expected database conflicts during table creation
+      if (!err.message.includes('already exists')) {
+        console.error('Session store error:', err);
+      }
+    }
   }),
   cookie: {
     secure: isProduction,
