@@ -51,6 +51,9 @@ Preferred communication style: Simple, everyday language.
   - Added clear privacy messaging explaining that only email sending permission is requested
   - Improved user experience by requesting permissions progressively rather than all at once
   - Fixed session persistence issues and callback handling for both auth flows
+  - **Production Issue**: "invalid_credentials" error on gigfloww.com requires Google OAuth app configuration update
+  - Added diagnostic endpoint (/api/oauth-debug) and comprehensive fix guide (PRODUCTION_OAUTH_FIX.md)
+  - Enhanced error handling to show specific OAuth error messages to users
 
 - **2025-08-04**: Updated all contact email addresses site-wide to team@gigfloww.com:
   - Replaced all instances of autoapply.ai email addresses across footer, contact page, legal pages

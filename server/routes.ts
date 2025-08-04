@@ -141,6 +141,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next();
   });
 
+  // === DIAGNOSTIC ROUTES ===
+  
+  // OAuth diagnostic endpoint - helps debug production OAuth issues
+  app.get("/api/oauth-debug", (req, res) => {
+    const hostname = req.get('host');
+    const protocol = req.secure ? 'https' : 'http';
+    const fullUrl = `${protocol}://${hostname}`;
+    
+    res.json({
+      environment: {
+        NODE_ENV: process.env.NODE_ENV,
+        hostname,
+        protocol,
+        fullUrl,
+        REPL_SLUG: process.env.REPL_SLUG,
+        REPLIT_DOMAIN: process.env.REPLIT_DOMAIN,
+      },
+      oauth: {
+        clientId: process.env.GOOGLE_CLIENT_ID?.slice(0, 20) + "...", // Show first 20 chars
+        hasClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
+        expectedCallbackUrl: process.env.NODE_ENV === 'production' || 
+                           process.env.REPL_SLUG?.includes('gigfloww.com') ||
+                           process.env.REPLIT_DOMAIN?.includes('gigfloww.com')
+          ? 'https://gigfloww.com/api/auth/google/callback'
+          : 'http://localhost:5000/api/auth/google/callback',
+        requiredAuthorizedOrigins: [
+          'https://gigfloww.com',
+          'http://localhost:5000'
+        ],
+        requiredRedirectUris: [
+          'https://gigfloww.com/api/auth/google/callback',
+          'http://localhost:5000/api/auth/google/callback'
+        ]
+      }
+    });
+  });
+
   // === AUTHENTICATION ROUTES ===
   
   // Get current user
@@ -238,7 +275,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Handle OAuth errors specifically
     if (req.query.error) {
       console.error('OAuth error:', req.query.error, req.query.error_description);
-      return res.redirect(`/?error=${req.query.error}&description=${encodeURIComponent(req.query.error_description || '')}`);
+      return res.redirect(`/?error=${req.query.error}&description=${encodeURIComponent(String(req.query.error_description || ''))}`);
     }
     
     passport.authenticate('google', { 
