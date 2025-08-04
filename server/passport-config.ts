@@ -4,13 +4,12 @@ import { db } from './db';
 import { users } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 
-// Configure Google OAuth strategy  
+// Configure Google OAuth strategy with Gmail scope included
 passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      // Explicit callback URL for Google Cloud Console compatibility
       callbackURL: (process.env.NODE_ENV === 'production' || 
                     process.env.REPL_SLUG === 'workspace')
         ? 'https://gigfloww.com/api/auth/google/callback'
@@ -20,6 +19,7 @@ passport.use(
       try {
         console.log('Google OAuth callback with profile:', profile.id, profile.emails?.[0]?.value);
         console.log('Tokens received:', { hasAccess: !!accessToken, hasRefresh: !!refreshToken });
+        
         const email = profile.emails?.[0]?.value;
         if (!email) {
           return done(new Error('No email found in Google profile'));
@@ -45,7 +45,7 @@ passport.use(
             .where(eq(users.email, email))
             .returning();
         } else {
-          // Create new user with Google ID
+          // Create new user
           [user] = await db
             .insert(users)
             .values({
@@ -58,16 +58,36 @@ passport.use(
             .returning();
         }
 
-        // Only save Gmail credentials if we have Gmail scope in the request
-        // This happens when user specifically authorizes Gmail sending
+        // Save Gmail credentials if we have tokens with Gmail scope
         if (accessToken && refreshToken) {
-          // Check if this is a Gmail authorization (has gmail scope)
-          // We'll save Gmail credentials in a separate callback handler
-          console.log('User authenticated:', user.email);
+          console.log('Saving Gmail credentials for user:', user.email);
+          
+          const { gmailCredentials } = await import('@shared/schema');
+          const expiresAt = new Date(Date.now() + 3600 * 1000); // 1 hour
+
+          await db.insert(gmailCredentials)
+            .values({
+              userId: user.id,
+              accessToken,
+              refreshToken,
+              expiresAt,
+              isActive: true,
+            })
+            .onConflictDoUpdate({
+              target: gmailCredentials.userId,
+              set: {
+                accessToken,
+                refreshToken,
+                expiresAt,
+                isActive: true,
+                updatedAt: new Date(),
+              },
+            });
         }
 
         return done(null, user);
       } catch (error) {
+        console.error('OAuth error:', error);
         return done(error as Error);
       }
     }

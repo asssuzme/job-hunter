@@ -47,14 +47,13 @@ export function EmailComposerModal({
   const { data: gmailStatus } = useQuery({
     queryKey: ['/api/auth/gmail/status'],
     enabled: isOpen
-  }) as { data?: { isLinked?: boolean; hasGmailAccess?: boolean; isActive?: boolean } };
+  }) as { data?: { authorized?: boolean; needsRefresh?: boolean; email?: string } };
   
-  // Handle Gmail authorization
-  // Gmail authorization mutation - for sending emails specifically
-  const authorizeGmailMutation = useMutation({
+  // Handle Gmail re-authorization if needed
+  const reauthorizeGmailMutation = useMutation({
     mutationFn: async () => {
-      // Redirect to Gmail-specific authorization
-      window.location.href = '/api/auth/gmail/authorize';
+      // Redirect to Google OAuth to get fresh Gmail permissions
+      window.location.href = '/api/auth/google';
     },
     onError: (error: any) => {
       toast({
@@ -282,21 +281,11 @@ export function EmailComposerModal({
 
         <DialogFooter className="flex gap-2 flex-col sm:flex-row">
           <div className="flex gap-2 flex-1">
-            {gmailStatus?.isLinked && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => unlinkGmailMutation.mutate()}
-                disabled={unlinkGmailMutation.isPending}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                {unlinkGmailMutation.isPending ? (
-                  <Spinner className="mr-2" />
-                ) : (
-                  <Unlink className="h-4 w-4 mr-2" />
-                )}
-                Unlink Gmail
-              </Button>
+            {gmailStatus?.authorized && !gmailStatus?.needsRefresh && (
+              <div className="text-xs text-green-600 flex items-center gap-1 px-2 py-1 bg-green-50 rounded">
+                <CheckCircle className="h-3 w-3" />
+                Gmail connected
+              </div>
             )}
             <Button
               variant="outline"
@@ -329,7 +318,13 @@ export function EmailComposerModal({
               Cancel
             </Button>
             <Button
-              onClick={() => sendEmailMutation.mutate()}
+              onClick={() => {
+                if (!gmailStatus?.authorized || gmailStatus?.needsRefresh) {
+                  setShowGmailAuth(true);
+                } else {
+                  sendEmailMutation.mutate();
+                }
+              }}
               disabled={!emailContent || !subject || isGeneratingEmail || sendEmailMutation.isPending}
               className="bg-blue-600 hover:bg-blue-700"
             >
@@ -337,6 +332,11 @@ export function EmailComposerModal({
                 <>
                   <Spinner className="mr-2" />
                   Sending...
+                </>
+              ) : !gmailStatus?.authorized || gmailStatus?.needsRefresh ? (
+                <>
+                  <ShieldCheck className="h-4 w-4 mr-2" />
+                  Setup Gmail
                 </>
               ) : (
                 <>
@@ -392,8 +392,8 @@ export function EmailComposerModal({
                   Use Email App
                 </Button>
                 <Button
-                  onClick={() => authorizeGmailMutation.mutate()}
-                  disabled={authorizeGmailMutation.isPending}
+                  onClick={() => reauthorizeGmailMutation.mutate()}
+                  disabled={reauthorizeGmailMutation.isPending}
                   className="flex-1 bg-blue-600 hover:bg-blue-700"
                 >
                   <Mail className="h-4 w-4 mr-2" />

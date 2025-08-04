@@ -199,7 +199,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Google OAuth initiation - basic profile only
+  // Google OAuth initiation - includes Gmail scope from the start
   app.get('/api/auth/google', (req, res, next) => {
     console.log('OAuth initiation from host:', req.get('host'));
     console.log('Environment:', {
@@ -207,33 +207,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       replSlug: process.env.REPL_SLUG,
       replitDomain: process.env.REPLIT_DOMAIN
     });
+    
     passport.authenticate('google', { 
-      scope: ['profile', 'email'],
+      scope: [
+        'profile', 
+        'email', 
+        'https://www.googleapis.com/auth/gmail.send'
+      ],
       accessType: 'offline',
       prompt: 'consent'
     })(req, res, next);
   });
 
-  // Separate Gmail authorization endpoint - only for sending emails
-  app.get('/api/auth/gmail/authorize', isAuthenticated, (req, res, next) => {
-    console.log('Gmail auth request from:', req.get('host'));
-    console.log('Session ID:', req.sessionID);
-    console.log('Session User ID:', req.session.userId);
-    console.log('User:', (req.user as any)?.email);
-    
-    // Check if we have the current user properly set
-    if (!req.user) {
-      console.error('No user found in request after isAuthenticated check');
-      return res.status(401).json({ message: 'User not properly authenticated' });
+  // Check Gmail authorization status
+  app.get('/api/auth/gmail/status', isAuthenticated, async (req: any, res) => {
+    try {
+      const { gmailCredentials } = await import('@shared/schema');
+      const [credentials] = await db
+        .select()
+        .from(gmailCredentials)
+        .where(eq(gmailCredentials.userId, req.user.id))
+        .limit(1);
+
+      if (credentials && credentials.isActive) {
+        // Check if token is expired
+        const isExpired = new Date() > credentials.expiresAt;
+        res.json({ 
+          authorized: !isExpired,
+          needsRefresh: isExpired,
+          email: req.user.email
+        });
+      } else {
+        res.json({ 
+          authorized: false,
+          needsRefresh: false,
+          email: req.user.email
+        });
+      }
+    } catch (error) {
+      console.error('Error checking Gmail status:', error);
+      res.status(500).json({ message: 'Failed to check Gmail status' });
     }
-    
-    passport.authenticate('google', { 
-      scope: ['https://www.googleapis.com/auth/gmail.send'],
-      accessType: 'offline',
-      prompt: 'consent',
-      state: 'gmail_auth',
-      failureRedirect: '/?error=gmail_auth_failed'
-    })(req, res, next);
   });
 
   // TEMPORARY: Development bypass for testing
@@ -312,19 +326,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       });
 
-      // Check if this was a Gmail authorization request
-      const isGmailAuth = req.query.state === 'gmail_auth';
-      console.log('Is Gmail auth:', isGmailAuth);
-      
-      if (isGmailAuth) {
-        // This is a Gmail authorization - we'll handle token saving in passport callback
-        console.log('Gmail authorization completed');
-        return res.redirect('/?gmail_auth=success');
-      } else {
-        // Regular OAuth login completed
-        console.log('Regular OAuth login completed');
-        return res.redirect('/');
-      }
+      // OAuth login completed - Gmail tokens should be saved by passport callback
+      console.log('OAuth login completed with Gmail scope');
+      return res.redirect('/');
     } catch (error) {
       console.error('OAuth callback error:', error);
       return res.redirect('/?error=callback_failed');
