@@ -39,6 +39,7 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
       if (data.success) {
         setCompanyProfile(data.company);
         // After company data is loaded, generate the email
+        // The email composer will be shown automatically after generation
         await generateApplicationEmail(data.company);
       }
     },
@@ -79,6 +80,8 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
       if (data.success) {
         setGeneratedEmail(data.email);
         console.log("Email generated successfully");
+        // After email is generated, automatically show the composer
+        setShowEmailComposer(true);
       } else {
         console.error("Email generation failed:", data.error);
         alert(`Email generation failed: ${data.error || 'Unknown error'}`);
@@ -101,32 +104,29 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
         // User needs Gmail authorization first
         setShowGmailAuth(true);
       } else {
-        // User has Gmail authorization, proceed with auto-generation
-        setShowEmailComposer(true);
+        // User has Gmail authorization, proceed with loading and auto-generation
         
-        // Auto-generate email if not already generated
-        if (!generatedEmail && !isGeneratingEmail) {
-          if (job.companyLinkedinUrl) {
-            setShowCompanyModal(true);
-            companyMutation.mutate(job.companyLinkedinUrl);
-          } else {
-            // Generate email without company data
-            generateApplicationEmail(null);
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error checking Gmail status:', error);
-      // If error checking status, proceed with showing the email composer
-      setShowEmailComposer(true);
-      
-      if (!generatedEmail && !isGeneratingEmail) {
+        // Start loading immediately - this creates the "loading screen" effect
         if (job.companyLinkedinUrl) {
           setShowCompanyModal(true);
           companyMutation.mutate(job.companyLinkedinUrl);
         } else {
-          generateApplicationEmail(null);
+          // Show loading state and generate email without company data
+          setIsGeneratingEmail(true);
+          await generateApplicationEmail(null);
+          // After email is generated, show the composer
+          setShowEmailComposer(true);
         }
+      }
+    } catch (error) {
+      console.error('Error checking Gmail status:', error);
+      // If error checking status, proceed with loading and generation
+      if (job.companyLinkedinUrl) {
+        setShowCompanyModal(true);
+        companyMutation.mutate(job.companyLinkedinUrl);
+      } else {
+        setIsGeneratingEmail(true);
+        await generateApplicationEmail(null);
       }
     }
   };
@@ -442,7 +442,7 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
         generatedEmail={generatedEmail}
         isGeneratingEmail={isGeneratingEmail}
         onRegenerateEmail={handleRegenerateEmail}
-        showRegenerateButton={!generatedEmail}
+        showRegenerateButton={!!generatedEmail}
       />
     </motion.div>
   );
