@@ -159,20 +159,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         REPLIT_DOMAIN: process.env.REPLIT_DOMAIN,
       },
       oauth: {
-        clientId: process.env.GOOGLE_CLIENT_ID?.slice(0, 20) + "...", // Show first 20 chars
+        clientId: process.env.GOOGLE_CLIENT_ID?.slice(0, 20) + "..." + process.env.GOOGLE_CLIENT_ID?.slice(-8),
         hasClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
-        expectedCallbackUrl: process.env.NODE_ENV === 'production' || 
-                           process.env.REPL_SLUG?.includes('gigfloww.com') ||
-                           process.env.REPLIT_DOMAIN?.includes('gigfloww.com')
-          ? 'https://gigfloww.com/api/auth/google/callback'
-          : 'http://localhost:5000/api/auth/google/callback',
-        requiredAuthorizedOrigins: [
-          'https://gigfloww.com',
-          'http://localhost:5000'
-        ],
-        requiredRedirectUris: [
-          'https://gigfloww.com/api/auth/google/callback',
-          'http://localhost:5000/api/auth/google/callback'
+        secretLength: process.env.GOOGLE_CLIENT_SECRET?.length,
+        currentCallbackUrl: '/api/auth/google/callback',
+        requiredInGoogleCloud: {
+          authorizedOrigins: [
+            'https://gigfloww.com',
+            'http://localhost:5000'
+          ],
+          redirectUris: [
+            'https://gigfloww.com/api/auth/google/callback',
+            'http://localhost:5000/api/auth/google/callback'
+          ]
+        },
+        troubleshooting: [
+          'Verify Client ID matches your Google Cloud project',
+          'Check if OAuth app is published (not in testing mode)',
+          'Ensure Gmail API and Google+ API are enabled',
+          'Confirm you are editing the correct Google Cloud project'
         ]
       }
     });
@@ -211,15 +216,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Google OAuth login - basic authentication only
-  app.get('/api/auth/google', 
+  app.get('/api/auth/google', (req, res, next) => {
+    console.log('Google OAuth request from:', req.get('host'));
     passport.authenticate('google', { 
-      scope: ['profile', 'email'] 
-    })
-  );
+      scope: ['profile', 'email'],
+      // Force HTTPS in production
+      callbackURL: req.get('host')?.includes('gigfloww.com') 
+        ? 'https://gigfloww.com/api/auth/google/callback'
+        : undefined
+    })(req, res, next);
+  });
 
   // Separate Gmail authorization endpoint - only for sending emails
   app.get('/api/auth/gmail/authorize', isAuthenticated, (req, res, next) => {
-    // Add error handling and logging
     console.log('Gmail auth request from:', req.get('host'));
     console.log('User:', (req.user as any)?.email);
     
@@ -228,6 +237,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       accessType: 'offline',
       prompt: 'consent',
       state: 'gmail_auth',
+      // Force HTTPS callback for production
+      callbackURL: req.get('host')?.includes('gigfloww.com') 
+        ? 'https://gigfloww.com/api/auth/google/callback'
+        : undefined,
       failureRedirect: '/error?type=gmail_auth_failed'
     })(req, res, next);
   });
