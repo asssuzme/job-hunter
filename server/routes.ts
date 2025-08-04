@@ -1793,7 +1793,8 @@ function filterJobs(jobs: JobData[]): FilteredJobData[] {
         requirement: job.requirement,
         location: job.location,
         link: job.originalUrl,
-        salaryInfo: job.salaryInfo
+        salaryInfo: job.salaryInfo,
+        postedDate: job.postedDate
       });
     }
   }

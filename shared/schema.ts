@@ -163,6 +163,7 @@ export const filteredJobDataSchema = z.object({
   link: z.string(),
   salaryInfo: z.string().optional(),
   canApply: z.boolean().optional(),
+  postedDate: z.string().optional(), // Add posting date to track when job was posted
 });
 
 export type FilteredJobData = z.infer<typeof filteredJobDataSchema>;

@@ -2,12 +2,13 @@ import { useState, useRef } from "react";
 import { FilteredJobData } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, ExternalLink, User, Briefcase, DollarSign, Mail, CheckCircle, XCircle, Send, Loader2, Sparkles, Globe, Building } from "lucide-react";
+import { MapPin, ExternalLink, User, Briefcase, DollarSign, Mail, CheckCircle, XCircle, Send, Loader2, Sparkles, Globe, Building, Clock } from "lucide-react";
 import { CompanyProfileModal } from "./company-profile-modal";
 import { EmailComposerModal } from "./email-composer-modal";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { motion } from "framer-motion";
+import { getRelativeTime } from "@/lib/time-utils";
 
 interface FilteredJobCardProps {
   job: FilteredJobData;
@@ -211,6 +212,12 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
                 <MapPin className="h-3 w-3 mr-1" />
                 {job.location}
               </span>
+              {job.postedDate && (
+                <span className="flex items-center gap-1">
+                  <Clock className="h-3 w-3 mr-1" />
+                  {getRelativeTime(job.postedDate)}
+                </span>
+              )}
               {job.salaryInfo && (
                 <span className="flex items-center">
                   <DollarSign className="h-3 w-3 mr-1" />
