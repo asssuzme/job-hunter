@@ -169,13 +169,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // === AUTHENTICATION ROUTES ===
   
-  // Get current user
+  // Get current user with enhanced debugging
   app.get("/api/auth/user", async (req, res) => {
-    console.log('Auth check - Session ID:', req.sessionID);
-    console.log('Auth check - User ID:', req.session.userId);
+    console.log('=== AUTH DEBUG ===');
+    console.log('Session ID:', req.sessionID);
+    console.log('Session data:', JSON.stringify(req.session, null, 2));
+    console.log('User ID:', req.session.userId);
+    console.log('Cookies:', req.headers.cookie);
+    console.log('================');
     
     if (!req.session.userId) {
-      return res.status(401).json({ message: 'Unauthorized' });
+      console.log('❌ No user ID in session');
+      return res.status(401).json({ 
+        message: 'Unauthorized',
+        debug: {
+          sessionId: req.sessionID,
+          hasSession: !!req.session,
+          userId: req.session.userId
+        }
+      });
     }
     
     try {
@@ -186,15 +198,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .limit(1);
       
       if (!user) {
-        console.log('No user found for ID:', req.session.userId);
+        console.log('❌ No user found for ID:', req.session.userId);
         req.session.destroy(() => {});
-        return res.status(401).json({ message: 'Unauthorized' });
+        return res.status(401).json({ message: 'User not found' });
       }
       
-      console.log('User found:', user.email);
-      res.json(user);
+      console.log('✅ User authenticated:', user.email);
+      res.json({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        profileImageUrl: user.profileImageUrl,
+      });
     } catch (error) {
-      console.error('Error fetching user:', error);
+      console.error('❌ Error fetching user:', error);
       return res.status(500).json({ message: 'Internal server error' });
     }
   });

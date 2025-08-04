@@ -45,3 +45,29 @@ Preferred communication style: Simple, everyday language.
 - **Styling**: Tailwind CSS.
 - **Authentication**: Google OAuth 2.0 (for user authentication and Gmail API access).
 - **APIs**: Apify (for LinkedIn job scraping and email verification), OpenAI (for personalized email generation), Cashfree (for payment gateway integration).
+
+## Recent Changes
+
+- **2025-08-04**: Successfully implemented two-step OAuth flow with completely separate authentication flows:
+  - **Regular Login**: Uses Passport.js with basic Google scopes (profile, email) via /api/auth/google/callback
+  - **Gmail Authorization**: Uses direct OAuth2Client with gmail.send scope only via /api/auth/gmail/callback
+  - **Key Innovation**: Completely separate OAuth flows prevent configuration mismatches that caused "invalid_credentials" errors
+  - Users can login with any Google account and authorize Gmail sending with a different Gmail account
+  - Added /api/auth/gmail/callback to Google Cloud Console authorized redirect URIs
+  - Eliminated session persistence issues by keeping OAuth flows independent
+  - Progressive permission model: basic auth first, Gmail permissions only when needed for email sending
+  - Fixed all authentication errors by maintaining consistent OAuth client configuration within each flow
+
+- **2025-08-04**: Enhanced Apply button UX with smart Gmail flow:
+  - **New users**: Apply button first checks Gmail authorization, shows Gmail setup prompt if needed
+  - **Authorized users**: Apply button automatically generates and shows email (no regenerate button needed)
+  - Streamlined experience eliminates manual regenerate step for users with Gmail permissions
+  - Added Gmail authorization modal with privacy-focused messaging directly in job cards
+  - Email composer now conditionally shows regenerate button only when email hasn't been auto-generated
+
+- **2025-08-04**: Fixed persistent logout issue by implementing PostgreSQL session store:
+  - **Root Cause**: Default memory store was losing sessions between server restarts/requests in production
+  - **Solution**: Replaced memory store with PostgreSQL-based session persistence using connect-pg-simple
+  - Sessions now persist across server restarts and maintain user login state reliably
+  - Enhanced session debugging with detailed logging for troubleshooting authentication issues
+  - Session table automatically created in PostgreSQL database for production session storage

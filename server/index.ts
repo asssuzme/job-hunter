@@ -2,6 +2,9 @@ import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import connectPgSimple from "connect-pg-simple";
+import pkg from "pg";
+const { Pool } = pkg;
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
@@ -16,17 +19,32 @@ const hostname = process.env.REPL_SLUG || 'localhost';
 const isProduction = process.env.NODE_ENV === 'production' || 
                      process.env.REPL_SLUG === 'workspace';
 
-// Session configuration - simpler for production compatibility
+// Create PostgreSQL session store for production persistence
+const PgSession = connectPgSimple(session);
+
+// Create connection pool for sessions
+const pgPool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.DATABASE_URL?.includes('localhost') ? false : { rejectUnauthorized: false }
+});
+
+// Session configuration - PostgreSQL store for production persistence
 const sessionConfig: any = {
-  secret: process.env.SESSION_SECRET || 'your-secret-key-here',
+  secret: process.env.SESSION_SECRET || 'gigfloww-secret-key-super-secure-2024',
   resave: false,
   saveUninitialized: false,
-  name: 'gigfloww_session', // Custom session name
+  name: 'gigfloww_session',
+  rolling: true, // Reset expiry on each request
+  store: new PgSession({
+    pool: pgPool,
+    tableName: 'session',
+    createTableIfMissing: true,
+  }),
   cookie: {
     secure: isProduction,
     httpOnly: true,
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    sameSite: isProduction ? 'lax' : 'lax', // Change from 'none' to 'lax' for better compatibility
+    sameSite: isProduction ? 'lax' : 'lax',
   },
 };
 
