@@ -1,42 +1,57 @@
-# Quick OAuth Production Test
+# Quick OAuth Test for Production
 
-Since redirect URIs are already added, let's identify the exact issue:
+## Changes Made
+1. **Removed duplicate CORS configuration** - was causing conflicts
+2. **Changed session sameSite from 'none' to 'lax'** - better browser compatibility
+3. **Removed explicit cookie domain** - let browser handle it automatically
+4. **Added custom session name** - `gigfloww_session` for easier debugging
+5. **Enhanced logging** - better session tracking in OAuth callback
 
-## Step 1: Check Current Configuration
-Visit: https://gigfloww.com/api/oauth-debug
+## How to Test on Production
 
-This will show:
-- Exact Client ID being used
-- Whether Client Secret is present
-- Current callback URL configuration
+### Step 1: Basic Session Test
+```bash
+curl -s "https://gigfloww.com/api/auth/user"
+```
+Expected: `{"message":"Unauthorized"}` (because not logged in)
 
-## Step 2: Common Issues to Check
+### Step 2: Try OAuth Flow
+1. Go to: https://gigfloww.com
+2. Click "Sign in with Google"
+3. Watch the network tab for:
+   - Redirect to Google OAuth
+   - Callback with session cookie
+   - Should stay logged in after redirect
 
-### Issue A: Wrong Google Cloud Project
-- You might have multiple Google Cloud projects
-- The Client ID/Secret might be from a different project
-- **Solution**: Double-check which project contains your OAuth app
+### Step 3: Check Session Persistence
+After OAuth login:
+```bash
+curl -s "https://gigfloww.com/api/auth/user" -H "Cookie: gigfloww_session=<session_from_browser>"
+```
+Expected: User data JSON
 
-### Issue B: OAuth App in Testing Mode
-- If your OAuth app is in "Testing" mode, it only works for test users
-- **Solution**: Go to OAuth consent screen → Publish your app
+### Step 4: Test Gmail Authorization
+1. Make sure you're logged in from Step 2
+2. Try to send an email (which triggers Gmail auth)
+3. Should redirect to Google for Gmail permissions
+4. Should redirect back successfully
 
-### Issue C: APIs Not Enabled
-- **Gmail API** might not be enabled for sending emails
-- **Google+ API** might not be enabled for profile access
-- **Solution**: Enable both APIs in Google Cloud Console
+## Key Changes for Session Persistence
 
-### Issue D: Client Secret Mismatch
-- The GOOGLE_CLIENT_SECRET environment variable might be wrong
-- **Solution**: Copy the correct secret from Google Cloud Console
+1. **SameSite Policy**: Changed from 'none' to 'lax' 
+   - 'none' requires HTTPS and can be blocked by browsers
+   - 'lax' works better with redirect flows
 
-## Step 3: Quick Test
-1. Check the diagnostic endpoint: https://gigfloww.com/api/oauth-debug
-2. Compare the Client ID shown with your Google Cloud Console
-3. If they match, try publishing your OAuth app (if in testing mode)
-4. If they don't match, update your environment variables
+2. **No Explicit Domain**: Removed `domain: 'gigfloww.com'`
+   - Let browser automatically set based on request
+   - Avoids subdomain conflicts
 
-## Step 4: Alternative Solution
-If OAuth continues to fail, users can still send emails using:
-- **"Use Email App"** button (opens default email client)
-- Manual copy-paste of generated email content
+3. **Custom Session Name**: `gigfloww_session`
+   - Easier to identify in browser dev tools
+   - Avoids conflicts with default `connect.sid`
+
+## If Still Failing
+Check browser console for:
+- Cookie being set after OAuth callback
+- Session cookie included in subsequent requests
+- CORS errors or cookie warnings

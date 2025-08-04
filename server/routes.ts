@@ -103,15 +103,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       'http://localhost:3000',
       'https://gigfloww.com',
       'https://www.gigfloww.com',
-      'https://*.replit.dev',
-      'https://*.repl.co',
       'https://service-genie-ashutoshlathrep.replit.app'
     ];
     
     const origin = req.headers.origin;
-    if (origin && (allowedOrigins.some(allowed => 
-      allowed.includes('*') ? origin.includes(allowed.replace('https://*', '')) : allowed === origin
-    ))) {
+    if (origin && allowedOrigins.includes(origin)) {
       res.header('Access-Control-Allow-Origin', origin);
       res.header('Access-Control-Allow-Credentials', 'true');
       res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -124,33 +120,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     next();
   });
+  
   // Initialize Passport
   app.use(passport.initialize());
   app.use(passport.session());
-
-  // CORS configuration for production
-  app.use((req, res, next) => {
-    const origin = req.headers.origin;
-    const allowedOrigins = [
-      'https://service-genie-ashutoshlathrep.replit.app',
-      'https://gigfloww.com',
-      'http://localhost:5000',
-      'http://localhost:3000'
-    ];
-    
-    if (origin && allowedOrigins.includes(origin)) {
-      res.setHeader('Access-Control-Allow-Origin', origin);
-      res.setHeader('Access-Control-Allow-Credentials', 'true');
-      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    }
-    
-    if (req.method === 'OPTIONS') {
-      return res.sendStatus(200);
-    }
-    
-    next();
-  });
 
   // === DIAGNOSTIC ROUTES ===
   
@@ -302,63 +275,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     passport.authenticate('google', { 
-      failureRedirect: '/error?type=oauth_failed',
+      failureRedirect: '/?error=oauth_failed',
       failureFlash: true 
     })(req, res, next);
   }, async (req: any, res) => {
-      if (req.user) {
-        req.session.userId = req.user.id;
-        await new Promise<void>((resolve) => {
-          req.session.save(() => resolve());
-        });
-
-        // Check if this was a Gmail authorization request
-        // We'll detect this by checking if we have Gmail tokens in the authInfo
-        const accessToken = req.authInfo?.accessToken;
-        const refreshToken = req.authInfo?.refreshToken;
-        
-        if (accessToken && refreshToken && req.query.state === 'gmail_auth') {
-          // This is a Gmail authorization - save the Gmail credentials
-          try {
-            const profile = req.user;
-            const accessToken = req.authInfo?.accessToken;
-            const refreshToken = req.authInfo?.refreshToken;
-
-            const { gmailCredentials } = await import('@shared/schema');
-            const expiresAt = new Date(Date.now() + 3600 * 1000); // 1 hour
-
-            await db.insert(gmailCredentials)
-              .values({
-                userId: req.user.id,
-                accessToken,
-                refreshToken,
-                expiresAt,
-                isActive: true,
-              })
-              .onConflictDoUpdate({
-                target: gmailCredentials.userId,
-                set: {
-                  accessToken,
-                  refreshToken,
-                  expiresAt,
-                  isActive: true,
-                  updatedAt: new Date(),
-                },
-              });
-
-            console.log('Gmail credentials saved for user:', req.user.email);
-            res.redirect('/?gmail_auth=success');
-            return;
-          } catch (error) {
-            console.error('Error saving Gmail credentials:', error);
-            res.redirect('/?gmail_auth=error');
-            return;
-          }
-        }
+    console.log('OAuth callback success handler - User:', req.user?.email);
+    console.log('Session before save:', req.sessionID);
+    try {
+      if (!req.user) {
+        console.error('No user found in OAuth callback');
+        return res.redirect('/?error=auth_failed');
       }
-      res.redirect('/');
+
+      console.log('Setting session userId:', req.user.id);
+      req.session.userId = req.user.id;
+      
+      // Force session save and wait for completion
+      await new Promise<void>((resolve, reject) => {
+        req.session.save((err) => {
+          if (err) {
+            console.error('Session save error:', err);
+            reject(err);
+          } else {
+            console.log('Session saved successfully');
+            resolve();
+          }
+        });
+      });
+
+      // Check if this was a Gmail authorization request
+      const isGmailAuth = req.query.state === 'gmail_auth';
+      console.log('Is Gmail auth:', isGmailAuth);
+      
+      if (isGmailAuth) {
+        // This is a Gmail authorization - we'll handle token saving in passport callback
+        console.log('Gmail authorization completed');
+        return res.redirect('/?gmail_auth=success');
+      } else {
+        // Regular OAuth login completed
+        console.log('Regular OAuth login completed');
+        return res.redirect('/');
+      }
+    } catch (error) {
+      console.error('OAuth callback error:', error);
+      return res.redirect('/?error=callback_failed');
     }
-  );
+  });
 
   // Logout endpoint
   app.post('/api/auth/logout', (req, res) => {

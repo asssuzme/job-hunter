@@ -17,24 +17,22 @@ const isProduction = process.env.NODE_ENV === 'production' ||
                      process.env.REPLIT_DOMAIN?.includes('gigfloww.com') ||
                      false;
 
-// Session configuration - fix for production domain issues
+// Session configuration - simpler for production compatibility
 const sessionConfig: any = {
   secret: process.env.SESSION_SECRET || 'your-secret-key-here',
   resave: false,
   saveUninitialized: false,
+  name: 'gigfloww_session', // Custom session name
   cookie: {
     secure: isProduction,
     httpOnly: true,
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    sameSite: isProduction ? 'none' : 'lax',
+    sameSite: isProduction ? 'lax' : 'lax', // Change from 'none' to 'lax' for better compatibility
   },
 };
 
-// Set domain for production - but don't use subdomain dot prefix
-if (isProduction) {
-  // Use the exact domain without subdomain prefix to avoid cookie issues
-  sessionConfig.cookie.domain = 'gigfloww.com';
-}
+// Don't set domain for production to avoid cookie issues
+// Let the browser handle it automatically based on the request domain
 
 console.log('Session config:', {
   isProduction,
