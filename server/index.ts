@@ -17,7 +17,7 @@ const isProduction = process.env.NODE_ENV === 'production' ||
                      process.env.REPLIT_DOMAIN?.includes('gigfloww.com') ||
                      false;
 
-// Session configuration
+// Session configuration - fix for production domain issues
 const sessionConfig: any = {
   secret: process.env.SESSION_SECRET || 'your-secret-key-here',
   resave: false,
@@ -30,9 +30,10 @@ const sessionConfig: any = {
   },
 };
 
-// Only set domain for production
+// Set domain for production - but don't use subdomain dot prefix
 if (isProduction) {
-  sessionConfig.cookie.domain = '.gigfloww.com';
+  // Use the exact domain without subdomain prefix to avoid cookie issues
+  sessionConfig.cookie.domain = 'gigfloww.com';
 }
 
 console.log('Session config:', {

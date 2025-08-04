@@ -65,23 +65,34 @@ declare module 'express-session' {
 
 // Simple auth middleware
 async function isAuthenticated(req: Request, res: Response, next: NextFunction) {
+  console.log('Auth middleware - Session ID:', req.sessionID);
+  console.log('Auth middleware - User ID:', req.session.userId);
+  
   if (!req.session.userId) {
-    return res.status(401).json({ message: 'Unauthorized' });
+    console.log('No user ID in session');
+    return res.status(401).json({ message: 'Unauthorized - No session' });
   }
   
-  const [user] = await db
-    .select()
-    .from(users)
-    .where(eq(users.id, req.session.userId))
-    .limit(1);
-  
-  if (!user) {
-    req.session.destroy(() => {});
-    return res.status(401).json({ message: 'Unauthorized' });
+  try {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, req.session.userId))
+      .limit(1);
+    
+    if (!user) {
+      console.log('No user found in database for ID:', req.session.userId);
+      req.session.destroy(() => {});
+      return res.status(401).json({ message: 'Unauthorized - User not found' });
+    }
+    
+    console.log('User found:', user.email);
+    req.user = user;
+    next();
+  } catch (error) {
+    console.error('Error in auth middleware:', error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
-  
-  req.user = user;
-  next();
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -224,16 +235,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Separate Gmail authorization endpoint - only for sending emails
   app.get('/api/auth/gmail/authorize', isAuthenticated, (req, res, next) => {
-    // Add error handling and logging
     console.log('Gmail auth request from:', req.get('host'));
+    console.log('Session ID:', req.sessionID);
+    console.log('Session User ID:', req.session.userId);
     console.log('User:', (req.user as any)?.email);
+    
+    // Check if we have the current user properly set
+    if (!req.user) {
+      console.error('No user found in request after isAuthenticated check');
+      return res.status(401).json({ message: 'User not properly authenticated' });
+    }
     
     passport.authenticate('google', { 
       scope: ['https://www.googleapis.com/auth/gmail.send'],
       accessType: 'offline',
       prompt: 'consent',
       state: 'gmail_auth',
-      failureRedirect: '/error?type=gmail_auth_failed'
+      failureRedirect: '/?error=gmail_auth_failed'
     })(req, res, next);
   });
 
