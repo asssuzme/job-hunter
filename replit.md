@@ -42,15 +42,15 @@ Preferred communication style: Simple, everyday language.
   - Extended cancel functionality to results page for viewing ongoing searches
   - Added X close button and Cancel Search button to results page loading animation
 
-- **2025-08-04**: Fixed Gmail OAuth redirect_uri_mismatch error and email sending:
-  - Eliminated duplicate Gmail authorization by recognizing users already have Gmail permissions through main Google OAuth
-  - Removed separate Gmail OAuth flow that was causing redirect URI conflicts
-  - Updated Google OAuth to include Gmail scopes (send, compose, modify) automatically
-  - Modified Passport authentication to save Gmail tokens to database when users sign in with Google
-  - Fixed session persistence issues in development environment
-  - Updated email sending logic to use stored Gmail credentials from main Google sign-in
-  - Improved frontend error handling to guide users to sign in with Google for email functionality
-  - All Gmail functionality now works through main Google sign-in without separate authorization
+- **2025-08-04**: Implemented two-step OAuth flow with minimal Gmail permissions:
+  - Split authentication into two steps: basic Google auth first, Gmail permissions only when needed
+  - Initial sign-up now only requests basic Google scopes (profile, email) - no Gmail permissions upfront
+  - Created separate Gmail authorization endpoint (/api/auth/gmail/authorize) for email sending
+  - Reduced Gmail permissions to minimum required scope (gmail.send only) - removed unnecessary draft/read/compose/modify scopes
+  - Updated frontend to show Gmail authorization prompt only when users try to send their first email
+  - Added clear privacy messaging explaining that only email sending permission is requested
+  - Improved user experience by requesting permissions progressively rather than all at once
+  - Fixed session persistence issues and callback handling for both auth flows
 
 - **2025-08-04**: Updated all contact email addresses site-wide to team@gigfloww.com:
   - Replaced all instances of autoapply.ai email addresses across footer, contact page, legal pages

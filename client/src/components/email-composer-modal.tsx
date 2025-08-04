@@ -40,7 +40,7 @@ export function EmailComposerModal({
   const [subject, setSubject] = useState(`Application for ${jobTitle} position at ${companyName}`);
   const [copied, setCopied] = useState(false);
   const [localGenerating, setLocalGenerating] = useState(false);
-  // Removed showGmailAuth state - users already have Gmail access through main Google OAuth
+  const [showGmailAuth, setShowGmailAuth] = useState(false);
   const { toast } = useToast();
   
   // Check Gmail authorization status
@@ -50,7 +50,20 @@ export function EmailComposerModal({
   }) as { data?: { isLinked?: boolean; hasGmailAccess?: boolean; isActive?: boolean } };
   
   // Handle Gmail authorization
-  // Removed Gmail authorization mutation - users already have Gmail access through main Google OAuth
+  // Gmail authorization mutation - for sending emails specifically
+  const authorizeGmailMutation = useMutation({
+    mutationFn: async () => {
+      // Redirect to Gmail-specific authorization
+      window.location.href = '/api/auth/gmail/authorize';
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Authorization failed",
+        description: error.message || "Failed to start Gmail authorization",
+        variant: "destructive"
+      });
+    }
+  });
   
   // Handle Gmail unlink
   const unlinkGmailMutation = useMutation({
@@ -114,6 +127,9 @@ export function EmailComposerModal({
             description: `Your application has been sent to ${recipientEmail}`,
           });
           onClose();
+        } else if (data.needsGmailAuth) {
+          // User needs to authorize Gmail sending
+          setShowGmailAuth(true);
         } else {
           // Fall back to opening in email client
           if (data.gmailComposeUrl) {
@@ -128,12 +144,9 @@ export function EmailComposerModal({
           });
           onClose();
         }
-      } else if (data.requiresSignIn) {
-        toast({
-          title: "Sign in with Google required",
-          description: "To send emails directly from Gmail, please sign in with your Google account first.",
-          variant: "destructive"
-        });
+      } else if (data.needsGmailAuth) {
+        // Show Gmail authorization prompt
+        setShowGmailAuth(true);
       } else {
         toast({
           title: "Email not sent",
@@ -330,7 +343,48 @@ export function EmailComposerModal({
         </DialogFooter>
         
         {/* Gmail Authorization Prompt */}
-        {/* Removed Gmail authorization UI - users already have Gmail access through main Google OAuth */}
+        {showGmailAuth && (
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center rounded-lg">
+            <div className="bg-card p-6 rounded-lg shadow-lg max-w-md w-full mx-4 border">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                  <Mail className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="text-lg font-semibold">Enable Gmail Sending</h3>
+              </div>
+              
+              <p className="text-sm text-muted-foreground mb-4">
+                To send emails directly from your Gmail account, we need permission to send emails on your behalf. 
+                This is a one-time setup.
+              </p>
+              
+              <div className="bg-muted/50 p-3 rounded-md mb-4">
+                <p className="text-xs text-muted-foreground">
+                  <strong>Note:</strong> We only request permission to send emails. 
+                  We cannot read your existing emails or access your personal data.
+                </p>
+              </div>
+              
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowGmailAuth(false)}
+                  className="flex-1"
+                >
+                  Skip for now
+                </Button>
+                <Button
+                  onClick={() => authorizeGmailMutation.mutate()}
+                  disabled={authorizeGmailMutation.isPending}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                >
+                  <Mail className="h-4 w-4 mr-2" />
+                  Authorize Gmail
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

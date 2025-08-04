@@ -173,16 +173,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Google OAuth login with Gmail permissions
+  // Google OAuth login - basic authentication only
   app.get('/api/auth/google', 
     passport.authenticate('google', { 
-      scope: [
-        'profile', 
-        'email', 
-        'https://www.googleapis.com/auth/gmail.send',
-        'https://www.googleapis.com/auth/gmail.compose',
-        'https://www.googleapis.com/auth/gmail.modify'
-      ] 
+      scope: ['profile', 'email'] 
+    })
+  );
+
+  // Separate Gmail authorization endpoint - only for sending emails
+  app.get('/api/auth/gmail/authorize', isAuthenticated, 
+    passport.authenticate('google', { 
+      scope: ['https://www.googleapis.com/auth/gmail.send'],
+      accessType: 'offline',
+      prompt: 'consent',
+      state: 'gmail_auth' // To identify Gmail auth in callback
     })
   );
 
@@ -220,7 +224,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.redirect('/');
   });
 
-  // Google OAuth callback
+  // Google OAuth callback - handles both basic auth and Gmail auth
   app.get('/api/auth/google/callback',
     passport.authenticate('google', { failureRedirect: '/login' }),
     async (req: any, res) => {
@@ -229,6 +233,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await new Promise<void>((resolve) => {
           req.session.save(() => resolve());
         });
+
+        // Check if this was a Gmail authorization request
+        // We'll detect this by checking if we have Gmail tokens in the authInfo
+        const accessToken = req.authInfo?.accessToken;
+        const refreshToken = req.authInfo?.refreshToken;
+        
+        if (accessToken && refreshToken && req.query.state === 'gmail_auth') {
+          // This is a Gmail authorization - save the Gmail credentials
+          try {
+            const profile = req.user;
+            const accessToken = req.authInfo?.accessToken;
+            const refreshToken = req.authInfo?.refreshToken;
+
+            const { gmailCredentials } = await import('@shared/schema');
+            const expiresAt = new Date(Date.now() + 3600 * 1000); // 1 hour
+
+            await db.insert(gmailCredentials)
+              .values({
+                userId: req.user.id,
+                accessToken,
+                refreshToken,
+                expiresAt,
+                isActive: true,
+              })
+              .onConflictDoUpdate({
+                target: gmailCredentials.userId,
+                set: {
+                  accessToken,
+                  refreshToken,
+                  expiresAt,
+                  isActive: true,
+                  updatedAt: new Date(),
+                },
+              });
+
+            console.log('Gmail credentials saved for user:', req.user.email);
+            res.redirect('/?gmail_auth=success');
+            return;
+          } catch (error) {
+            console.error('Error saving Gmail credentials:', error);
+            res.redirect('/?gmail_auth=error');
+            return;
+          }
+        }
       }
       res.redirect('/');
     }
@@ -1006,9 +1054,9 @@ Format the email with proper structure including greeting, body paragraphs, and 
       if (!gmailCredentials || !gmailCredentials.isActive) {
         return res.json({
           success: false,
-          error: "No Gmail access available. Please sign in with Google to enable email sending.",
-          needsGmailAuth: false, // Don't trigger separate auth since main auth handles Gmail
-          requiresSignIn: true
+          error: "Gmail authorization required to send emails directly.",
+          needsGmailAuth: true, // Trigger Gmail-specific authorization
+          requiresSignIn: false
         });
       }
       
