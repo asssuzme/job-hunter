@@ -177,72 +177,74 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -2 }}
-      className="glass-card p-6 hover:shadow-xl transition-all duration-300"
+      className="glass-card p-4 md:p-6 hover:shadow-xl transition-all duration-300"
     >
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-start gap-4">
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
+        <div className="flex items-start gap-3 md:gap-4 min-w-0">
           {job.companyLogo ? (
             <img 
               src={job.companyLogo} 
               alt={`${job.companyName} logo`} 
-              className="w-14 h-14 rounded-xl object-cover ring-2 ring-primary/10" 
+              className="w-12 h-12 md:w-14 md:h-14 rounded-xl object-cover ring-2 ring-primary/10 flex-shrink-0" 
             />
           ) : (
-            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-              <Building className="h-7 w-7 text-primary" />
+            <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center flex-shrink-0">
+              <Building className="h-6 w-6 md:h-7 md:w-7 text-primary" />
             </div>
           )}
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <h3 
-              className="text-lg font-semibold hover:text-primary transition-colors cursor-pointer mb-2 flex items-center gap-2"
+              className="text-base md:text-lg font-semibold hover:text-primary transition-colors cursor-pointer mb-2 flex items-start gap-2"
               onClick={handleViewJob}
             >
-              {job.title}
-              <ExternalLink className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <span className="line-clamp-2">{job.title}</span>
+              <ExternalLink className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 hidden md:block" />
             </h3>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
+            <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs md:text-sm text-muted-foreground mb-3">
               <span 
                 className="font-medium hover:text-primary cursor-pointer transition-colors flex items-center gap-1"
                 onClick={handleViewCompany}
               >
-                <Building className="h-3 w-3" />
-                {job.companyName}
+                <Building className="h-3 w-3 flex-shrink-0" />
+                <span className="truncate">{job.companyName}</span>
               </span>
               <span className="flex items-center gap-1">
-                <MapPin className="h-3 w-3 mr-1" />
-                {job.location}
+                <MapPin className="h-3 w-3 flex-shrink-0" />
+                <span className="truncate">{job.location}</span>
               </span>
               {job.postedDate && (
                 <span className="flex items-center gap-1">
-                  <Clock className="h-3 w-3 mr-1" />
-                  {getRelativeTime(job.postedDate)}
+                  <Clock className="h-3 w-3 flex-shrink-0" />
+                  <span className="whitespace-nowrap">{getRelativeTime(job.postedDate)}</span>
                 </span>
               )}
               {job.salaryInfo && (
-                <span className="flex items-center">
-                  <DollarSign className="h-3 w-3 mr-1" />
-                  {job.salaryInfo}
+                <span className="flex items-center gap-1">
+                  <DollarSign className="h-3 w-3 flex-shrink-0" />
+                  <span className="truncate">{job.salaryInfo}</span>
                 </span>
               )}
             </div>
           </div>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2 justify-end md:justify-start md:flex-shrink-0">
           {job.canApply ? (
-            <Badge className="bg-primary/10 text-primary border-primary/20 font-semibold">
-              <CheckCircle className="h-3 w-3 mr-1" />
-              Can Apply
+            <Badge className="bg-primary/10 text-primary border-primary/20 font-semibold text-xs md:text-sm whitespace-nowrap">
+              <CheckCircle className="h-3 w-3 mr-1 flex-shrink-0" />
+              <span className="hidden sm:inline">Can Apply</span>
+              <span className="sm:hidden">Apply</span>
             </Badge>
           ) : (
-            <Badge className="bg-muted text-muted-foreground border-muted font-semibold">
-              <XCircle className="h-3 w-3 mr-1" />
-              Cannot Apply
+            <Badge className="bg-muted text-muted-foreground border-muted font-semibold text-xs md:text-sm whitespace-nowrap">
+              <XCircle className="h-3 w-3 mr-1 flex-shrink-0" />
+              <span className="hidden sm:inline">Cannot Apply</span>
+              <span className="sm:hidden">No</span>
             </Badge>
           )}
           {job.canApply && (
             <Button 
               size="sm" 
-              className="tech-btn"
+              className="tech-btn text-xs md:text-sm"
               onClick={handleApplyClick}
               disabled={applyStep !== 'idle'}
             >
@@ -283,20 +285,20 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
       
       {job.requirement && (
         <div className="mb-4">
-          <p className="text-sm text-gray-600 line-clamp-2">
+          <p className="text-xs md:text-sm text-gray-600 line-clamp-2">
             {job.requirement}
           </p>
         </div>
       )}
       
       {job.jobPosterName && (
-        <div className="mb-4 p-4 bg-primary/5 rounded-lg border border-primary/10">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center space-x-2">
-              <User className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Job Poster:</span>
+        <div className="mb-4 p-3 md:p-4 bg-primary/5 rounded-lg border border-primary/10">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+            <div className="flex items-center space-x-2 min-w-0">
+              <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <span className="text-xs md:text-sm font-medium whitespace-nowrap">Job Poster:</span>
               <span 
-                className="text-sm text-primary hover:underline cursor-pointer transition-colors"
+                className="text-xs md:text-sm text-primary hover:underline cursor-pointer transition-colors truncate"
                 onClick={handleViewPoster}
               >
                 {job.jobPosterName}
@@ -315,19 +317,21 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
           </div>
           {job.jobPosterEmail && (
             <div className="space-y-2 pt-2 border-t border-border">
-              <div className="flex items-center space-x-2">
-                <Mail className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium">Email:</span>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <div className="flex items-center space-x-2">
+                  <Mail className="h-4 w-4 text-primary flex-shrink-0" />
+                  <span className="text-xs md:text-sm font-medium">Email:</span>
+                </div>
                 <a 
                   href={`mailto:${job.jobPosterEmail}`}
-                  className="text-sm text-primary hover:underline transition-colors"
+                  className="text-xs md:text-sm text-primary hover:underline transition-colors break-all"
                 >
                   {job.jobPosterEmail}
                 </a>
                 {job.emailVerificationStatus && (
                   <Badge 
                     variant="secondary" 
-                    className={`text-xs ${
+                    className={`text-xs self-start sm:self-auto ${
                       job.emailVerificationStatus === 'valid' 
                         ? 'bg-primary/10 text-primary' 
                         : job.emailVerificationStatus === 'catch-all' 

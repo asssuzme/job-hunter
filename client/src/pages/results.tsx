@@ -789,18 +789,18 @@ export default function Results() {
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex justify-end mb-4"
+                className="flex justify-center md:justify-end mb-4"
               >
                 <Button
                   variant="default"
                   size="lg"
                   onClick={() => setShowProPlanModal(true)}
-                  className="relative overflow-hidden bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 hover:from-purple-700 hover:via-pink-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 px-6 py-3"
+                  className="relative overflow-hidden bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 hover:from-purple-700 hover:via-pink-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 px-4 md:px-6 py-2 md:py-3 text-sm md:text-base w-full md:w-auto max-w-xs md:max-w-none"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full animate-shimmer" />
-                  <Lock className="h-5 w-5 mr-2" />
-                  Apply to All Jobs ({canApplyJobs.length})
-                  <Badge variant="secondary" className="ml-2 bg-yellow-500 text-black">PRO</Badge>
+                  <Lock className="h-4 w-4 md:h-5 md:w-5 mr-2 flex-shrink-0" />
+                  <span className="whitespace-nowrap">Apply to All ({canApplyJobs.length})</span>
+                  <Badge variant="secondary" className="ml-2 bg-yellow-500 text-black text-xs flex-shrink-0">PRO</Badge>
                 </Button>
               </motion.div>
             )}
