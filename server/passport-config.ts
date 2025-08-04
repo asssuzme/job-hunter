@@ -4,7 +4,7 @@ import { db } from './db';
 import { users } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 
-// Configure Google OAuth strategy with Gmail scope included
+// Configure Google OAuth strategy - basic profile only
 passport.use(
   new GoogleStrategy(
     {
@@ -58,11 +58,8 @@ passport.use(
             .returning();
         }
 
-        console.log('User authenticated with scope, checking for Gmail tokens');
-        console.log('Has access token:', !!accessToken);
-        console.log('Has refresh token:', !!refreshToken);
-
-        return done(null, user);
+        // Pass tokens in authInfo for Gmail authorization
+        return done(null, user, { accessToken, refreshToken });
       } catch (error) {
         console.error('OAuth error:', error);
         return done(error as Error);

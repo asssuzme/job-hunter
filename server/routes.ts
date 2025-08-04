@@ -215,19 +215,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
     })(req, res, next);
   });
 
-  // Gmail authorization using Passport with Gmail scope
-  app.get('/api/auth/gmail/authorize', isAuthenticated, (req, res, next) => {
+  // Gmail authorization using direct OAuth2 - bypassing Passport for Gmail scope
+  app.get('/api/auth/gmail/authorize', isAuthenticated, async (req, res) => {
     console.log('Gmail authorization request from user:', (req.user as any)?.email);
+    console.log('User ID:', (req.user as any)?.id);
     
-    // Store the current user ID in session for later retrieval
-    req.session.gmailAuthUserId = (req.user as any).id;
+    try {
+      const { OAuth2Client } = await import('google-auth-library');
+      
+      // Use exact same configuration as Passport
+      const redirectUri = (process.env.NODE_ENV === 'production' || process.env.REPL_SLUG === 'workspace')
+        ? 'https://gigfloww.com/api/auth/gmail/callback'
+        : 'http://localhost:5000/api/auth/gmail/callback';
+      
+      const oauth2Client = new OAuth2Client(
+        process.env.GOOGLE_CLIENT_ID,
+        process.env.GOOGLE_CLIENT_SECRET,
+        redirectUri
+      );
+
+      const authUrl = oauth2Client.generateAuthUrl({
+        access_type: 'offline',
+        scope: ['https://www.googleapis.com/auth/gmail.send'],
+        prompt: 'consent',
+        state: JSON.stringify({ 
+          userId: (req.user as any).id,
+          type: 'gmail_auth'
+        })
+      });
+
+      console.log('Gmail OAuth URL generated:', authUrl);
+      console.log('Redirect URI used:', redirectUri);
+      res.redirect(authUrl);
+    } catch (error) {
+      console.error('Error creating Gmail auth URL:', error);
+      res.status(500).json({ message: 'Failed to create Gmail authorization URL' });
+    }
+  });
+
+  // Gmail OAuth callback - separate endpoint
+  app.get('/api/auth/gmail/callback', async (req, res) => {
+    console.log('Gmail callback received');
+    console.log('Query params:', req.query);
     
-    passport.authenticate('google', { 
-      scope: ['https://www.googleapis.com/auth/gmail.send'],
-      accessType: 'offline',
-      prompt: 'consent',
-      state: 'gmail_auth'
-    })(req, res, next);
+    try {
+      const { code, state, error } = req.query;
+      
+      if (error) {
+        console.error('Gmail OAuth error:', error);
+        return res.redirect(`/?error=gmail_${error}`);
+      }
+      
+      if (!code) {
+        console.error('No authorization code received');
+        return res.redirect('/?error=no_gmail_code');
+      }
+
+      const stateData = JSON.parse(state as string);
+      const userId = stateData.userId;
+      
+      console.log('Processing Gmail auth for user:', userId);
+
+      const { OAuth2Client } = await import('google-auth-library');
+      
+      const redirectUri = (process.env.NODE_ENV === 'production' || process.env.REPL_SLUG === 'workspace')
+        ? 'https://gigfloww.com/api/auth/gmail/callback'
+        : 'http://localhost:5000/api/auth/gmail/callback';
+      
+      const oauth2Client = new OAuth2Client(
+        process.env.GOOGLE_CLIENT_ID,
+        process.env.GOOGLE_CLIENT_SECRET,
+        redirectUri
+      );
+
+      // Exchange code for tokens
+      const { tokens } = await oauth2Client.getToken(code as string);
+      console.log('Gmail tokens received:', { 
+        hasAccess: !!tokens.access_token, 
+        hasRefresh: !!tokens.refresh_token,
+        expiryDate: tokens.expiry_date
+      });
+
+      // Save Gmail credentials
+      const { gmailCredentials } = await import('@shared/schema');
+      const expiresAt = new Date(tokens.expiry_date || Date.now() + 3600 * 1000);
+
+      await db.insert(gmailCredentials)
+        .values({
+          userId,
+          accessToken: tokens.access_token!,
+          refreshToken: tokens.refresh_token || '',
+          expiresAt,
+          isActive: true,
+        })
+        .onConflictDoUpdate({
+          target: gmailCredentials.userId,
+          set: {
+            accessToken: tokens.access_token!,
+            refreshToken: tokens.refresh_token || undefined,
+            expiresAt,
+            isActive: true,
+            updatedAt: new Date(),
+          },
+        });
+
+      console.log('Gmail credentials saved successfully for user:', userId);
+      res.redirect('/?gmail_auth=success');
+    } catch (error) {
+      console.error('Gmail callback error:', error);
+      res.redirect('/?error=gmail_callback_failed');
+    }
   });
 
 
@@ -325,79 +422,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.redirect('/?error=auth_failed');
       }
 
-      // Check if this is a Gmail authorization request
-      const isGmailAuth = req.query.state === 'gmail_auth';
-      let userId = req.user.id;
+      // Handle regular OAuth login only (Gmail handled separately)
+      console.log('Setting session userId:', req.user.id);
+      req.session.userId = req.user.id;
       
-      if (isGmailAuth && req.session.gmailAuthUserId) {
-        userId = req.session.gmailAuthUserId;
-        console.log('This is a Gmail authorization for user:', userId);
-      }
-
-      if (isGmailAuth) {
-        // Handle Gmail authorization - extract tokens and save them
-        try {
-          // Get the OAuth tokens from the Passport callback
-          const accessToken = (req as any).authInfo?.accessToken || (req.user as any).accessToken;
-          const refreshToken = (req as any).authInfo?.refreshToken || (req.user as any).refreshToken;
-          
-          console.log('Gmail tokens from callback:', { hasAccess: !!accessToken, hasRefresh: !!refreshToken });
-          
-          if (accessToken) {
-            const { gmailCredentials } = await import('@shared/schema');
-            const expiresAt = new Date(Date.now() + 3600 * 1000); // 1 hour
-
-            await db.insert(gmailCredentials)
-              .values({
-                userId,
-                accessToken,
-                refreshToken: refreshToken || '',
-                expiresAt,
-                isActive: true,
-              })
-              .onConflictDoUpdate({
-                target: gmailCredentials.userId,
-                set: {
-                  accessToken,
-                  refreshToken: refreshToken || undefined,
-                  expiresAt,
-                  isActive: true,
-                  updatedAt: new Date(),
-                },
-              });
-
-            console.log('Gmail credentials saved for user:', userId);
-            delete req.session.gmailAuthUserId; // Clean up
-            return res.redirect('/?gmail_auth=success');
+      // Force session save and wait for completion
+      await new Promise<void>((resolve, reject) => {
+        req.session.save((err: any) => {
+          if (err) {
+            console.error('Session save error:', err);
+            reject(err);
           } else {
-            console.error('No access token found in Gmail callback');
-            return res.redirect('/?error=no_gmail_token');
+            console.log('Session saved successfully');
+            resolve();
           }
-        } catch (error) {
-          console.error('Gmail token save error:', error);
-          return res.redirect('/?error=gmail_callback_failed');
-        }
-      } else {
-        // Handle regular OAuth login
-        console.log('Setting session userId:', req.user.id);
-        req.session.userId = req.user.id;
-        
-        // Force session save and wait for completion
-        await new Promise<void>((resolve, reject) => {
-          req.session.save((err) => {
-            if (err) {
-              console.error('Session save error:', err);
-              reject(err);
-            } else {
-              console.log('Session saved successfully');
-              resolve();
-            }
-          });
         });
+      });
 
-        console.log('OAuth login completed');
-        return res.redirect('/');
-      }
+      console.log('OAuth login completed');
+      return res.redirect('/');
     } catch (error) {
       console.error('OAuth callback error:', error);
       return res.redirect('/?error=callback_failed');
