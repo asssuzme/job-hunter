@@ -10,11 +10,10 @@ app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 // Session configuration
 app.set("trust proxy", 1);
 
-// Detect environment properly
+// Detect environment properly for gigfloww.com
 const hostname = process.env.REPL_SLUG || 'localhost';
 const isProduction = process.env.NODE_ENV === 'production' || 
-                     hostname.includes('gigfloww.com') || 
-                     process.env.REPLIT_DOMAIN?.includes('gigfloww.com') ||
+                     process.env.REPL_SLUG === 'workspace' || // This is the production repl
                      false;
 
 // Session configuration - simpler for production compatibility

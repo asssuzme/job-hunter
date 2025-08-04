@@ -10,10 +10,9 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      // Use full URL for production compatibility (revert to working version)
+      // Explicit callback URL for Google Cloud Console compatibility
       callbackURL: process.env.NODE_ENV === 'production' || 
-                   process.env.REPL_SLUG?.includes('gigfloww.com') ||
-                   process.env.REPLIT_DOMAIN?.includes('gigfloww.com')
+                   process.env.REPL_SLUG?.includes('workspace')
         ? 'https://gigfloww.com/api/auth/google/callback'
         : 'http://localhost:5000/api/auth/google/callback',
     },

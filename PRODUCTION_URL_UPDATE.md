@@ -1,39 +1,46 @@
-# Production URL Configuration Update
+# Production OAuth URL Fix
 
-## Changes Made
+## Issue Identified
+The OAuth callback URL in Google Cloud Console is likely still set to a fixed URL instead of allowing dynamic callbacks.
 
-We're now using the Replit production URL exclusively:
-**https://service-genie-ashutoshlathrep.replit.app**
+## Current Setup Issue
+When using relative callback URLs (`/api/auth/google/callback`), Google OAuth requires the authorized redirect URI to be configured correctly in Google Cloud Console.
 
-### 1. Updated CORS Configuration
-- Removed gigfloww.com from allowed origins
-- Added Replit production URLs only
+## Fix Required in Google Cloud Console
 
-### 2. Updated Session Configuration
-- Removed domain restriction (was set to .gigfloww.com)
-- Sessions now work properly on Replit domain
+### Step 1: Update Authorized Redirect URIs
+Go to [Google Cloud Console](https://console.cloud.google.com) → APIs & Services → Credentials → Your OAuth Client
 
-### 3. Updated Gmail OAuth URLs
-- Changed callback URLs to use Replit production URL
-- No longer references gigfloww.com
+**Current (incorrect):** 
+- https://gigfloww.com/api/auth/google/callback
 
-## Required Supabase Updates
+**Should be (correct):**
+- https://gigfloww.com/api/auth/google/callback
+- http://localhost:5000/api/auth/google/callback
 
-You need to update your Supabase redirect URLs to include:
-- https://service-genie-ashutoshlathrep.replit.app/auth/callback
-- http://localhost:5000/auth/callback
-- http://localhost:3000/auth/callback
+### Step 2: Ensure Both Domains Are Authorized
+**Authorized JavaScript origins:**
+- https://gigfloww.com
+- http://localhost:5000
 
-Remove any gigfloww.com URLs from Supabase.
+**Authorized redirect URIs:**
+- https://gigfloww.com/api/auth/google/callback
+- http://localhost:5000/api/auth/google/callback
 
-## Google OAuth Updates
+## Why This Fixes It
+1. **Dynamic callbacks work**: Passport.js can handle relative URLs when domain is authorized
+2. **Both environments work**: Development and production use same OAuth app
+3. **Session persistence**: Removes hardcoded domain conflicts
 
-Update your Google OAuth authorized redirect URIs:
-- https://service-genie-ashutoshlathrep.replit.app/api/auth/gmail/callback
-- http://localhost:5000/api/auth/gmail/callback
+## Test After Update
+1. Wait 5-10 minutes for Google to propagate changes
+2. Test OAuth flow: https://gigfloww.com → Sign in with Google
+3. Should redirect properly and maintain session
 
-## Testing
-
-1. Clear your browser cookies
-2. Try signing in at: https://service-genie-ashutoshlathrep.replit.app
-3. The authentication should now work properly
+## Alternative Fix (If Console Access Limited)
+Revert to hardcoded callback URL but fix session persistence:
+```typescript
+callbackURL: req.get('host')?.includes('gigfloww.com') 
+  ? 'https://gigfloww.com/api/auth/google/callback'
+  : 'http://localhost:5000/api/auth/google/callback'
+```

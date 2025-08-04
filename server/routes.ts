@@ -199,12 +199,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Google OAuth login - basic authentication only
-  app.get('/api/auth/google', 
+  // Google OAuth initiation - basic profile only
+  app.get('/api/auth/google', (req, res, next) => {
+    console.log('OAuth initiation from host:', req.get('host'));
     passport.authenticate('google', { 
-      scope: ['profile', 'email'] 
-    })
-  );
+      scope: ['profile', 'email'],
+      accessType: 'offline',
+      prompt: 'consent'
+    })(req, res, next);
+  });
 
   // Separate Gmail authorization endpoint - only for sending emails
   app.get('/api/auth/gmail/authorize', isAuthenticated, (req, res, next) => {
@@ -267,6 +270,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('OAuth callback received from:', req.get('host'));
     console.log('Query params:', req.query);
     console.log('Error param:', req.query.error);
+    console.log('Session ID before auth:', req.sessionID);
     
     // Handle OAuth errors specifically
     if (req.query.error) {
@@ -276,7 +280,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     passport.authenticate('google', { 
       failureRedirect: '/?error=oauth_failed',
-      failureFlash: true 
+      failureFlash: false // Disable flash to avoid session conflicts
     })(req, res, next);
   }, async (req: any, res) => {
     console.log('OAuth callback success handler - User:', req.user?.email);
