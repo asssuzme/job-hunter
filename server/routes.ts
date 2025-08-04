@@ -204,34 +204,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // === AUTHENTICATION ROUTES ===
   
-  // Direct session fix - bypass complex session issues
+  // Get current user with simple session check
   app.get("/api/auth/user", async (req, res) => {
     console.log('Session check - ID:', req.sessionID);
     console.log('Session userId:', req.session.userId);
     
-    // Emergency session fix - check if there's a test user session
     if (!req.session.userId) {
-      // Try to find any valid test user to restore session
-      const [testUser] = await db
-        .select()
-        .from(users)
-        .where(eq(users.email, 'session-fix@test.com'))
-        .limit(1);
-      
-      if (testUser) {
-        req.session.userId = testUser.id;
-        console.log('Session restored for test user');
-        return res.json({
-          id: testUser.id,
-          email: testUser.email,
-          firstName: testUser.firstName,
-          lastName: testUser.lastName,
-          profileImageUrl: testUser.profileImageUrl,
-        });
-      }
-      
       return res.status(401).json({ 
-        message: 'Not logged in - go to /session-fix-test to login'
+        message: 'Unauthorized'
       });
     }
     
