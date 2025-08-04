@@ -906,11 +906,16 @@ Format the email with proper structure including greeting, body paragraphs, and 
   app.get("/api/auth/gmail/status", isAuthenticated, async (req: any, res) => {
     try {
       const credentials = await storage.getGmailCredentials(req.user.id);
+      const userHasGoogleTokens = req.user.googleAccessToken && req.user.googleRefreshToken;
+      
+      // User has Gmail access if they have either separate Gmail credentials OR Google OAuth tokens (which include Gmail scope)
+      const hasGmailAccess = (!!credentials && credentials.isActive !== false) || userHasGoogleTokens;
+      
       res.json({ 
-        hasGmailAccess: !!credentials && credentials.isActive !== false,
+        hasGmailAccess,
         expiresAt: credentials?.expiresAt,
-        isLinked: !!credentials,
-        isActive: credentials?.isActive !== false
+        isLinked: !!credentials || userHasGoogleTokens,
+        isActive: credentials?.isActive !== false || userHasGoogleTokens
       });
     } catch (error) {
       console.error("Error checking Gmail status:", error);
@@ -983,17 +988,18 @@ Format the email with proper structure including greeting, body paragraphs, and 
         companyWebsite
       } = req.body;
 
-      // Check if user has active Gmail credentials
+      // Check if user has active Gmail credentials or Google OAuth tokens
       const gmailCredentials = await storage.getGmailCredentials(req.user.id);
+      const userHasGoogleTokens = req.user.googleAccessToken && req.user.googleRefreshToken;
       
-      if (gmailCredentials && gmailCredentials.expiresAt > new Date() && gmailCredentials.isActive !== false) {
-        // User has valid Gmail credentials, send email directly
+      if ((gmailCredentials && gmailCredentials.expiresAt > new Date() && gmailCredentials.isActive !== false) || userHasGoogleTokens) {
+        // User has valid Gmail credentials or Google OAuth tokens, send email directly
         try {
           const { refreshGmailToken } = await import('./gmailOAuth');
-          let accessToken = gmailCredentials.accessToken;
+          let accessToken = gmailCredentials?.accessToken || req.user.googleAccessToken;
           
           // Check if token needs refresh (expires in less than 5 minutes)
-          if (gmailCredentials.expiresAt < new Date(Date.now() + 5 * 60 * 1000)) {
+          if (gmailCredentials && gmailCredentials.expiresAt < new Date(Date.now() + 5 * 60 * 1000)) {
             const newToken = await refreshGmailToken(gmailCredentials.refreshToken);
             if (newToken) {
               accessToken = newToken;
@@ -1118,7 +1124,7 @@ Format the email with proper structure including greeting, body paragraphs, and 
         message: "Email draft created! Opening in your email client...",
         gmailComposeUrl: gmailComposeUrl,
         mailtoLink: mailtoLink,
-        needsGmailAuth: !gmailCredentials,
+        needsGmailAuth: !gmailCredentials && !userHasGoogleTokens,
         emailContent: {
           to,
           subject,

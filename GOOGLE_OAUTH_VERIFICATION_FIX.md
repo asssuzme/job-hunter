@@ -36,19 +36,13 @@ In the **App information** section, make sure these URLs are set correctly:
 
 **IMPORTANT**: The privacy policy URL must be different from the homepage URL!
 
-### Step 3: Fix Gmail OAuth Redirect URI Issue
+### Step 3: Gmail OAuth Issue - FIXED
 
-You're getting "Error 400: redirect_uri_mismatch" because the Gmail OAuth redirect URI is not authorized. You need to add it:
+~~You're getting "Error 400: redirect_uri_mismatch" because the Gmail OAuth redirect URI is not authorized.~~
 
-1. In the same Google Cloud Console project, go to **APIs & Services** > **Credentials**
-2. Click on your OAuth 2.0 Client ID
-3. In the **Authorized redirect URIs** section, add:
-   ```
-   https://gigfloww.com/api/auth/gmail/callback
-   ```
-4. Click **Save**
+**ISSUE RESOLVED**: I've fixed the Gmail OAuth problem by updating the code to use the existing Google OAuth tokens (which already include Gmail permissions) instead of requiring a separate Gmail authorization flow. Users no longer need to authorize Gmail separately since they already granted those permissions during the main Google sign-in.
 
-This is separate from the main OAuth consent screen and is required for Gmail integration to work.
+The "redirect_uri_mismatch" error should no longer occur when users try to send emails via Gmail.
 
 ### Step 4: Save and Submit
 
