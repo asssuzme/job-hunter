@@ -58,32 +58,8 @@ passport.use(
             .returning();
         }
 
-        // Save Gmail credentials if we have tokens with Gmail scope
-        if (accessToken && refreshToken) {
-          console.log('Saving Gmail credentials for user:', user.email);
-          
-          const { gmailCredentials } = await import('@shared/schema');
-          const expiresAt = new Date(Date.now() + 3600 * 1000); // 1 hour
-
-          await db.insert(gmailCredentials)
-            .values({
-              userId: user.id,
-              accessToken,
-              refreshToken,
-              expiresAt,
-              isActive: true,
-            })
-            .onConflictDoUpdate({
-              target: gmailCredentials.userId,
-              set: {
-                accessToken,
-                refreshToken,
-                expiresAt,
-                isActive: true,
-                updatedAt: new Date(),
-              },
-            });
-        }
+        // Don't save Gmail credentials here - only basic auth
+        console.log('User authenticated with basic scope:', user.email);
 
         return done(null, user);
       } catch (error) {

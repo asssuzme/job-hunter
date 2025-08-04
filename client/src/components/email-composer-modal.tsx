@@ -49,11 +49,11 @@ export function EmailComposerModal({
     enabled: isOpen
   }) as { data?: { authorized?: boolean; needsRefresh?: boolean; email?: string } };
   
-  // Handle Gmail re-authorization if needed
-  const reauthorizeGmailMutation = useMutation({
+  // Handle Gmail authorization - separate from login
+  const authorizeGmailMutation = useMutation({
     mutationFn: async () => {
-      // Redirect to Google OAuth to get fresh Gmail permissions
-      window.location.href = '/api/auth/google';
+      // Redirect to separate Gmail authorization endpoint
+      window.location.href = '/api/auth/gmail/authorize';
     },
     onError: (error: any) => {
       toast({
@@ -360,8 +360,8 @@ export function EmailComposerModal({
               </div>
               
               <p className="text-sm text-muted-foreground mb-4">
-                To send emails directly from your Gmail account, we need permission to send emails on your behalf. 
-                This is a one-time setup.
+                To send emails directly from Gmail, we need permission to send emails on your behalf. 
+                You can use any Gmail account - it doesn't have to be the same one you signed in with.
               </p>
               
               <div className="bg-muted/50 p-3 rounded-md mb-4">
@@ -370,7 +370,7 @@ export function EmailComposerModal({
                   We cannot read your existing emails or access your personal data.
                 </p>
                 <p className="text-xs text-muted-foreground mt-2">
-                  <strong>Having issues?</strong> You can also copy the email and send it manually from your Gmail.
+                  <strong>Different account:</strong> You can authorize any Gmail account, not just your login account.
                 </p>
               </div>
               
@@ -392,8 +392,8 @@ export function EmailComposerModal({
                   Use Email App
                 </Button>
                 <Button
-                  onClick={() => reauthorizeGmailMutation.mutate()}
-                  disabled={reauthorizeGmailMutation.isPending}
+                  onClick={() => authorizeGmailMutation.mutate()}
+                  disabled={authorizeGmailMutation.isPending}
                   className="flex-1 bg-blue-600 hover:bg-blue-700"
                 >
                   <Mail className="h-4 w-4 mr-2" />
