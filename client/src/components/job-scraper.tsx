@@ -519,9 +519,9 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
           />
         </div>
 
-        <div className="relative z-10 w-full max-w-2xl px-4">
+        <div className="relative z-10 w-full max-w-sm sm:max-w-lg lg:max-w-2xl px-4">
           <motion.div 
-            className="space-y-8"
+            className="space-y-6 sm:space-y-8"
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
@@ -575,7 +575,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
             </AnimatePresence>
 
             {/* Main Loading Container */}
-            <div className="text-center space-y-6">
+            <div className="text-center space-y-4 sm:space-y-6">
               <motion.div className="relative inline-block">
                 {/* Pulsing glow behind icon */}
                 <motion.div
@@ -603,7 +603,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
                     ease: "easeInOut"
                   }}
                 >
-                  <Search className="h-24 w-24 text-primary relative z-10" />
+                  <Search className="h-16 w-16 sm:h-20 sm:w-20 lg:h-24 lg:w-24 text-primary relative z-10" />
                   {/* AI sparkles */}
                   {[...Array(3)].map((_, i) => (
                     <motion.div
@@ -632,7 +632,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
 
               <div className="space-y-3">
                 <motion.h2 
-                  className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+                  className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
                   key={getStatusMessage()}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -641,7 +641,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
                   {getStatusMessage()}
                 </motion.h2>
                 <motion.p 
-                  className="text-lg text-muted-foreground"
+                  className="text-sm sm:text-base lg:text-lg text-muted-foreground px-2"
                   key={getEstimatedTime()}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -667,8 +667,8 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
                 }}
               />
               
-              <div className="relative bg-background/80 backdrop-blur-xl rounded-full p-6 border border-primary/20">
-                <div className="space-y-4">
+              <div className="relative bg-background/80 backdrop-blur-xl rounded-full p-4 sm:p-6 border border-primary/20">
+                <div className="space-y-3 sm:space-y-4">
                   <div className="flex justify-between items-center">
                     <motion.span 
                       className="text-sm font-medium flex items-center gap-2"
@@ -683,7 +683,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
                       Processing
                     </motion.span>
                     <motion.span 
-                      className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+                      className="text-lg sm:text-xl lg:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
                       key={getProgressPercentage()}
                       initial={{ scale: 1.2, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
@@ -693,7 +693,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
                     </motion.span>
                   </div>
                   
-                  <div className="relative h-6 bg-secondary/30 rounded-full overflow-hidden">
+                  <div className="relative h-4 sm:h-6 bg-secondary/30 rounded-full overflow-hidden">
                     <motion.div
                       className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
                       style={{ width: `${animatedProgress}%` }}
@@ -730,7 +730,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.5 }}
             >
-              <p className="text-muted-foreground italic">{dynamicMessage}</p>
+              <p className="text-muted-foreground italic text-sm sm:text-base px-2">{dynamicMessage}</p>
             </motion.div>
 
             {/* Cancel Button */}
@@ -744,10 +744,11 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
                 variant="outline"
                 size="lg"
                 onClick={handleAbort}
-                className="gap-2"
+                className="gap-2 text-sm sm:text-base px-4 sm:px-6 h-10 sm:h-12"
               >
                 <X className="h-4 w-4" />
-                Cancel Search
+                <span className="hidden sm:inline">Cancel Search</span>
+                <span className="sm:hidden">Cancel</span>
               </Button>
             </motion.div>
           </motion.div>
@@ -757,16 +758,16 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
   }
 
   return (
-    <div className="space-y-4 md:space-y-6">
+    <div className="space-y-4 sm:space-y-5 md:space-y-6">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 md:space-y-6">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 sm:space-y-5 md:space-y-6">
           {/* Job Keyword Combobox */}
           <FormField
             control={form.control}
             name="keyword"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm font-medium flex items-center gap-2 mb-2">
+                <FormLabel className="text-sm sm:text-base font-medium flex items-center gap-2 mb-2">
                   <Briefcase className="h-4 w-4 text-primary" />
                   Job Keyword
                 </FormLabel>
@@ -782,15 +783,15 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
                         )}
                         disabled={isProcessing}
                       >
-                        <div className="flex items-center">
-                          <Briefcase className="mr-2 h-5 w-5 text-muted-foreground" />
-                          {field.value || "Select or type a job role..."}
+                        <div className="flex items-center min-w-0">
+                          <Briefcase className="mr-2 h-4 sm:h-5 w-4 sm:w-5 text-muted-foreground flex-shrink-0" />
+                          <span className="truncate">{field.value || "Select or type a job role..."}</span>
                         </div>
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
-                  <PopoverContent className="w-full p-0" align="start">
+                  <PopoverContent className="w-[--radix-popover-trigger-width] max-h-[300px] p-0" align="start" side="bottom">
                     <Command>
                       <CommandInput 
                         placeholder="Search or type custom role..." 
@@ -832,7 +833,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
                     </Command>
                   </PopoverContent>
                 </Popover>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground px-1">
                   Choose from popular roles or type your own
                 </p>
                 <FormMessage />
@@ -846,7 +847,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
             name="location"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm font-medium flex items-center gap-2 mb-2">
+                <FormLabel className="text-sm sm:text-base font-medium flex items-center gap-2 mb-2">
                   <MapPin className="h-4 w-4 text-primary" />
                   Location
                 </FormLabel>
@@ -862,15 +863,15 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
                         )}
                         disabled={isProcessing}
                       >
-                        <div className="flex items-center">
-                          <MapPin className="mr-2 h-5 w-5 text-muted-foreground" />
-                          {field.value || "Select or type a location..."}
+                        <div className="flex items-center min-w-0">
+                          <MapPin className="mr-2 h-4 sm:h-5 w-4 sm:w-5 text-muted-foreground flex-shrink-0" />
+                          <span className="truncate">{field.value || "Select or type a location..."}</span>
                         </div>
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
-                  <PopoverContent className="w-full p-0" align="start">
+                  <PopoverContent className="w-[--radix-popover-trigger-width] max-h-[300px] p-0" align="start" side="bottom">
                     <Command>
                       <CommandInput 
                         placeholder="Search city..." 
@@ -932,13 +933,13 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
             name="workType"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm font-medium flex items-center gap-2 mb-2">
+                <FormLabel className="text-sm sm:text-base font-medium flex items-center gap-2 mb-2">
                   <Globe className="h-4 w-4 text-primary" />
                   Work Type
                 </FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger className="glass-input h-12 text-base" disabled={isProcessing}>
+                    <SelectTrigger className="glass-input h-12 sm:h-14 text-sm sm:text-base" disabled={isProcessing}>
                       <SelectValue placeholder="Select work type" />
                     </SelectTrigger>
                   </FormControl>
@@ -948,7 +949,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
                     <SelectItem value="3">Hybrid</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground px-1">
                   Select your preferred work arrangement
                 </p>
                 <FormMessage />
@@ -963,7 +964,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
             transition={{ delay: 0.1 }}
             className="space-y-2"
           >
-            <label className="text-sm font-medium flex items-center gap-2 mb-2">
+            <label className="text-sm sm:text-base font-medium flex items-center gap-2 mb-2">
               <FileText className="h-4 w-4 text-primary" />
               Resume {hasExistingResume ? '' : '(Required)'}
               {!hasExistingResume && (
@@ -972,25 +973,25 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
             </label>
             
             {isLoadingResume ? (
-              <div className="glass-card p-4 md:p-6 border border-primary/20 min-h-[120px] flex items-center justify-center">
+              <div className="glass-card p-3 sm:p-4 md:p-6 border border-primary/20 min-h-[100px] sm:min-h-[120px] flex items-center justify-center">
                 <div className="flex items-center gap-3 text-muted-foreground">
                   <Loader2 className="h-5 w-5 animate-spin" />
-                  <span>Loading your saved resume...</span>
+                  <span className="text-sm sm:text-base">Loading your saved resume...</span>
                 </div>
               </div>
             ) : hasExistingResume ? (
               // Show existing resume info with link to settings to change
-              <div className="glass-card p-4 md:p-6 border border-green-500/20 bg-green-500/5 min-h-[120px] flex items-center">
-                <div className="w-full flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-full bg-green-500/10">
-                      <CheckCircle className="h-6 w-6 text-green-600" />
+              <div className="glass-card p-3 sm:p-4 md:p-6 border border-green-500/20 bg-green-500/5 min-h-[100px] sm:min-h-[120px] flex items-center">
+                <div className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                    <div className="p-2 sm:p-3 rounded-full bg-green-500/10 flex-shrink-0">
+                      <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
                     </div>
-                    <div>
-                      <p className="font-medium text-green-800 dark:text-green-200">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-green-800 dark:text-green-200 text-sm sm:text-base truncate">
                         {resumeFileName || 'Resume Loaded'}
                       </p>
-                      <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                      <p className="text-xs sm:text-sm text-green-600 dark:text-green-400 mt-1">
                         Your saved resume will be used automatically
                       </p>
                     </div>
@@ -1000,7 +1001,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
                     variant="outline"
                     size="sm"
                     onClick={() => window.open('/settings', '_blank')}
-                    className="text-xs border-green-500/30 text-green-700 dark:text-green-300 hover:bg-green-500/10"
+                    className="text-xs border-green-500/30 text-green-700 dark:text-green-300 hover:bg-green-500/10 w-full sm:w-auto"
                   >
                     Change in Settings
                   </Button>
@@ -1008,7 +1009,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
               </div>
             ) : (
               // Show upload interface for new users
-              <div className={`glass-card p-4 md:p-6 border-dashed border-2 transition-all cursor-pointer group min-h-[120px] flex items-center ${
+              <div className={`glass-card p-3 sm:p-4 md:p-6 border-dashed border-2 transition-all cursor-pointer group min-h-[100px] sm:min-h-[120px] flex items-center ${
                 !resumeText ? 'border-red-500/30 hover:border-red-500/50' : 'border-primary/20 hover:border-primary/40'
               }`}>
                 <input
@@ -1025,12 +1026,12 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
                   className="w-full flex flex-col items-center justify-center gap-3"
                   disabled={isProcessing}
                 >
-                  <div className="p-3 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                    <Upload className="h-6 w-6 text-primary" />
+                  <div className="p-2 sm:p-3 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                    <Upload className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                   </div>
                   <div className="text-center">
-                    <p className="font-medium">Drop your resume here</p>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="font-medium text-sm sm:text-base">Drop your resume here</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                       <span className="text-red-500">Required for first search</span> • Supports .txt, .pdf, and image files
                     </p>
                     <p className="text-xs text-muted-foreground">
@@ -1046,7 +1047,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
           <Button
             type="submit"
             disabled={isProcessing || (!hasExistingResume && !resumeText)}
-            className={`w-full h-12 text-base ${
+            className={`w-full h-12 sm:h-14 text-sm sm:text-base ${
               (!hasExistingResume && !resumeText) 
                 ? 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed' 
                 : 'btn-primary'
@@ -1056,17 +1057,20 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
             {isProcessing ? (
               <>
                 <DotsLoader className="mr-2" />
-                Processing...
+                <span className="hidden sm:inline">Processing...</span>
+                <span className="sm:hidden">Processing</span>
               </>
             ) : (!hasExistingResume && !resumeText) ? (
               <>
-                <Upload className="h-5 w-5 mr-2" />
-                Upload Resume to Continue
+                <Upload className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                <span className="hidden sm:inline">Upload Resume to Continue</span>
+                <span className="sm:hidden">Upload Resume</span>
               </>
             ) : (
               <>
-                <Search className="h-5 w-5 mr-2" />
-                Start Job Search
+                <Search className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                <span className="hidden sm:inline">Start Job Search</span>
+                <span className="sm:hidden">Search Jobs</span>
               </>
             )}
           </Button>
