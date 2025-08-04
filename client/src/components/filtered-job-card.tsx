@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { MapPin, ExternalLink, User, Briefcase, DollarSign, Mail, CheckCircle, XCircle, Send, Loader2, Sparkles, Globe, Building } from "lucide-react";
 import { CompanyProfileModal } from "./company-profile-modal";
 import { EmailComposerModal } from "./email-composer-modal";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { motion } from "framer-motion";
 
@@ -17,9 +17,16 @@ interface FilteredJobCardProps {
 export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
   const [showCompanyModal, setShowCompanyModal] = useState(false);
   const [showEmailComposer, setShowEmailComposer] = useState(false);
+  const [showGmailAuth, setShowGmailAuth] = useState(false);
   const [companyProfile, setCompanyProfile] = useState<any>(null);
   const [generatedEmail, setGeneratedEmail] = useState<string>("");
   const [isGeneratingEmail, setIsGeneratingEmail] = useState(false);
+
+  // Check Gmail authorization status
+  const { data: gmailStatus, refetch: refetchGmailStatus } = useQuery({
+    queryKey: ['/api/auth/gmail/status'],
+    enabled: false // Only fetch when needed
+  }) as { data?: { authorized?: boolean; needsRefresh?: boolean; email?: string }; refetch: () => void };
 
   const companyMutation = useMutation({
     mutationFn: async (companyLinkedinUrl: string) => {
@@ -84,16 +91,42 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
     }
   };
 
-  const handleApplyClick = () => {
-    setShowEmailComposer(true);
-    // Generate email if not already generated
-    if (!generatedEmail && !isGeneratingEmail) {
-      if (job.companyLinkedinUrl) {
-        setShowCompanyModal(true);
-        companyMutation.mutate(job.companyLinkedinUrl);
+  const handleApplyClick = async () => {
+    try {
+      // First check Gmail authorization status
+      const result = await refetchGmailStatus();
+      const status = result.data;
+      
+      if (!status?.authorized || status?.needsRefresh) {
+        // User needs Gmail authorization first
+        setShowGmailAuth(true);
       } else {
-        // Generate email without company data
-        generateApplicationEmail(null);
+        // User has Gmail authorization, proceed with auto-generation
+        setShowEmailComposer(true);
+        
+        // Auto-generate email if not already generated
+        if (!generatedEmail && !isGeneratingEmail) {
+          if (job.companyLinkedinUrl) {
+            setShowCompanyModal(true);
+            companyMutation.mutate(job.companyLinkedinUrl);
+          } else {
+            // Generate email without company data
+            generateApplicationEmail(null);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error checking Gmail status:', error);
+      // If error checking status, proceed with showing the email composer
+      setShowEmailComposer(true);
+      
+      if (!generatedEmail && !isGeneratingEmail) {
+        if (job.companyLinkedinUrl) {
+          setShowCompanyModal(true);
+          companyMutation.mutate(job.companyLinkedinUrl);
+        } else {
+          generateApplicationEmail(null);
+        }
       }
     }
   };
@@ -352,6 +385,51 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
         isGeneratingEmail={isGeneratingEmail}
       />
       
+      {/* Gmail Authorization Prompt */}
+      {showGmailAuth && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-card p-6 rounded-lg shadow-lg max-w-md w-full mx-4 border">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                <Mail className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <h3 className="text-lg font-semibold">Enable Gmail Sending</h3>
+            </div>
+            
+            <p className="text-sm text-muted-foreground mb-4">
+              To send job applications directly, we need permission to send emails on your behalf. 
+              You can use any Gmail account for sending.
+            </p>
+            
+            <div className="bg-muted/50 p-3 rounded-md mb-4">
+              <p className="text-xs text-muted-foreground">
+                <strong>Privacy:</strong> We only request email sending permission. 
+                We cannot read your emails or access personal data.
+              </p>
+            </div>
+            
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowGmailAuth(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  window.location.href = '/api/auth/gmail/authorize';
+                }}
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+              >
+                <Mail className="h-4 w-4 mr-2" />
+                Authorize Gmail
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Email Composer Modal */}
       <EmailComposerModal 
         isOpen={showEmailComposer}
@@ -364,6 +442,7 @@ export function FilteredJobCard({ job, resumeText }: FilteredJobCardProps) {
         generatedEmail={generatedEmail}
         isGeneratingEmail={isGeneratingEmail}
         onRegenerateEmail={handleRegenerateEmail}
+        showRegenerateButton={!generatedEmail}
       />
     </motion.div>
   );

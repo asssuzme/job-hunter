@@ -22,6 +22,7 @@ interface EmailComposerModalProps {
   generatedEmail: string;
   isGeneratingEmail: boolean;
   onRegenerateEmail: () => void;
+  showRegenerateButton?: boolean;
 }
 
 export function EmailComposerModal({
@@ -34,7 +35,8 @@ export function EmailComposerModal({
   companyWebsite,
   generatedEmail,
   isGeneratingEmail,
-  onRegenerateEmail
+  onRegenerateEmail,
+  showRegenerateButton = true
 }: EmailComposerModalProps) {
   const [emailContent, setEmailContent] = useState(generatedEmail);
   const [subject, setSubject] = useState(`Application for ${jobTitle} position at ${companyName}`);
@@ -236,7 +238,7 @@ export function EmailComposerModal({
                     This may take 10-15 seconds
                   </div>
                 </div>
-              ) : (
+              ) : showRegenerateButton ? (
                 <Button
                   variant="outline"
                   size="sm"
@@ -253,7 +255,7 @@ export function EmailComposerModal({
                   <Sparkles className="h-3 w-3 mr-1" />
                   Regenerate Email
                 </Button>
-              )}
+              ) : null}
             </div>
             <Textarea
               id="email-content"

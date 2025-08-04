@@ -52,6 +52,13 @@ Preferred communication style: Simple, everyday language.
   - Progressive permission model: basic auth first, Gmail permissions only when needed for email sending
   - Fixed all authentication errors by maintaining consistent OAuth client configuration within each flow
 
+- **2025-08-04**: Enhanced Apply button UX with smart Gmail flow:
+  - **New users**: Apply button first checks Gmail authorization, shows Gmail setup prompt if needed
+  - **Authorized users**: Apply button automatically generates and shows email (no regenerate button needed)
+  - Streamlined experience eliminates manual regenerate step for users with Gmail permissions
+  - Added Gmail authorization modal with privacy-focused messaging directly in job cards
+  - Email composer now conditionally shows regenerate button only when email hasn't been auto-generated
+
 - **2025-08-04**: Updated all contact email addresses site-wide to team@gigfloww.com:
   - Replaced all instances of autoapply.ai email addresses across footer, contact page, legal pages
   - Consolidated all support/privacy/legal/DPO emails to single email: team@gigfloww.com
