@@ -42,18 +42,15 @@ Preferred communication style: Simple, everyday language.
   - Extended cancel functionality to results page for viewing ongoing searches
   - Added X close button and Cancel Search button to results page loading animation
 
-- **2025-08-04**: Implemented two-step OAuth flow with minimal Gmail permissions:
-  - Split authentication into two steps: basic Google auth first, Gmail permissions only when needed
-  - Initial sign-up now only requests basic Google scopes (profile, email) - no Gmail permissions upfront
-  - Created separate Gmail authorization endpoint (/api/auth/gmail/authorize) for email sending
-  - Reduced Gmail permissions to minimum required scope (gmail.send only) - removed unnecessary draft/read/compose/modify scopes
-  - Updated frontend to show Gmail authorization prompt only when users try to send their first email
-  - Added clear privacy messaging explaining that only email sending permission is requested
-  - Improved user experience by requesting permissions progressively rather than all at once
-  - Fixed session persistence issues and callback handling for both auth flows
-  - **Production Issue**: "invalid_credentials" error on gigfloww.com requires Google OAuth app configuration update
-  - Added diagnostic endpoint (/api/oauth-debug) and comprehensive fix guide (PRODUCTION_OAUTH_FIX.md)
-  - Enhanced error handling to show specific OAuth error messages to users
+- **2025-08-04**: Successfully implemented two-step OAuth flow with completely separate authentication flows:
+  - **Regular Login**: Uses Passport.js with basic Google scopes (profile, email) via /api/auth/google/callback
+  - **Gmail Authorization**: Uses direct OAuth2Client with gmail.send scope only via /api/auth/gmail/callback
+  - **Key Innovation**: Completely separate OAuth flows prevent configuration mismatches that caused "invalid_credentials" errors
+  - Users can login with any Google account and authorize Gmail sending with a different Gmail account
+  - Added /api/auth/gmail/callback to Google Cloud Console authorized redirect URIs
+  - Eliminated session persistence issues by keeping OAuth flows independent
+  - Progressive permission model: basic auth first, Gmail permissions only when needed for email sending
+  - Fixed all authentication errors by maintaining consistent OAuth client configuration within each flow
 
 - **2025-08-04**: Updated all contact email addresses site-wide to team@gigfloww.com:
   - Replaced all instances of autoapply.ai email addresses across footer, contact page, legal pages
