@@ -37,7 +37,7 @@ const sessionConfig: any = {
   rolling: true, // Reset expiry on each request
   store: new PgSession({
     pool: pgPool,
-    tableName: 'session',
+    tableName: 'user_sessions', // Use different table name to avoid conflicts
     createTableIfMissing: true,
   }),
   cookie: {
