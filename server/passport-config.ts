@@ -11,12 +11,16 @@ passport.use(
       clientID: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       // Use full URL for production compatibility
-      callbackURL: process.env.NODE_ENV === 'production' || process.env.REPL_SLUG?.includes('gigfloww.com') 
+      callbackURL: process.env.NODE_ENV === 'production' || 
+                   process.env.REPL_SLUG?.includes('gigfloww.com') ||
+                   process.env.REPLIT_DOMAIN?.includes('gigfloww.com')
         ? 'https://gigfloww.com/api/auth/google/callback'
         : 'http://localhost:5000/api/auth/google/callback',
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
+        console.log('Google OAuth callback with profile:', profile.id, profile.emails?.[0]?.value);
+        console.log('Tokens received:', { hasAccess: !!accessToken, hasRefresh: !!refreshToken });
         const email = profile.emails?.[0]?.value;
         if (!email) {
           return done(new Error('No email found in Google profile'));

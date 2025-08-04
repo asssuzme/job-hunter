@@ -184,7 +184,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/auth/gmail/authorize', isAuthenticated, (req, res, next) => {
     // Add error handling and logging
     console.log('Gmail auth request from:', req.get('host'));
-    console.log('User:', req.user?.email);
+    console.log('User:', (req.user as any)?.email);
     
     passport.authenticate('google', { 
       scope: ['https://www.googleapis.com/auth/gmail.send'],
@@ -233,6 +233,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/auth/google/callback', (req, res, next) => {
     console.log('OAuth callback received from:', req.get('host'));
     console.log('Query params:', req.query);
+    console.log('Error param:', req.query.error);
+    
+    // Handle OAuth errors specifically
+    if (req.query.error) {
+      console.error('OAuth error:', req.query.error, req.query.error_description);
+      return res.redirect(`/?error=${req.query.error}&description=${encodeURIComponent(req.query.error_description || '')}`);
+    }
     
     passport.authenticate('google', { 
       failureRedirect: '/error?type=oauth_failed',

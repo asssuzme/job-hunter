@@ -12,7 +12,10 @@ app.set("trust proxy", 1);
 
 // Detect environment properly
 const hostname = process.env.REPL_SLUG || 'localhost';
-const isProduction = hostname.includes('gigfloww.com') || process.env.NODE_ENV === 'production';
+const isProduction = process.env.NODE_ENV === 'production' || 
+                     hostname.includes('gigfloww.com') || 
+                     process.env.REPLIT_DOMAIN?.includes('gigfloww.com') ||
+                     false;
 
 // Session configuration
 const sessionConfig: any = {
@@ -34,6 +37,9 @@ if (isProduction) {
 
 console.log('Session config:', {
   isProduction,
+  hostname,
+  replSlug: process.env.REPL_SLUG,
+  replitDomain: process.env.REPLIT_DOMAIN,
   secure: sessionConfig.cookie.secure,
   domain: sessionConfig.cookie.domain,
   sameSite: sessionConfig.cookie.sameSite

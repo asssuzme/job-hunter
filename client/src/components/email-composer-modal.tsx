@@ -147,6 +147,12 @@ export function EmailComposerModal({
       } else if (data.needsGmailAuth) {
         // Show Gmail authorization prompt
         setShowGmailAuth(true);
+      } else if (data.requiresSignIn) {
+        toast({
+          title: "Sign in required",
+          description: "Please sign in with Google to send emails",
+          variant: "destructive"
+        });
       } else {
         toast({
           title: "Email not sent",

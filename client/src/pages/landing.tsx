@@ -1,3 +1,4 @@
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
@@ -12,6 +13,31 @@ import { Spinner, PageLoader } from "@/components/ui/loading-animations";
 export default function Landing() {
   const { isLoading } = useAuth();
   const { toast } = useToast();
+
+  // Check for OAuth errors in URL params
+  React.useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const error = urlParams.get('error');
+    const description = urlParams.get('description');
+    
+    if (error) {
+      toast({
+        title: "Authentication Error",
+        description: description || `OAuth error: ${error}`,
+        variant: "destructive"
+      });
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    
+    if (urlParams.get('gmail_auth') === 'success') {
+      toast({
+        title: "Gmail Connected!",
+        description: "You can now send emails directly from Gmail",
+      });
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [toast]);
 
   const handleSignIn = async () => {
     try {
