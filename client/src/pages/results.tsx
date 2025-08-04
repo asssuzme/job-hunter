@@ -23,7 +23,8 @@ import {
   CheckCircle2,
   Zap,
   Building2,
-  Clock
+  Clock,
+  Lock
 } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -783,6 +784,27 @@ export default function Results() {
 
           {/* Jobs with contacts */}
           <TabsContent value="with-contacts" className="space-y-4">
+            {/* Apply All Button - Locked for Pro Plan */}
+            {canApplyJobs.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex justify-end mb-4"
+              >
+                <Button
+                  variant="default"
+                  size="lg"
+                  onClick={() => setShowProPlanModal(true)}
+                  className="relative overflow-hidden bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 hover:from-purple-700 hover:via-pink-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 px-6 py-3"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full animate-shimmer" />
+                  <Lock className="h-5 w-5 mr-2" />
+                  Apply to All Jobs ({canApplyJobs.length})
+                  <Badge variant="secondary" className="ml-2 bg-yellow-500 text-black">PRO</Badge>
+                </Button>
+              </motion.div>
+            )}
+            
             {canApplyJobs.length === 0 ? (
               <motion.div
                 initial={{ opacity: 0 }}
