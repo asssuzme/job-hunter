@@ -849,7 +849,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       let text = "";
       
-      // Check if the file is a PDF or text file
+      // Check if the file is a PDF, text file, or image
       if (req.file.mimetype === "application/pdf") {
         // Use the PDF parsing logic
         const fs = await import('fs');
@@ -879,8 +879,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
         text = data.text;
       } else if (req.file.mimetype === "text/plain") {
         text = req.file.buffer.toString('utf-8');
+      } else if (req.file.mimetype.startsWith('image/')) {
+        // Handle image files using OpenAI Vision API
+        try {
+          const base64Image = req.file.buffer.toString('base64');
+          const dataUrl = `data:${req.file.mimetype};base64,${base64Image}`;
+          
+          const response = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [
+              {
+                role: "user",
+                content: [
+                  {
+                    type: "text",
+                    text: "Extract all text from this resume image. Return only the extracted text content, no additional commentary or formatting. Include all details like name, contact information, experience, education, skills, etc. Preserve the structure and format as much as possible."
+                  },
+                  {
+                    type: "image_url",
+                    image_url: {
+                      url: dataUrl,
+                      detail: "high"
+                    }
+                  }
+                ]
+              }
+            ],
+            max_tokens: 4000
+          });
+
+          text = response.choices[0]?.message?.content || "";
+          
+          if (!text.trim()) {
+            throw new Error("No text could be extracted from the image");
+          }
+        } catch (error) {
+          console.error("Error extracting text from image:", error);
+          return res.status(400).json({ 
+            error: "Failed to extract text from image. Please ensure the image contains clear, readable text or try uploading a PDF/text file instead." 
+          });
+        }
       } else {
-        return res.status(400).json({ error: "Invalid file type. Please upload a PDF or text file." });
+        return res.status(400).json({ error: "Invalid file type. Please upload a PDF, text file, or image file (JPG, PNG, WebP)." });
       }
       
       // Clean the text to remove null bytes and other invalid characters

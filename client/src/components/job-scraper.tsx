@@ -1014,7 +1014,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".txt,.pdf"
+                  accept=".txt,.pdf,.jpg,.jpeg,.png,.webp"
                   onChange={handleFileUpload}
                   className="hidden"
                   disabled={isProcessing}
@@ -1031,7 +1031,7 @@ export function JobScraper({ onComplete }: JobScraperProps = {}) {
                   <div className="text-center">
                     <p className="font-medium">Drop your resume here</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      <span className="text-red-500">Required for first search</span> • Supports .txt and .pdf files
+                      <span className="text-red-500">Required for first search</span> • Supports .txt, .pdf, and image files
                     </p>
                     <p className="text-xs text-muted-foreground">
                       Will be saved to your account for future searches
